@@ -35,7 +35,7 @@ library
     TextBuilderDev.UTF16
     TextBuilderDev.Prelude
   build-depends:
-    base >=4.10 && <5,
+    base >=4.11 && <5,
     bytestring >=0.10 && <0.12,
     deferred-folds >=0.9.10.1 && <0.10,
     split >=0.2.3.4 && <0.3,

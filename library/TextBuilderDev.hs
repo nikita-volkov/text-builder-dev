@@ -111,12 +111,8 @@ data TextBuilder
 newtype Action
   = Action (forall s. B.MArray s -> Int -> ST s ())
 
-instance Monoid TextBuilder where
-  {-# INLINE mempty #-}
-  mempty =
-    TextBuilder (Action (\_ _ -> return ())) 0 0
-  {-# INLINEABLE mappend #-}
-  mappend (TextBuilder (Action action1) arraySize1 charsAmount1) (TextBuilder (Action action2) arraySize2 charsAmount2) =
+instance Semigroup TextBuilder where
+  (<>) (TextBuilder (Action action1) arraySize1 charsAmount1) (TextBuilder (Action action2) arraySize2 charsAmount2) =
     TextBuilder action arraySize charsAmount
     where
       action =
@@ -128,8 +124,10 @@ instance Monoid TextBuilder where
       charsAmount =
         charsAmount1 + charsAmount2
 
-instance Semigroup TextBuilder where
-  (<>) = mappend
+instance Monoid TextBuilder where
+  {-# INLINE mempty #-}
+  mempty =
+    TextBuilder (Action (\_ _ -> return ())) 0 0
 
 instance IsString TextBuilder where
   fromString = string
