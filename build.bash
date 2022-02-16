@@ -18,16 +18,18 @@ function format {
     -not -path "./.git/*")
 }
 
-function build_and_test {
+function build_all {
+  stack build \
+  --ghc-options "$build_ghc_options" \
+  --fast \
+  --test --no-run-tests \
+  --bench --no-run-benchmarks
+}
+
+function test {
   stack build \
   --ghc-options "$build_ghc_options" \
   --test \
-  --fast
-}
-
-function build {
-  stack build \
-  --ghc-options "$build_ghc_options" \
   --fast
 }
 
@@ -41,10 +43,10 @@ function bench {
   build \
   --ghc-options "-O2 -rtsopts $build_ghc_options" \
   --bench \
-  --ba "-s -m pattern \"$pattern\" +RTS -A128m -n2m -RTS"
+  --ba "-m pattern \"$pattern\" +RTS -A128m -n2m -RTS"
 
 }
 
 
 format
-bench
+build_all
