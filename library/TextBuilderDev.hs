@@ -89,16 +89,16 @@ import qualified TextBuilderDev.UTF16 as D
 -- |
 -- Default conversion to text builder.
 class ToTextBuilder a where
-  toTextBuilderDev :: a -> TextBuilder
+  toTextBuilder :: a -> TextBuilder
 
 instance ToTextBuilder TextBuilder where
-  toTextBuilderDev = id
+  toTextBuilder = id
 
 instance ToTextBuilder Text where
-  toTextBuilderDev = text
+  toTextBuilder = text
 
 instance ToTextBuilder String where
-  toTextBuilderDev = fromString
+  toTextBuilder = fromString
 
 -- *
 
