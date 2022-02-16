@@ -1,6 +1,6 @@
-module TextBuilder.UTF16 where
+module TextBuilderDev.UTF16 where
 
-import TextBuilder.Prelude
+import TextBuilderDev.Prelude
 
 -- |
 -- A matching function, which chooses the continuation to run.

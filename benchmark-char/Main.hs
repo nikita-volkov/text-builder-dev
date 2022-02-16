@@ -4,13 +4,13 @@ import Criterion.Main
 import qualified Data.Text as D
 import qualified Data.Text.Lazy as C
 import qualified Data.Text.Lazy.Builder as B
-import qualified TextBuilder as A
+import qualified TextBuilderDev as A
 import Prelude
 
 main =
   defaultMain $
     [ subjectBenchmark "builderSubject" builderSubject,
-      subjectBenchmark "lazyTextBuilderSubject" lazyTextBuilderSubject,
+      subjectBenchmark "lazyTextBuilderDevSubject" lazyTextBuilderDevSubject,
       subjectBenchmark "plainTextPackingSubject" plainTextPackingSubject
     ]
 
@@ -33,8 +33,8 @@ builderSubject :: Subject
 builderSubject =
   A.buildText . A.string . map chr
 
-lazyTextBuilderSubject :: Subject
-lazyTextBuilderSubject =
+lazyTextBuilderDevSubject :: Subject
+lazyTextBuilderDevSubject =
   C.toStrict . B.toLazyText . B.fromString . map chr
 
 plainTextPackingSubject :: Subject

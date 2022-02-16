@@ -7,7 +7,7 @@ import Test.QuickCheck.Instances
 import Test.Tasty
 import Test.Tasty.HUnit
 import Test.Tasty.QuickCheck
-import qualified TextBuilder as B
+import qualified TextBuilderDev as B
 import Prelude hiding (choose)
 
 main =

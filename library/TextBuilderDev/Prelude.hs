@@ -1,4 +1,4 @@
-module TextBuilder.Prelude
+module TextBuilderDev.Prelude
   ( module Exports,
     Product2 (..),
   )
