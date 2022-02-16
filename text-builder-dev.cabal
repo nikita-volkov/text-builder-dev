@@ -67,7 +67,7 @@ benchmark benchmark-text
   hs-source-dirs: benchmark-text
   main-is: Main.hs
   build-depends:
-    criterion >=1.5.6.1 && <2,
+    criterion >=1.5.13.0 && <2,
     rerebase ==1.*,
     text-builder-dev,
 
@@ -77,6 +77,6 @@ benchmark benchmark-char
   hs-source-dirs: benchmark-char
   main-is: Main.hs
   build-depends:
-    criterion >=1.5.6.1 && <2,
+    criterion >=1.5.13.0 && <2,
     rerebase ==1.*,
     text-builder-dev,
