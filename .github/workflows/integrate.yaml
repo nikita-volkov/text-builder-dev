@@ -47,5 +47,6 @@ jobs:
 
       - run: cabal build --enable-tests --enable-benchmarks
       - run: cabal test --enable-tests --enable-benchmarks
-      - run: cabal haddock --enable-tests --enable-benchmarks
-
+      
+      - if: matrix.ghc != '8.2'
+        run: cabal haddock --enable-tests --enable-benchmarks
