@@ -1,5 +1,5 @@
 module TextBuilderDev
-  ( TextBuilderDev,
+  ( TextBuilder,
 
     -- * Accessors
     buildText,
@@ -15,7 +15,7 @@ module TextBuilderDev
     -- * Constructors
 
     -- ** Helper class
-    ToTextBuilderDev (..),
+    ToTextBuilder (..),
 
     -- ** Builder manipulators
     force,
@@ -88,16 +88,16 @@ import qualified TextBuilderDev.UTF16 as D
 
 -- |
 -- Default conversion to text builder.
-class ToTextBuilderDev a where
-  toTextBuilderDev :: a -> TextBuilderDev
+class ToTextBuilder a where
+  toTextBuilderDev :: a -> TextBuilder
 
-instance ToTextBuilderDev TextBuilderDev where
+instance ToTextBuilder TextBuilder where
   toTextBuilderDev = id
 
-instance ToTextBuilderDev Text where
+instance ToTextBuilder Text where
   toTextBuilderDev = text
 
-instance ToTextBuilderDev String where
+instance ToTextBuilder String where
   toTextBuilderDev = fromString
 
 -- *
@@ -105,19 +105,19 @@ instance ToTextBuilderDev String where
 -- |
 -- Specification of how to efficiently construct strict 'Text'.
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
-data TextBuilderDev
-  = TextBuilderDev !Action !Int !Int
+data TextBuilder
+  = TextBuilder !Action !Int !Int
 
 newtype Action
   = Action (forall s. B.MArray s -> Int -> ST s ())
 
-instance Monoid TextBuilderDev where
+instance Monoid TextBuilder where
   {-# INLINE mempty #-}
   mempty =
-    TextBuilderDev (Action (\_ _ -> return ())) 0 0
+    TextBuilder (Action (\_ _ -> return ())) 0 0
   {-# INLINEABLE mappend #-}
-  mappend (TextBuilderDev (Action action1) arraySize1 charsAmount1) (TextBuilderDev (Action action2) arraySize2 charsAmount2) =
-    TextBuilderDev action arraySize charsAmount
+  mappend (TextBuilder (Action action1) arraySize1 charsAmount1) (TextBuilder (Action action2) arraySize2 charsAmount2) =
+    TextBuilder action arraySize charsAmount
     where
       action =
         Action $ \array offset -> do
@@ -128,39 +128,39 @@ instance Monoid TextBuilderDev where
       charsAmount =
         charsAmount1 + charsAmount2
 
-instance Semigroup TextBuilderDev where
+instance Semigroup TextBuilder where
   (<>) = mappend
 
-instance IsString TextBuilderDev where
+instance IsString TextBuilder where
   fromString = string
 
-instance Show TextBuilderDev where
+instance Show TextBuilder where
   show = Text.unpack . buildText
 
-instance FromText TextBuilderDev where
-  fromText = TextBuilderDev.text
+instance FromText TextBuilder where
+  fromText = text
 
-instance ToText TextBuilderDev where
+instance ToText TextBuilder where
   toText = buildText
 
-instance ToString TextBuilderDev where
+instance ToString TextBuilder where
   toString = toString . buildText
 
 -- * Accessors
 
 -- | Get the amount of characters
 {-# INLINE length #-}
-length :: TextBuilderDev -> Int
-length (TextBuilderDev _ _ x) = x
+length :: TextBuilder -> Int
+length (TextBuilder _ _ x) = x
 
 -- | Check whether the builder is empty
 {-# INLINE null #-}
-null :: TextBuilderDev -> Bool
+null :: TextBuilder -> Bool
 null = (== 0) . length
 
 -- | Execute a builder producing a strict text
-buildText :: TextBuilderDev -> Text
-buildText (TextBuilderDev (Action action) arraySize _) =
+buildText :: TextBuilder -> Text
+buildText (TextBuilder (Action action) arraySize _) =
   C.text array 0 arraySize
   where
     array =
@@ -172,19 +172,19 @@ buildText (TextBuilderDev (Action action) arraySize _) =
 -- ** Output IO
 
 -- | Put builder, to stdout
-putToStdOut :: TextBuilderDev -> IO ()
+putToStdOut :: TextBuilder -> IO ()
 putToStdOut = Text.hPutStr stdout . buildText
 
 -- | Put builder, to stderr
-putToStdErr :: TextBuilderDev -> IO ()
+putToStdErr :: TextBuilder -> IO ()
 putToStdErr = Text.hPutStr stderr . buildText
 
 -- | Put builder, followed by a line, to stdout
-putLnToStdOut :: TextBuilderDev -> IO ()
+putLnToStdOut :: TextBuilder -> IO ()
 putLnToStdOut = Text.hPutStrLn stdout . buildText
 
 -- | Put builder, followed by a line, to stderr
-putLnToStdErr :: TextBuilderDev -> IO ()
+putLnToStdErr :: TextBuilder -> IO ()
 putLnToStdErr = Text.hPutStrLn stderr . buildText
 
 -- * Constructors
@@ -196,35 +196,35 @@ putLnToStdErr = Text.hPutStrLn stderr . buildText
 -- because a forced builder is much faster,
 -- since it's virtually a single call @memcopy@.
 {-# INLINE force #-}
-force :: TextBuilderDev -> TextBuilderDev
+force :: TextBuilder -> TextBuilder
 force = text . toText
 
 -- | Unicode character
 {-# INLINE char #-}
-char :: Char -> TextBuilderDev
+char :: Char -> TextBuilder
 char x =
   unicodeCodePoint (ord x)
 
 -- | Unicode code point
 {-# INLINE unicodeCodePoint #-}
-unicodeCodePoint :: Int -> TextBuilderDev
+unicodeCodePoint :: Int -> TextBuilder
 unicodeCodePoint x =
   D.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
 
 -- | Single code-unit UTF-16 character
 {-# INLINEABLE utf16CodeUnits1 #-}
-utf16CodeUnits1 :: Word16 -> TextBuilderDev
+utf16CodeUnits1 :: Word16 -> TextBuilder
 utf16CodeUnits1 unit =
-  TextBuilderDev action 1 1
+  TextBuilder action 1 1
   where
     action =
       Action $ \array offset -> B.unsafeWrite array offset unit
 
 -- | Double code-unit UTF-16 character
 {-# INLINEABLE utf16CodeUnits2 #-}
-utf16CodeUnits2 :: Word16 -> Word16 -> TextBuilderDev
+utf16CodeUnits2 :: Word16 -> Word16 -> TextBuilder
 utf16CodeUnits2 unit1 unit2 =
-  TextBuilderDev action 2 1
+  TextBuilder action 2 1
   where
     action =
       Action $ \array offset -> do
@@ -233,33 +233,33 @@ utf16CodeUnits2 unit1 unit2 =
 
 -- | Single code-unit UTF-8 character
 {-# INLINE utf8CodeUnits1 #-}
-utf8CodeUnits1 :: Word8 -> TextBuilderDev
+utf8CodeUnits1 :: Word8 -> TextBuilder
 utf8CodeUnits1 unit1 =
   D.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
 
 -- | Double code-unit UTF-8 character
 {-# INLINE utf8CodeUnits2 #-}
-utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilderDev
+utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilder
 utf8CodeUnits2 unit1 unit2 =
   D.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
 
 -- | Triple code-unit UTF-8 character
 {-# INLINE utf8CodeUnits3 #-}
-utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilderDev
+utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits3 unit1 unit2 unit3 =
   D.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
 
 -- | UTF-8 character out of 4 code units
 {-# INLINE utf8CodeUnits4 #-}
-utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilderDev
+utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits4 unit1 unit2 unit3 unit4 =
   D.utf8CodeUnits4 unit1 unit2 unit3 unit4 utf16CodeUnits1 utf16CodeUnits2
 
 -- | ASCII byte string
 {-# INLINEABLE asciiByteString #-}
-asciiByteString :: ByteString -> TextBuilderDev
+asciiByteString :: ByteString -> TextBuilder
 asciiByteString byteString =
-  TextBuilderDev action length length
+  TextBuilder action length length
   where
     length = ByteString.length byteString
     action =
@@ -271,9 +271,9 @@ asciiByteString byteString =
 
 -- | Strict text
 {-# INLINEABLE text #-}
-text :: Text -> TextBuilderDev
+text :: Text -> TextBuilder
 text text@(C.Text array offset length) =
-  TextBuilderDev action length (Text.length text)
+  TextBuilder action length (Text.length text)
   where
     action =
       Action $ \builderArray builderOffset -> do
@@ -281,13 +281,13 @@ text text@(C.Text array offset length) =
 
 -- | String
 {-# INLINE string #-}
-string :: String -> TextBuilderDev
+string :: String -> TextBuilder
 string =
   foldMap char
 
 -- | Decimal representation of an integral value
 {-# INLINEABLE decimal #-}
-decimal :: Integral a => a -> TextBuilderDev
+decimal :: Integral a => a -> TextBuilder
 decimal i =
   if i >= 0
     then unsignedDecimal i
@@ -295,13 +295,13 @@ decimal i =
 
 -- | Decimal representation of an unsigned integral value
 {-# INLINEABLE unsignedDecimal #-}
-unsignedDecimal :: Integral a => a -> TextBuilderDev
+unsignedDecimal :: Integral a => a -> TextBuilder
 unsignedDecimal =
   foldMap decimalDigit . Unfoldr.decimalDigits
 
 -- | Decimal representation of an integral value with thousands separated by the specified character
 {-# INLINEABLE thousandSeparatedDecimal #-}
-thousandSeparatedDecimal :: Integral a => Char -> a -> TextBuilderDev
+thousandSeparatedDecimal :: Integral a => Char -> a -> TextBuilder
 thousandSeparatedDecimal separatorChar a =
   if a >= 0
     then thousandSeparatedUnsignedDecimal separatorChar a
@@ -309,7 +309,7 @@ thousandSeparatedDecimal separatorChar a =
 
 -- | Decimal representation of an unsigned integral value with thousands separated by the specified character
 {-# INLINEABLE thousandSeparatedUnsignedDecimal #-}
-thousandSeparatedUnsignedDecimal :: Integral a => Char -> a -> TextBuilderDev
+thousandSeparatedUnsignedDecimal :: Integral a => Char -> a -> TextBuilder
 thousandSeparatedUnsignedDecimal separatorChar a =
   fold $ do
     (index, digit) <- Unfoldr.zipWithReverseIndex $ Unfoldr.decimalDigits a
@@ -319,7 +319,7 @@ thousandSeparatedUnsignedDecimal separatorChar a =
 
 -- | Data size in decimal notation over amount of bytes.
 {-# INLINEABLE dataSizeInBytesInDecimal #-}
-dataSizeInBytesInDecimal :: Integral a => Char -> a -> TextBuilderDev
+dataSizeInBytesInDecimal :: Integral a => Char -> a -> TextBuilder
 dataSizeInBytesInDecimal separatorChar amount =
   if amount < 1000
     then unsignedDecimal amount <> "B"
@@ -346,7 +346,7 @@ dataSizeInBytesInDecimal separatorChar amount =
                                 then dividedDecimal separatorChar 100000000000000000000 amount <> "ZB"
                                 else dividedDecimal separatorChar 100000000000000000000000 amount <> "YB"
 
-dividedDecimal :: Integral a => Char -> a -> a -> TextBuilderDev
+dividedDecimal :: Integral a => Char -> a -> a -> TextBuilder
 dividedDecimal separatorChar divisor n =
   let byDivisor = div n divisor
       byExtraTen = div byDivisor 10
@@ -357,19 +357,19 @@ dividedDecimal separatorChar divisor n =
 
 -- | Unsigned binary number
 {-# INLINE unsignedBinary #-}
-unsignedBinary :: Integral a => a -> TextBuilderDev
+unsignedBinary :: Integral a => a -> TextBuilder
 unsignedBinary =
   foldMap decimalDigit . Unfoldr.binaryDigits
 
 -- | Unsigned binary number
 {-# INLINE unsignedPaddedBinary #-}
-unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilderDev
+unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilder
 unsignedPaddedBinary a =
   padFromLeft (finiteBitSize a) '0' $ foldMap decimalDigit $ Unfoldr.binaryDigits a
 
 -- | Hexadecimal representation of an integral value
 {-# INLINE hexadecimal #-}
-hexadecimal :: Integral a => a -> TextBuilderDev
+hexadecimal :: Integral a => a -> TextBuilder
 hexadecimal i =
   if i >= 0
     then unsignedHexadecimal i
@@ -377,19 +377,19 @@ hexadecimal i =
 
 -- | Unsigned hexadecimal representation of an integral value
 {-# INLINE unsignedHexadecimal #-}
-unsignedHexadecimal :: Integral a => a -> TextBuilderDev
+unsignedHexadecimal :: Integral a => a -> TextBuilder
 unsignedHexadecimal =
   foldMap hexadecimalDigit . Unfoldr.hexadecimalDigits
 
 -- | Decimal digit
 {-# INLINE decimalDigit #-}
-decimalDigit :: Integral a => a -> TextBuilderDev
+decimalDigit :: Integral a => a -> TextBuilder
 decimalDigit n =
   unicodeCodePoint (fromIntegral n + 48)
 
 -- | Hexadecimal digit
 {-# INLINE hexadecimalDigit #-}
-hexadecimalDigit :: Integral a => a -> TextBuilderDev
+hexadecimalDigit :: Integral a => a -> TextBuilder
 hexadecimalDigit n =
   if n <= 9
     then unicodeCodePoint (fromIntegral n + 48)
@@ -397,7 +397,7 @@ hexadecimalDigit n =
 
 -- | Intercalate builders
 {-# INLINE intercalate #-}
-intercalate :: Foldable foldable => TextBuilderDev -> foldable TextBuilderDev -> TextBuilderDev
+intercalate :: Foldable foldable => TextBuilder -> foldable TextBuilder -> TextBuilder
 intercalate separator = extract . foldl' step init
   where
     init = Product2 False mempty
@@ -410,7 +410,7 @@ intercalate separator = extract . foldl' step init
 
 -- | Pad a builder from the left side to the specified length with the specified character
 {-# INLINEABLE padFromLeft #-}
-padFromLeft :: Int -> Char -> TextBuilderDev -> TextBuilderDev
+padFromLeft :: Int -> Char -> TextBuilder -> TextBuilder
 padFromLeft paddedLength paddingChar builder =
   let builderLength = length builder
    in if paddedLength <= builderLength
@@ -419,7 +419,7 @@ padFromLeft paddedLength paddingChar builder =
 
 -- | Pad a builder from the right side to the specified length with the specified character
 {-# INLINEABLE padFromRight #-}
-padFromRight :: Int -> Char -> TextBuilderDev -> TextBuilderDev
+padFromRight :: Int -> Char -> TextBuilder -> TextBuilder
 padFromRight paddedLength paddingChar builder =
   let builderLength = length builder
    in if paddedLength <= builderLength
@@ -446,7 +446,7 @@ utcTimestampInIso8601 ::
   Int ->
   -- | Second.
   Int ->
-  TextBuilderDev
+  TextBuilder
 utcTimestampInIso8601 y mo d h mi s =
   mconcat
     [ padFromLeft 4 '0' $ decimal y,
@@ -467,7 +467,7 @@ utcTimestampInIso8601 y mo d h mi s =
 -- Time interval in seconds.
 -- Directly applicable to 'DiffTime' and 'NominalDiffTime'.
 {-# INLINEABLE intervalInSeconds #-}
-intervalInSeconds :: RealFrac seconds => seconds -> TextBuilderDev
+intervalInSeconds :: RealFrac seconds => seconds -> TextBuilder
 intervalInSeconds interval = flip evalState (round interval) $ do
   seconds <- state (swap . flip divMod 60)
   minutes <- state (swap . flip divMod 60)
@@ -487,7 +487,7 @@ fixedDouble ::
   -- | Amount of decimals after point.
   Int ->
   Double ->
-  TextBuilderDev
+  TextBuilder
 fixedDouble decimalPlaces = fromString . printf ("!." ++ show decimalPlaces ++ "f")
 
 -- | Double multiplied by 100 with a fixed number of decimal places applied and followed by a percent-sign.
@@ -496,12 +496,12 @@ doublePercent ::
   -- | Amount of decimals after point.
   Int ->
   Double ->
-  TextBuilderDev
+  TextBuilder
 doublePercent decimalPlaces x = fixedDouble decimalPlaces (x * 100) <> "!"
 
 -- | Hexadecimal readable representation of binary data.
 {-# INLINE hexData #-}
-hexData :: ByteString -> TextBuilderDev
+hexData :: ByteString -> TextBuilder
 hexData =
   intercalate " " . fmap mconcat
     . Split.chunksOf 2
