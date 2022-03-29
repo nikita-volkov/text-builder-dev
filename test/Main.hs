@@ -82,5 +82,12 @@ main =
           assertEqual "" "1.1MB" (B.buildText (B.dataSizeInBytesInDecimal ',' 1150000))
           assertEqual "" "9.9MB" (B.buildText (B.dataSizeInBytesInDecimal ',' 9990000))
           assertEqual "" "10MB" (B.buildText (B.dataSizeInBytesInDecimal ',' 10100000))
-          assertEqual "" "1,000YB" (B.buildText (B.dataSizeInBytesInDecimal ',' 1000000000000000000000000000))
+          assertEqual "" "1,000YB" (B.buildText (B.dataSizeInBytesInDecimal ',' 1000000000000000000000000000)),
+        testCase "fixedDouble" $ do
+          assertEqual "" "0.0" (B.buildText (B.fixedDouble 1 0.05))
+          assertEqual "" "0.1" (B.buildText (B.fixedDouble 1 0.06))
+          assertEqual "" "10.0000" (B.buildText (B.fixedDouble 4 10))
+          assertEqual "" "0.9000" (B.buildText (B.fixedDouble 4 0.9)),
+        testCase "doublePercent" $ do
+          assertEqual "" "90.4%" (B.buildText (B.doublePercent 1 0.904))
       ]

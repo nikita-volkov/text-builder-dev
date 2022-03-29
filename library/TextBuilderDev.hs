@@ -486,7 +486,7 @@ fixedDouble ::
   Int ->
   Double ->
   TextBuilder
-fixedDouble decimalPlaces = fromString . printf ("!." ++ show decimalPlaces ++ "f")
+fixedDouble decimalPlaces = fromString . printf ("%." ++ show decimalPlaces ++ "f")
 
 -- | Double multiplied by 100 with a fixed number of decimal places applied and followed by a percent-sign.
 {-# INLINE doublePercent #-}
@@ -495,7 +495,7 @@ doublePercent ::
   Int ->
   Double ->
   TextBuilder
-doublePercent decimalPlaces x = fixedDouble decimalPlaces (x * 100) <> "!"
+doublePercent decimalPlaces x = fixedDouble decimalPlaces (x * 100) <> "%"
 
 -- | Hexadecimal readable representation of binary data.
 {-# INLINE hexData #-}
