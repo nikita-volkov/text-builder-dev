@@ -100,6 +100,9 @@ instance ToTextBuilder Text where
 instance ToTextBuilder String where
   toTextBuilder = fromString
 
+instance ToTextBuilder Char where
+  toTextBuilder = char
+
 -- *
 
 -- |
