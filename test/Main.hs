@@ -50,16 +50,26 @@ main =
         testProperty "TextBuilderDev.null is isomorphic to Text.null" $ \(text :: Text) ->
           B.null (B.toTextBuilder text) === A.null text,
         testProperty "(TextBuilderDev.utf8CodeUnitsN <>) is isomorphic to Text.cons" $ \(text :: Text) (c :: Char) ->
-          let mkBuilder
+          let cp = Char.ord c
+              cuBuilder
                 | cp <    0x80 = B.utf8CodeUnits1 (cuAt 0)
                 | cp <   0x800 = B.utf8CodeUnits2 (cuAt 0) (cuAt 1)
                 | cp < 0x10000 = B.utf8CodeUnits3 (cuAt 0) (cuAt 1) (cuAt 2)
                 | otherwise    = B.utf8CodeUnits4 (cuAt 0) (cuAt 1) (cuAt 2) (cuAt 3)
                 where codeUnits = Text.encodeUtf8 $ A.singleton c
                       cuAt = (codeUnits `ByteString.index`)
-                      cp = Char.ord c
           in
-          B.buildText (mkBuilder <> B.text text) === A.cons c text,
+          B.buildText (cuBuilder <> B.text text) === A.cons c text,
+        testProperty "(TextBuilderDev.utf16CodeUnitsN <>) is isomorphic to Text.cons" $ \(text :: Text) (c :: Char) ->
+          let cp = Char.ord c
+              cuBuilder
+                | cp < 0x10000 = B.utf16CodeUnits1 (cuAt 0)
+                | otherwise    = B.utf16CodeUnits2 (cuAt 0) (cuAt 1)
+                where codeUnits = Text.encodeUtf16LE $ A.singleton c
+                      cuAt i = (fromIntegral $ codeUnits `ByteString.index` (2 * i))
+                           .|. (fromIntegral $ codeUnits `ByteString.index` (2 * i + 1)) `shiftL` 8
+          in
+          B.buildText (cuBuilder <> B.text text) === A.cons c text,
         testCase "Separated thousands" $ do
           assertEqual "" "0" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 0))
           assertEqual "" "123" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 123))
