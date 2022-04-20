@@ -49,25 +49,29 @@ main =
             ==> (fromString . showHex x) "" === (B.buildText . B.hexadecimal) x,
         testProperty "TextBuilderDev.null is isomorphic to Text.null" $ \(text :: Text) ->
           B.null (B.toTextBuilder text) === A.null text,
-        testProperty "(TextBuilderDev.utf8CodeUnitsN <>) is isomorphic to Text.cons" $ \(text :: Text) (c :: Char) ->
+        testProperty "(TextBuilderDev.unicodeCodePoint <>) is isomorphic to Text.cons" $ withMaxSuccess bigTest $ \(text :: Text) (c :: Char) ->
+          B.buildText (B.unicodeCodePoint (Char.ord c) <> B.text text) === A.cons c text,
+        testProperty "(TextBuilderDev.utf8CodeUnitsN <>) is isomorphic to Text.cons" $ withMaxSuccess bigTest $ \(text :: Text) (c :: Char) ->
           let cp = Char.ord c
               cuBuilder
                 | cp <    0x80 = B.utf8CodeUnits1 (cuAt 0)
                 | cp <   0x800 = B.utf8CodeUnits2 (cuAt 0) (cuAt 1)
                 | cp < 0x10000 = B.utf8CodeUnits3 (cuAt 0) (cuAt 1) (cuAt 2)
                 | otherwise    = B.utf8CodeUnits4 (cuAt 0) (cuAt 1) (cuAt 2) (cuAt 3)
+                -- Use Data.Text.Encoding for comparison
                 where codeUnits = Text.encodeUtf8 $ A.singleton c
                       cuAt = (codeUnits `ByteString.index`)
           in
           B.buildText (cuBuilder <> B.text text) === A.cons c text,
-        testProperty "(TextBuilderDev.utf16CodeUnitsN <>) is isomorphic to Text.cons" $ \(text :: Text) (c :: Char) ->
+        testProperty "(TextBuilderDev.utf16CodeUnitsN <>) is isomorphic to Text.cons" $ withMaxSuccess bigTest $ \(text :: Text) (c :: Char) ->
           let cp = Char.ord c
               cuBuilder
                 | cp < 0x10000 = B.utf16CodeUnits1 (cuAt 0)
                 | otherwise    = B.utf16CodeUnits2 (cuAt 0) (cuAt 1)
+                -- Use Data.Text.Encoding for comparison
                 where codeUnits = Text.encodeUtf16LE $ A.singleton c
                       cuAt i = (fromIntegral $ codeUnits `ByteString.index` (2 * i))
-                           .|. (fromIntegral $ codeUnits `ByteString.index` (2 * i + 1)) `shiftL` 8
+                           .|. ((fromIntegral $ codeUnits `ByteString.index` (2 * i + 1)) `shiftL` 8)
           in
           B.buildText (cuBuilder <> B.text text) === A.cons c text,
         testCase "Separated thousands" $ do
@@ -115,3 +119,4 @@ main =
         testCase "doublePercent" $ do
           assertEqual "" "90.4%" (B.buildText (B.doublePercent 1 0.904))
       ]
+  where bigTest = 10000
