@@ -1,12 +1,13 @@
 module Main where
 
 import qualified Data.ByteString as ByteString
+import qualified Data.Char as Char
 import qualified Data.Text as A
 import qualified Data.Text.Encoding as Text
 import Test.QuickCheck.Instances
 import Test.Tasty
 import Test.Tasty.HUnit
-import Test.Tasty.QuickCheck
+import Test.Tasty.QuickCheck hiding ((.&.))
 import qualified TextBuilderDev as B
 import Prelude hiding (choose)
 
@@ -46,6 +47,19 @@ main =
         testProperty "Hexadecimal vs std show" $ \(x :: Integer) ->
           x >= 0
             ==> (fromString . showHex x) "" === (B.buildText . B.hexadecimal) x,
+        testProperty "TextBuilderDev.null is isomorphic to Text.null" $ \(text :: Text) ->
+          B.null (B.toTextBuilder text) === A.null text,
+        testProperty "(TextBuilderDev.utf8CodeUnitsN <>) is isomorphic to Text.cons" $ \(text :: Text) (c :: Char) ->
+          let mkBuilder
+                | cp <    0x80 = B.utf8CodeUnits1 (cuAt 0)
+                | cp <   0x800 = B.utf8CodeUnits2 (cuAt 0) (cuAt 1)
+                | cp < 0x10000 = B.utf8CodeUnits3 (cuAt 0) (cuAt 1) (cuAt 2)
+                | otherwise    = B.utf8CodeUnits4 (cuAt 0) (cuAt 1) (cuAt 2) (cuAt 3)
+                where codeUnits = Text.encodeUtf8 $ A.singleton c
+                      cuAt = (codeUnits `ByteString.index`)
+                      cp = Char.ord c
+          in
+          B.buildText (mkBuilder <> B.text text) === A.cons c text,
         testCase "Separated thousands" $ do
           assertEqual "" "0" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 0))
           assertEqual "" "123" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 123))
