@@ -15,7 +15,7 @@ module TextBuilderDev
     -- * Constructors
 
     -- ** Helper class
-    ToTextBuilder (..),
+    IsomorphicToTextBuilder (..),
 
     -- ** Builder manipulators
     force,
@@ -88,20 +88,21 @@ import qualified TextBuilderDev.UTF16 as D
 
 -- |
 -- Default conversion to text builder.
-class ToTextBuilder a where
+class IsomorphicToTextBuilder a where
   toTextBuilder :: a -> TextBuilder
+  fromTextBuilder :: TextBuilder -> a
 
-instance ToTextBuilder TextBuilder where
+instance IsomorphicToTextBuilder TextBuilder where
   toTextBuilder = id
+  fromTextBuilder = id
 
-instance ToTextBuilder Text where
+instance IsomorphicToTextBuilder Text where
   toTextBuilder = text
+  fromTextBuilder = toText
 
-instance ToTextBuilder String where
+instance IsomorphicToTextBuilder String where
   toTextBuilder = fromString
-
-instance ToTextBuilder Char where
-  toTextBuilder = char
+  fromTextBuilder = toString
 
 -- *
 
