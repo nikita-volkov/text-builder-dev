@@ -19,6 +19,7 @@ jobs:
     strategy:
       matrix:
         ghc: ['8.4', '9.2']
+        text: ['1.2.5.0', '2.0']
       fail-fast: false
 
     runs-on: ubuntu-latest
@@ -28,12 +29,16 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Setup Haskell
-        uses: haskell/actions/setup@v1
+        uses: haskell/actions/setup@v2
         with:
           ghc-version: ${{ matrix.ghc }}
           cabal-version: 3.4
       
-      - run: cabal update
+      - run: |
+          echo "packages: ." > cabal.project
+          echo "constraints:" >> cabal.project
+          echo "  text == ${{ matrix.text }}" >> cabal.project
+      - run: cabal update --enable-tests --enable-benchmarks
       - run: cabal freeze --enable-tests --enable-benchmarks
 
       - uses: actions/cache@v2
