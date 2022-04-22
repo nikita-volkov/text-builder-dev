@@ -102,11 +102,11 @@ instance IsomorphicToTextBuilder TextBuilder where
 
 instance IsomorphicToTextBuilder Text where
   toTextBuilder = text
-  fromTextBuilder = toText
+  fromTextBuilder = buildText
 
 instance IsomorphicToTextBuilder String where
   toTextBuilder = fromString
-  fromTextBuilder = Text.unpack . toText
+  fromTextBuilder = Text.unpack . buildText
 
 -- *
 
@@ -142,12 +142,6 @@ instance IsString TextBuilder where
 
 instance Show TextBuilder where
   show = Text.unpack . buildText
-
-instance FromText TextBuilder where
-  fromText = text
-
-instance ToText TextBuilder where
-  toText = buildText
 
 -- * Accessors
 
@@ -200,7 +194,7 @@ putLnToStdErr = Text.hPutStrLn stderr . buildText
 -- since it's virtually a single call @memcopy@.
 {-# INLINE force #-}
 force :: TextBuilder -> TextBuilder
-force = text . toText
+force = text . buildText
 
 -- | Unicode character
 {-# INLINE char #-}
