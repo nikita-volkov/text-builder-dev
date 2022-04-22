@@ -12,10 +12,10 @@ module TextBuilderDev
     putLnToStdOut,
     putLnToStdErr,
 
-    -- * Constructors
-
-    -- ** Helper class
+    -- * Classes
     IsomorphicToTextBuilder (..),
+
+    -- * Constructors
 
     -- ** Builder manipulators
     force,
@@ -91,7 +91,29 @@ import qualified TextBuilderDev.UTF16 as D
 -- *
 
 -- |
--- Default conversion to text builder.
+-- Evidence that there exists an unambiguous way to convert
+-- a type to and from "TextBuilder".
+--
+-- Unlike typical conversion classes this class is lawful.
+-- The law is:
+--
+-- @a == "fromTextBuilder" ("toTextBuilder" a)@
+--
+-- This class does not provide implicit rendering,
+-- such as from integer to its decimal representation.
+-- It should already be evident that there is multiple ways of
+-- how an integer can be represented in a textual form (e.g., hexadecimal).
+-- The non-ambiguity is further enforced by the presence of
+-- the inverse conversion.
+-- In the integer case there is no way to read it
+-- from a textual form without a possibility of failing.
+-- So that is enough to prove that it's not sufficient.
+--
+-- If you're looking for such conversion classes,
+-- this library is not a place for them,
+-- since there can be infinite amount of flavours of
+-- conversions. IOW, they are context-dependent and as such
+-- should be defined as part of the domain.
 class IsomorphicToTextBuilder a where
   toTextBuilder :: a -> TextBuilder
   fromTextBuilder :: TextBuilder -> a
