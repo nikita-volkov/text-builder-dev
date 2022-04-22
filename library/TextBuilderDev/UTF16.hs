@@ -1,6 +1,7 @@
 module TextBuilderDev.UTF16 where
 
 import TextBuilderDev.Prelude
+import qualified TextBuilderDev.Unicode as Unicode
 
 -- |
 -- A matching function, which chooses the continuation to run.
@@ -38,21 +39,10 @@ utf8CodeUnits2 byte1 byte2 case1 _ =
 
 {-# INLINE utf8CodeUnits3 #-}
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> UTF16View
-utf8CodeUnits3 byte1 byte2 byte3 case1 case2 =
-  unicodeCodePoint unicode case1 case2
-  where
-    unicode =
-      shiftL (fromIntegral byte1 - 0xE0) 12
-        + shiftL (fromIntegral byte2 - 0x80) 6
-        + fromIntegral byte3 - 0x80
+utf8CodeUnits3 byte1 byte2 byte3 =
+  unicodeCodePoint (Unicode.utf8CodeUnits3 byte1 byte2 byte3)
 
 {-# INLINE utf8CodeUnits4 #-}
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> UTF16View
-utf8CodeUnits4 byte1 byte2 byte3 byte4 case1 case2 =
-  unicodeCodePoint unicode case1 case2
-  where
-    unicode =
-      shiftL (fromIntegral byte1 - 0xF0) 18
-        + shiftL (fromIntegral byte2 - 0x80) 12
-        + shiftL (fromIntegral byte3 - 0x80) 6
-        + fromIntegral byte4 - 0x80
+utf8CodeUnits4 byte1 byte2 byte3 byte4 =
+  unicodeCodePoint (Unicode.utf8CodeUnits4 byte1 byte2 byte3 byte4)
