@@ -106,7 +106,7 @@ instance IsomorphicToTextBuilder Text where
 
 instance IsomorphicToTextBuilder String where
   toTextBuilder = fromString
-  fromTextBuilder = toString
+  fromTextBuilder = Text.unpack . toText
 
 -- *
 
@@ -148,9 +148,6 @@ instance FromText TextBuilder where
 
 instance ToText TextBuilder where
   toText = buildText
-
-instance ToString TextBuilder where
-  toString = toString . buildText
 
 -- * Accessors
 

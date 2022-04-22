@@ -44,7 +44,6 @@ import Data.Ratio as Exports
 import Data.STRef as Exports
 import Data.Semigroup as Exports
 import Data.String as Exports
-import Data.String.ToString as Exports
 import Data.Text as Exports (Text)
 import Data.Text.Conversions as Exports
 import Data.Traversable as Exports
