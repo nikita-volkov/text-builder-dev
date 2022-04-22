@@ -1,5 +1,6 @@
 module TextBuilderDev
-  ( TextBuilder,
+  ( -- *
+    TextBuilder,
 
     -- * Accessors
     buildText,
@@ -11,9 +12,6 @@ module TextBuilderDev
     putToStdErr,
     putLnToStdOut,
     putLnToStdErr,
-
-    -- * Classes
-    IsomorphicToTextBuilder (..),
 
     -- * Constructors
 
@@ -69,6 +67,9 @@ module TextBuilderDev
     -- ** Time
     utcTimestampInIso8601,
     intervalInSeconds,
+
+    -- * Classes
+    IsomorphicToTextBuilder (..),
   )
 where
 
@@ -103,18 +104,18 @@ import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 --
 -- This class does not provide implicit rendering,
 -- such as from integer to its decimal representation.
--- It should already be evident that there is multiple ways of
--- how an integer can be represented in a textual form (e.g., hexadecimal).
+-- There are multiple ways of representing an integer
+-- as text (e.g., hexadecimal, binary).
 -- The non-ambiguity is further enforced by the presence of
 -- the inverse conversion.
 -- In the integer case there is no way to read it
--- from a textual form without a possibility of failing.
--- So that is enough to prove that it's not sufficient.
+-- from a textual form without a possibility of failing
+-- (e.g., when the input string cannot be parsed as a integer).
 --
 -- If you're looking for such conversion classes,
 -- this library is not a place for them,
 -- since there can be infinite amount of flavours of
--- conversions. IOW, they are context-dependent and as such
+-- conversions. They are context-dependent and as such
 -- should be defined as part of the domain.
 class IsomorphicToTextBuilder a where
   toTextBuilder :: a -> TextBuilder
