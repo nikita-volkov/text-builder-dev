@@ -110,7 +110,7 @@ import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 -- the inverse conversion.
 -- In the integer case there is no way to read it
 -- from a textual form without a possibility of failing
--- (e.g., when the input string cannot be parsed as a integer).
+-- (e.g., when the input string cannot be parsed as an integer).
 --
 -- If you're looking for such conversion classes,
 -- this library is not a place for them,
