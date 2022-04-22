@@ -87,6 +87,8 @@ import qualified TextBuilderDev.UTF8 as D
 #else
 import qualified TextBuilderDev.UTF16 as D
 #endif
+import qualified Data.Text.Lazy as TextLazy
+import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 
 -- *
 
@@ -129,6 +131,14 @@ instance IsomorphicToTextBuilder Text where
 instance IsomorphicToTextBuilder String where
   toTextBuilder = fromString
   fromTextBuilder = Text.unpack . buildText
+
+instance IsomorphicToTextBuilder TextLazy.Text where
+  toTextBuilder = text . TextLazy.toStrict
+  fromTextBuilder = TextLazy.fromStrict . buildText
+
+instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
+  toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
+  fromTextBuilder = TextLazyBuilder.fromText . buildText
 
 -- *
 
