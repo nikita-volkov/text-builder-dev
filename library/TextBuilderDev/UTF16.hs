@@ -52,7 +52,7 @@ utf8CodeUnits4 byte1 byte2 byte3 byte4 case1 case2 =
   unicodeCodePoint unicode case1 case2
   where
     unicode =
-      shiftL (fromIntegral byte1 - 0xE0) 18
+      shiftL (fromIntegral byte1 - 0xF0) 18
         + shiftL (fromIntegral byte2 - 0x80) 12
         + shiftL (fromIntegral byte3 - 0x80) 6
         + fromIntegral byte4 - 0x80
