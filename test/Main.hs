@@ -2,7 +2,7 @@ module Main where
 
 import qualified Data.ByteString as ByteString
 import qualified Data.Char as Char
-import qualified Data.Text as A
+import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import Test.QuickCheck.Instances
 import Test.Tasty
@@ -23,11 +23,11 @@ main =
                   === Text.encodeUtf8 (B.buildText (foldMap B.asciiByteString chunks)),
         testProperty "Intercalation has the same effect as in Text" $
           \separator texts ->
-            A.intercalate separator texts
+            Text.intercalate separator texts
               === B.buildText (B.intercalate (B.text separator) (fmap B.text texts)),
         testProperty "Packing a list of chars is isomorphic to appending a list of builders" $
           \chars ->
-            A.pack chars
+            Text.pack chars
               === B.buildText (foldMap B.char chars),
         testProperty "Concatting a list of texts is isomorphic to fold-mapping with builders" $
           \texts ->
@@ -39,7 +39,7 @@ main =
               === B.buildText (mconcat (map B.text texts)),
         testProperty "Concatting a list of trimmed texts is isomorphic to concatting a list of builders" $
           \texts ->
-            let trimmedTexts = fmap (A.drop 3) texts
+            let trimmedTexts = fmap (Text.drop 3) texts
              in mconcat trimmedTexts
                   === B.buildText (mconcat (map B.text trimmedTexts)),
         testProperty "Decimal" $ \(x :: Integer) ->
@@ -48,10 +48,10 @@ main =
           x >= 0
             ==> (fromString . showHex x) "" === (B.buildText . B.hexadecimal) x,
         testProperty "TextBuilderDev.null is isomorphic to Text.null" $ \(text :: Text) ->
-          B.null (B.toTextBuilder text) === A.null text,
+          B.null (B.toTextBuilder text) === Text.null text,
         testProperty "(TextBuilderDev.unicodeCodePoint <>) is isomorphic to Text.cons" $
           withMaxSuccess bigTest $ \(text :: Text) (c :: Char) ->
-            B.buildText (B.unicodeCodePoint (Char.ord c) <> B.text text) === A.cons c text,
+            B.buildText (B.unicodeCodePoint (Char.ord c) <> B.text text) === Text.cons c text,
         testProperty "(TextBuilderDev.utf8CodeUnitsN <>) is isomorphic to Text.cons" $
           withMaxSuccess bigTest $ \(text :: Text) (c :: Char) ->
             let cp = Char.ord c
@@ -62,9 +62,9 @@ main =
                   | otherwise = B.utf8CodeUnits4 (cuAt 0) (cuAt 1) (cuAt 2) (cuAt 3)
                   where
                     -- Use Data.Text.Encoding for comparison
-                    codeUnits = Text.encodeUtf8 $ A.singleton c
+                    codeUnits = Text.encodeUtf8 $ Text.singleton c
                     cuAt = (codeUnits `ByteString.index`)
-             in B.buildText (cuBuilder <> B.text text) === A.cons c text,
+             in B.buildText (cuBuilder <> B.text text) === Text.cons c text,
         testProperty "(TextBuilderDev.utf16CodeUnitsN <>) is isomorphic to Text.cons" $
           withMaxSuccess bigTest $ \(text :: Text) (c :: Char) ->
             let cp = Char.ord c
@@ -73,11 +73,11 @@ main =
                   | otherwise = B.utf16CodeUnits2 (cuAt 0) (cuAt 1)
                   where
                     -- Use Data.Text.Encoding for comparison
-                    codeUnits = Text.encodeUtf16LE $ A.singleton c
+                    codeUnits = Text.encodeUtf16LE $ Text.singleton c
                     cuAt i =
                       (fromIntegral $ codeUnits `ByteString.index` (2 * i))
                         .|. ((fromIntegral $ codeUnits `ByteString.index` (2 * i + 1)) `shiftL` 8)
-             in B.buildText (cuBuilder <> B.text text) === A.cons c text,
+             in B.buildText (cuBuilder <> B.text text) === Text.cons c text,
         testCase "Separated thousands" $ do
           assertEqual "" "0" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 0))
           assertEqual "" "123" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 123))
