@@ -1,12 +1,13 @@
 module Main where
 
 import qualified Data.ByteString as ByteString
-import qualified Data.Text as A
+import qualified Data.Char as Char
+import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import Test.QuickCheck.Instances
 import Test.Tasty
 import Test.Tasty.HUnit
-import Test.Tasty.QuickCheck
+import Test.Tasty.QuickCheck hiding ((.&.))
 import qualified TextBuilderDev as B
 import Prelude hiding (choose)
 
@@ -22,11 +23,11 @@ main =
                   === Text.encodeUtf8 (B.buildText (foldMap B.asciiByteString chunks)),
         testProperty "Intercalation has the same effect as in Text" $
           \separator texts ->
-            A.intercalate separator texts
+            Text.intercalate separator texts
               === B.buildText (B.intercalate (B.text separator) (fmap B.text texts)),
         testProperty "Packing a list of chars is isomorphic to appending a list of builders" $
           \chars ->
-            A.pack chars
+            Text.pack chars
               === B.buildText (foldMap B.char chars),
         testProperty "Concatting a list of texts is isomorphic to fold-mapping with builders" $
           \texts ->
@@ -38,7 +39,7 @@ main =
               === B.buildText (mconcat (map B.text texts)),
         testProperty "Concatting a list of trimmed texts is isomorphic to concatting a list of builders" $
           \texts ->
-            let trimmedTexts = fmap (A.drop 3) texts
+            let trimmedTexts = fmap (Text.drop 3) texts
              in mconcat trimmedTexts
                   === B.buildText (mconcat (map B.text trimmedTexts)),
         testProperty "Decimal" $ \(x :: Integer) ->
@@ -46,6 +47,50 @@ main =
         testProperty "Hexadecimal vs std show" $ \(x :: Integer) ->
           x >= 0
             ==> (fromString . showHex x) "" === (B.buildText . B.hexadecimal) x,
+        testProperty "TextBuilderDev.null is isomorphic to Text.null" $ \(text :: Text) ->
+          B.null (B.toTextBuilder text) === Text.null text,
+        testProperty "(TextBuilderDev.unicodeCodePoint <>) is isomorphic to Text.cons" $
+          withMaxSuccess bigTest $ \(text :: Text) (c :: Char) ->
+            B.buildText (B.unicodeCodePoint (Char.ord c) <> B.text text) === Text.cons c text,
+        testProperty "(TextBuilderDev.utf8CodeUnitsN <>) is isomorphic to Text.cons" $
+          withMaxSuccess bigTest $ \(text :: Text) (c :: Char) ->
+            let cp = Char.ord c
+                cuBuilder
+                  | cp < 0x80 = B.utf8CodeUnits1 (cuAt 0)
+                  | cp < 0x800 = B.utf8CodeUnits2 (cuAt 0) (cuAt 1)
+                  | cp < 0x10000 = B.utf8CodeUnits3 (cuAt 0) (cuAt 1) (cuAt 2)
+                  | otherwise = B.utf8CodeUnits4 (cuAt 0) (cuAt 1) (cuAt 2) (cuAt 3)
+                  where
+                    -- Use Data.Text.Encoding for comparison
+                    codeUnits = Text.encodeUtf8 $ Text.singleton c
+                    cuAt = (codeUnits `ByteString.index`)
+             in B.buildText (cuBuilder <> B.text text) === Text.cons c text,
+        testProperty "TextBuilderDev.utf8CodeUnitsN is isomorphic to Text.singleton" $
+          withMaxSuccess bigTest $ \(c :: Char) ->
+            let text = Text.singleton c
+                codeUnits = Text.encodeUtf8 text
+                cp = Char.ord c
+                cuBuilder
+                  | cp < 0x80 = B.utf8CodeUnits1 (cuAt 0)
+                  | cp < 0x800 = B.utf8CodeUnits2 (cuAt 0) (cuAt 1)
+                  | cp < 0x10000 = B.utf8CodeUnits3 (cuAt 0) (cuAt 1) (cuAt 2)
+                  | otherwise = B.utf8CodeUnits4 (cuAt 0) (cuAt 1) (cuAt 2) (cuAt 3)
+                  where
+                    cuAt = ByteString.index codeUnits
+             in B.buildText cuBuilder === text,
+        testProperty "(TextBuilderDev.utf16CodeUnitsN <>) is isomorphic to Text.cons" $
+          withMaxSuccess bigTest $ \(text :: Text) (c :: Char) ->
+            let cp = Char.ord c
+                cuBuilder
+                  | cp < 0x10000 = B.utf16CodeUnits1 (cuAt 0)
+                  | otherwise = B.utf16CodeUnits2 (cuAt 0) (cuAt 1)
+                  where
+                    -- Use Data.Text.Encoding for comparison
+                    codeUnits = Text.encodeUtf16LE $ Text.singleton c
+                    cuAt i =
+                      (fromIntegral $ codeUnits `ByteString.index` (2 * i))
+                        .|. ((fromIntegral $ codeUnits `ByteString.index` (2 * i + 1)) `shiftL` 8)
+             in B.buildText (cuBuilder <> B.text text) === Text.cons c text,
         testCase "Separated thousands" $ do
           assertEqual "" "0" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 0))
           assertEqual "" "123" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 123))
@@ -91,3 +136,5 @@ main =
         testCase "doublePercent" $ do
           assertEqual "" "90.4%" (B.buildText (B.doublePercent 1 0.904))
       ]
+  where
+    bigTest = 10000
