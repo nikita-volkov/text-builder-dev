@@ -49,6 +49,8 @@ test-suite test
   type: exitcode-stdio-1.0
   hs-source-dirs: test
   main-is: Main.hs
+  other-modules:
+    TextBuilderDev.TastyExtras
   build-depends:
     QuickCheck >=2.13 && <3,
     quickcheck-instances >=0.3.22 && <0.4,

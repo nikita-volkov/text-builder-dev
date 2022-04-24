@@ -4,11 +4,14 @@ import qualified Data.ByteString as ByteString
 import qualified Data.Char as Char
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
+import qualified Data.Text.Lazy as TextLazy
+import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import Test.QuickCheck.Instances
 import Test.Tasty
 import Test.Tasty.HUnit
 import Test.Tasty.QuickCheck hiding ((.&.))
 import qualified TextBuilderDev as B
+import qualified TextBuilderDev.TastyExtras as Extras
 import Prelude hiding (choose)
 
 main =
@@ -134,7 +137,13 @@ main =
           assertEqual "" "10.0000" (B.buildText (B.fixedDouble 4 10))
           assertEqual "" "0.9000" (B.buildText (B.fixedDouble 4 0.9)),
         testCase "doublePercent" $ do
-          assertEqual "" "90.4%" (B.buildText (B.doublePercent 1 0.904))
+          assertEqual "" "90.4%" (B.buildText (B.doublePercent 1 0.904)),
+        testGroup "IsomorphicToTextBuilder" $
+          [ Extras.isomorphismLaws "Text" $ arbitrary @Text,
+            Extras.isomorphismLaws "Lazy Text" $ arbitrary @TextLazy.Text,
+            Extras.isomorphismLaws "Lazy Text Builder" $ arbitrary @TextLazyBuilder.Builder,
+            Extras.isomorphismLaws "String" $ arbitrary @String
+          ]
       ]
   where
     bigTest = 10000
