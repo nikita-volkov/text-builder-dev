@@ -23,6 +23,7 @@ module TextBuilderDev
 
     -- ** Textual
     text,
+    lazyText,
     string,
     asciiByteString,
     hexData,
@@ -134,7 +135,7 @@ instance IsomorphicToTextBuilder String where
   fromTextBuilder = Text.unpack . buildText
 
 instance IsomorphicToTextBuilder TextLazy.Text where
-  toTextBuilder = text . TextLazy.toStrict
+  toTextBuilder = lazyText
   fromTextBuilder = TextLazy.fromStrict . buildText
 
 instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
@@ -363,6 +364,11 @@ text text@(C.Text array offset length) =
 #else
         B.copyI builderArray builderOffset array offset (builderOffset + length)
 #endif
+
+{-# INLINE lazyText #-}
+lazyText :: TextLazy.Text -> TextBuilder
+lazyText =
+  TextLazy.foldrChunks (mappend . text) mempty
 
 -- | String
 {-# INLINE string #-}
