@@ -95,15 +95,12 @@ import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 
 -- |
 -- Evidence that there exists an unambiguous way to convert
--- a type to and from 'TextBuilder'.
+-- a type to and from "TextBuilder".
 --
 -- Unlike conversion classes from other libs this class is lawful.
--- These laws:
+-- The law is:
 --
--- - Converting from builder into a value of any isomorphic type should produce the 
--- same builder.
--- - Converting a value into builder and extracting the value back from it
--- should produce the same value.
+-- @fromTextBuilder . toTextBuilder = id@
 --
 -- This class does not provide implicit rendering,
 -- such as from integer to its decimal representation.
