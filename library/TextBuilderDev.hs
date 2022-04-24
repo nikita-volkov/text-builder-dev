@@ -177,6 +177,9 @@ instance IsString TextBuilder where
 instance Show TextBuilder where
   show = Text.unpack . buildText
 
+instance Eq TextBuilder where
+  (==) = on (==) buildText
+
 -- * Accessors
 
 -- | Get the amount of characters
