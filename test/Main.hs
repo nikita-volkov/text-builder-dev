@@ -139,10 +139,10 @@ main =
         testCase "doublePercent" $ do
           assertEqual "" "90.4%" (B.buildText (B.doublePercent 1 0.904)),
         testGroup "IsomorphicToTextBuilder" $
-          [ Extras.isomorphismLaws "Text" $ arbitrary @Text,
-            Extras.isomorphismLaws "Lazy Text" $ arbitrary @TextLazy.Text,
-            Extras.isomorphismLaws "Lazy Text Builder" $ arbitrary @TextLazyBuilder.Builder,
-            Extras.isomorphismLaws "String" $ arbitrary @String
+          [ Extras.isomorphismLaws "Text" $ Proxy @Text,
+            Extras.isomorphismLaws "Lazy Text" $ Proxy @TextLazy.Text,
+            Extras.isomorphismLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder,
+            Extras.isomorphismLaws "String" $ Proxy @String
           ]
       ]
   where

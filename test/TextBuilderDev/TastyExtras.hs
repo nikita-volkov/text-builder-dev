@@ -15,12 +15,25 @@ instance Arbitrary TextLazyBuilder.Builder where
   arbitrary =
     TextLazyBuilder.fromLazyText <$> arbitrary
 
+instance Arbitrary B.TextBuilder where
+  arbitrary =
+    B.lazyText <$> arbitrary
+
 -- *
 
-isomorphismLaws :: (B.IsomorphicToTextBuilder a, Eq a, Show a) => String -> Gen a -> TestTree
-isomorphismLaws subject gen =
+isomorphismLaws ::
+  (B.IsomorphicToTextBuilder a, Eq a, Show a, Arbitrary a) =>
+  String ->
+  Proxy a ->
+  TestTree
+isomorphismLaws subject proxy =
   testGroup subject $
     [ testProperty "fromTextBuilder . toTextBuilder == id" $
-        forAll gen $
-          (===) <$> B.fromTextBuilder . B.toTextBuilder <*> id
+        (===)
+          <$> B.fromTextBuilder . B.toTextBuilder
+          <*> flip asProxyTypeOf proxy,
+      testProperty "toTextBuilder . fromTextBuilder == id" $
+        (===)
+          <$> B.toTextBuilder . flip asProxyTypeOf proxy . B.fromTextBuilder
+          <*> id
     ]
