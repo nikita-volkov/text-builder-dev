@@ -100,7 +100,7 @@ import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 -- Unlike conversion classes from other libs this class is lawful.
 -- The law is:
 --
--- @fromTextBuilder . toTextBuilder = id@
+-- @'fromTextBuilder' . 'toTextBuilder' = 'id'@
 --
 -- This class does not provide implicit rendering,
 -- such as from integer to its decimal representation.
