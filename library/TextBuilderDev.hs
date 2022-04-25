@@ -368,6 +368,7 @@ text text@(C.Text array offset length) =
         B.copyI builderArray builderOffset array offset (builderOffset + length)
 #endif
 
+-- | Lazy text
 {-# INLINE lazyText #-}
 lazyText :: TextLazy.Text -> TextBuilder
 lazyText =
