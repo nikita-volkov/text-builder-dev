@@ -28,6 +28,10 @@ main =
           \separator texts ->
             Text.intercalate separator texts
               === B.buildText (B.intercalate (B.text separator) (fmap B.text texts)),
+        testProperty "intercalateMap sep mapper == intercalate sep . fmap mapper" $
+          \separator ints ->
+            Text.intercalate separator (fmap (fromString . show @Int) ints)
+              === B.buildText (B.intercalateMap (B.text separator) B.decimal ints),
         testProperty "Packing a list of chars is isomorphic to appending a list of builders" $
           \chars ->
             Text.pack chars

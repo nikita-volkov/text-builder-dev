@@ -18,6 +18,7 @@ module TextBuilderDev
     -- ** Builder manipulators
     force,
     intercalate,
+    intercalateMap,
     padFromLeft,
     padFromRight,
 
@@ -492,7 +493,7 @@ hexadecimalDigit n =
 
 -- | Intercalate builders
 {-# INLINE intercalate #-}
-intercalate :: Foldable foldable => TextBuilder -> foldable TextBuilder -> TextBuilder
+intercalate :: Foldable f => TextBuilder -> f TextBuilder -> TextBuilder
 intercalate separator = extract . foldl' step init
   where
     init = Product2 False mempty
@@ -502,6 +503,18 @@ intercalate separator = extract . foldl' step init
           then builder <> separator <> element
           else element
     extract (Product2 _ builder) = builder
+
+-- | Intercalate projecting values to builder
+{-# INLINE intercalateMap #-}
+intercalateMap :: Foldable f => TextBuilder -> (a -> TextBuilder) -> f a -> TextBuilder
+intercalateMap separator mapper = extract . foldl' step init
+  where
+    init = Nothing
+    step acc element =
+      Just $ case acc of
+        Nothing -> mapper element
+        Just acc -> acc <> separator <> mapper element
+    extract = fromMaybe mempty
 
 -- | Pad a builder from the left side to the specified length with the specified character
 {-# INLINEABLE padFromLeft #-}
