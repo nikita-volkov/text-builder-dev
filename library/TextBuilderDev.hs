@@ -1,5 +1,5 @@
 module TextBuilderDev
-  ( -- *
+  ( -- * --
     TextBuilder,
 
     -- * Accessors
@@ -93,7 +93,7 @@ import qualified TextBuilderDev.UTF16 as D
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 
--- *
+-- * --
 
 -- |
 -- Evidence that there exists an unambiguous way to convert
@@ -143,7 +143,7 @@ instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
   toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
   fromTextBuilder = TextLazyBuilder.fromText . buildText
 
--- *
+-- * --
 
 -- |
 -- Specification of how to efficiently construct strict 'Text'.

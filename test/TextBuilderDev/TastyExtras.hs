@@ -9,7 +9,7 @@ import Test.Tasty.QuickCheck
 import qualified TextBuilderDev as B
 import Prelude hiding (choose)
 
--- *
+-- * --
 
 instance Arbitrary TextLazyBuilder.Builder where
   arbitrary =
@@ -19,7 +19,7 @@ instance Arbitrary B.TextBuilder where
   arbitrary =
     B.lazyText <$> arbitrary
 
--- *
+-- * --
 
 isomorphismLaws ::
   (B.IsomorphicToTextBuilder a, Eq a, Show a, Arbitrary a) =>
