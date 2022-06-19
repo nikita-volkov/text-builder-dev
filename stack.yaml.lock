@@ -3,10 +3,21 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    name: isomorphism-class
+    pantry-tree:
+      sha256: e15893487ac37aa96b0c77a71660c9e3c402459bbb6bf1f9e4f60615f0fb7496
+      size: 692
+    commit: e66a02cef13eb3801e202667de4279cb3a591be0
+    git: https://github.com/nikita-volkov/isomorphism-class
+    version: '0.1'
+  original:
+    commit: e66a02cef13eb3801e202667de4279cb3a591be0
+    git: https://github.com/nikita-volkov/isomorphism-class
 snapshots:
 - completed:
-    sha256: 5955badf83941fb44f6ee27d37111f95a8c5ec455a5c4dcfc8ef11e436a0612b
-    size: 590825
-    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/5/27.yaml
-  original: nightly-2022-05-27
+    sha256: 869e23c4f7367895ae63b129255b70bc8b4b965229aa258f6c50141c6b10ae76
+    size: 607265
+    url: https://raw.githubusercontent.com/commercialhaskell/stackage-snapshots/master/nightly/2022/6/8.yaml
+  original: nightly-2022-06-08
