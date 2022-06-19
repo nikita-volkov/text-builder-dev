@@ -83,6 +83,8 @@ import qualified Data.Text.Encoding as E
 import qualified Data.Text.Encoding.Error as E
 import qualified Data.Text.IO as Text
 import qualified Data.Text.Internal as C
+import qualified Data.Text.Lazy as TextLazy
+import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified DeferredFolds.Unfoldr as Unfoldr
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 #if MIN_VERSION_text(2,0,0)
@@ -90,8 +92,6 @@ import qualified TextBuilderDev.UTF8 as D
 #else
 import qualified TextBuilderDev.UTF16 as D
 #endif
-import qualified Data.Text.Lazy as TextLazy
-import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 
 -- * --
 
