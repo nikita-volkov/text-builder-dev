@@ -1,4 +1,3 @@
 resolver: nightly-2022-06-08
 extra-deps:
-  - git: https://github.com/nikita-volkov/isomorphism-class
-    commit: e66a02cef13eb3801e202667de4279cb3a591be0
+  - isomorphism-class-0.1.0.1
