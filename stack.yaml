@@ -1,1 +1,3 @@
-resolver: nightly-2022-05-27
+resolver: nightly-2022-06-08
+extra-deps:
+  - isomorphism-class-0.1.0.1

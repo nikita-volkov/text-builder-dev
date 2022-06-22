@@ -181,6 +181,33 @@ instance Show TextBuilder where
 instance Eq TextBuilder where
   (==) = on (==) buildText
 
+instance IsomorphicTo TextBuilder TextBuilder where
+  to = id
+
+instance IsomorphicTo TextBuilder String where
+  to = TextBuilderDev.string
+
+instance IsomorphicTo TextBuilder Text where
+  to = TextBuilderDev.text
+
+instance IsomorphicTo TextBuilder TextLazy.Text where
+  to = TextBuilderDev.lazyText
+
+instance IsomorphicTo TextBuilder TextLazyBuilder.Builder where
+  to = to . to @TextLazy.Text
+
+instance IsomorphicTo String TextBuilder where
+  to = to . to @Text
+
+instance IsomorphicTo Text TextBuilder where
+  to = TextBuilderDev.buildText
+
+instance IsomorphicTo TextLazy.Text TextBuilder where
+  to = to . to @Text
+
+instance IsomorphicTo TextLazyBuilder.Builder TextBuilder where
+  to = to . to @Text
+
 -- * Accessors
 
 -- | Get the amount of characters
