@@ -1,6 +1,5 @@
 module TextBuilderDev
-  ( -- * --
-    TextBuilder,
+  ( TextBuilder,
 
     -- * Accessors
     buildText,
