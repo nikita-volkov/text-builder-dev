@@ -85,9 +85,9 @@ import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified DeferredFolds.Unfoldr as Unfoldr
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 #if MIN_VERSION_text(2,0,0)
-import qualified TextBuilderDev.UTF8 as Utf8
+import qualified TextBuilderDev.Utf8View as Utf8View
 #else
-import qualified TextBuilderDev.UTF16 as Utf16
+import qualified TextBuilderDev.Utf16View as Utf16View
 #endif
 
 -- * --
@@ -270,7 +270,7 @@ char x =
 {-# INLINE unicodeCodePoint #-}
 unicodeCodePoint :: Int -> TextBuilder
 unicodeCodePoint x =
-  Utf8.unicodeCodePoint x utf8CodeUnits1 utf8CodeUnits2 utf8CodeUnits3 utf8CodeUnits4
+  Utf8View.unicodeCodePoint x utf8CodeUnits1 utf8CodeUnits2 utf8CodeUnits3 utf8CodeUnits4
 
 {-# INLINEABLE utf8CodeUnits1 #-}
 utf8CodeUnits1 :: Word8 -> TextBuilder
@@ -317,7 +317,7 @@ utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
 {-# INLINE unicodeCodePoint #-}
 unicodeCodePoint :: Int -> TextBuilder
 unicodeCodePoint x =
-  Utf16.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
+  Utf16View.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
 
 -- | Single code-unit UTF-16 character
 {-# INLINEABLE utf16CodeUnits1 #-}
@@ -343,25 +343,25 @@ utf16CodeUnits2 unit1 unit2 =
 {-# INLINE utf8CodeUnits1 #-}
 utf8CodeUnits1 :: Word8 -> TextBuilder
 utf8CodeUnits1 unit1 =
-  Utf16.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
+  Utf16View.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
 
 -- | Double code-unit UTF-8 character
 {-# INLINE utf8CodeUnits2 #-}
 utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilder
 utf8CodeUnits2 unit1 unit2 =
-  Utf16.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
+  Utf16View.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
 
 -- | Triple code-unit UTF-8 character
 {-# INLINE utf8CodeUnits3 #-}
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits3 unit1 unit2 unit3 =
-  Utf16.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
+  Utf16View.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
 
 -- | UTF-8 character out of 4 code units
 {-# INLINE utf8CodeUnits4 #-}
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits4 unit1 unit2 unit3 unit4 =
-  Utf16.utf8CodeUnits4 unit1 unit2 unit3 unit4 utf16CodeUnits1 utf16CodeUnits2
+  Utf16View.utf8CodeUnits4 unit1 unit2 unit3 unit4 utf16CodeUnits1 utf16CodeUnits2
 
 #endif
 

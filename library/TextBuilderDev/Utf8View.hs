@@ -1,10 +1,10 @@
-module TextBuilderDev.UTF8 where
+module TextBuilderDev.Utf8View where
 
 import TextBuilderDev.Prelude
 
 -- |
 -- A matching function, which chooses the continuation to run.
-type UTF8View =
+type Utf8View =
   forall x.
   (Word8 -> x) ->
   (Word8 -> Word8 -> x) ->
@@ -13,7 +13,7 @@ type UTF8View =
   x
 
 {-# INLINE unicodeCodePoint #-}
-unicodeCodePoint :: Int -> UTF8View
+unicodeCodePoint :: Int -> Utf8View
 unicodeCodePoint x case1 case2 case3 case4
   | x < 0x80 = case1 (fromIntegral x)
   | x < 0x800 =
