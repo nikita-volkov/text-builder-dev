@@ -77,19 +77,17 @@ where
 import qualified Data.ByteString as ByteString
 import qualified Data.List.Split as Split
 import qualified Data.Text as Text
-import qualified Data.Text.Array as B
-import qualified Data.Text.Encoding as E
-import qualified Data.Text.Encoding.Error as E
+import qualified Data.Text.Array as TextArray
 import qualified Data.Text.IO as Text
-import qualified Data.Text.Internal as C
+import qualified Data.Text.Internal as TextInternal
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified DeferredFolds.Unfoldr as Unfoldr
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 #if MIN_VERSION_text(2,0,0)
-import qualified TextBuilderDev.UTF8 as D
+import qualified TextBuilderDev.UTF8 as Utf8
 #else
-import qualified TextBuilderDev.UTF16 as D
+import qualified TextBuilderDev.UTF16 as Utf16
 #endif
 
 -- * --
@@ -151,7 +149,7 @@ data TextBuilder
   = TextBuilder !Action !Int !Int
 
 newtype Action
-  = Action (forall s. B.MArray s -> Int -> ST s ())
+  = Action (forall s. TextArray.MArray s -> Int -> ST s ())
 
 instance Semigroup TextBuilder where
   (<>) (TextBuilder (Action action1) arraySize1 charsAmount1) (TextBuilder (Action action2) arraySize2 charsAmount2) =
@@ -222,13 +220,13 @@ null = (== 0) . length
 -- | Execute a builder producing a strict text
 buildText :: TextBuilder -> Text
 buildText (TextBuilder (Action action) arraySize _) =
-  C.text array 0 arraySize
+  TextInternal.text array 0 arraySize
   where
     array =
       runST $ do
-        array <- B.new arraySize
+        array <- TextArray.new arraySize
         action array 0
-        B.unsafeFreeze array
+        TextArray.unsafeFreeze array
 
 -- ** Output IO
 
@@ -272,36 +270,36 @@ char x =
 {-# INLINE unicodeCodePoint #-}
 unicodeCodePoint :: Int -> TextBuilder
 unicodeCodePoint x =
-  D.unicodeCodePoint x utf8CodeUnits1 utf8CodeUnits2 utf8CodeUnits3 utf8CodeUnits4
+  Utf8.unicodeCodePoint x utf8CodeUnits1 utf8CodeUnits2 utf8CodeUnits3 utf8CodeUnits4
 
 {-# INLINEABLE utf8CodeUnits1 #-}
 utf8CodeUnits1 :: Word8 -> TextBuilder
 utf8CodeUnits1 unit1 = TextBuilder action 1 1
-  where action = Action $ \array offset -> B.unsafeWrite array offset unit1
+  where action = Action $ \array offset -> TextArray.unsafeWrite array offset unit1
 
 {-# INLINEABLE utf8CodeUnits2 #-}
 utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilder
 utf8CodeUnits2 unit1 unit2 = TextBuilder action 2 1
   where action = Action $ \array offset -> do
-          B.unsafeWrite array (offset + 0) unit1
-          B.unsafeWrite array (offset + 1) unit2
+          TextArray.unsafeWrite array (offset + 0) unit1
+          TextArray.unsafeWrite array (offset + 1) unit2
 
 {-# INLINEABLE utf8CodeUnits3 #-}
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits3 unit1 unit2 unit3 = TextBuilder action 3 1
   where action = Action $ \array offset -> do
-          B.unsafeWrite array (offset + 0) unit1
-          B.unsafeWrite array (offset + 1) unit2
-          B.unsafeWrite array (offset + 2) unit3
+          TextArray.unsafeWrite array (offset + 0) unit1
+          TextArray.unsafeWrite array (offset + 1) unit2
+          TextArray.unsafeWrite array (offset + 2) unit3
 
 {-# INLINEABLE utf8CodeUnits4 #-}
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits4 unit1 unit2 unit3 unit4 = TextBuilder action 4 1
   where action = Action $ \array offset -> do
-          B.unsafeWrite array (offset + 0) unit1
-          B.unsafeWrite array (offset + 1) unit2
-          B.unsafeWrite array (offset + 2) unit3
-          B.unsafeWrite array (offset + 3) unit4
+          TextArray.unsafeWrite array (offset + 0) unit1
+          TextArray.unsafeWrite array (offset + 1) unit2
+          TextArray.unsafeWrite array (offset + 2) unit3
+          TextArray.unsafeWrite array (offset + 3) unit4
 
 {-# INLINE utf16CodeUnits1 #-}
 utf16CodeUnits1 :: Word16 -> TextBuilder
@@ -319,7 +317,7 @@ utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
 {-# INLINE unicodeCodePoint #-}
 unicodeCodePoint :: Int -> TextBuilder
 unicodeCodePoint x =
-  D.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
+  Utf16.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
 
 -- | Single code-unit UTF-16 character
 {-# INLINEABLE utf16CodeUnits1 #-}
@@ -328,7 +326,7 @@ utf16CodeUnits1 unit =
   TextBuilder action 1 1
   where
     action =
-      Action $ \array offset -> B.unsafeWrite array offset unit
+      Action $ \array offset -> TextArray.unsafeWrite array offset unit
 
 -- | Double code-unit UTF-16 character
 {-# INLINEABLE utf16CodeUnits2 #-}
@@ -338,32 +336,32 @@ utf16CodeUnits2 unit1 unit2 =
   where
     action =
       Action $ \array offset -> do
-        B.unsafeWrite array offset unit1
-        B.unsafeWrite array (succ offset) unit2
+        TextArray.unsafeWrite array offset unit1
+        TextArray.unsafeWrite array (succ offset) unit2
 
 -- | Single code-unit UTF-8 character
 {-# INLINE utf8CodeUnits1 #-}
 utf8CodeUnits1 :: Word8 -> TextBuilder
 utf8CodeUnits1 unit1 =
-  D.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
+  Utf16.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
 
 -- | Double code-unit UTF-8 character
 {-# INLINE utf8CodeUnits2 #-}
 utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilder
 utf8CodeUnits2 unit1 unit2 =
-  D.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
+  Utf16.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
 
 -- | Triple code-unit UTF-8 character
 {-# INLINE utf8CodeUnits3 #-}
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits3 unit1 unit2 unit3 =
-  D.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
+  Utf16.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
 
 -- | UTF-8 character out of 4 code units
 {-# INLINE utf8CodeUnits4 #-}
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits4 unit1 unit2 unit3 unit4 =
-  D.utf8CodeUnits4 unit1 unit2 unit3 unit4 utf16CodeUnits1 utf16CodeUnits2
+  Utf16.utf8CodeUnits4 unit1 unit2 unit3 unit4 utf16CodeUnits1 utf16CodeUnits2
 
 #endif
 
@@ -377,22 +375,22 @@ asciiByteString byteString =
     action =
       Action $ \array ->
         let step byte next index = do
-              B.unsafeWrite array index (fromIntegral byte)
+              TextArray.unsafeWrite array index (fromIntegral byte)
               next (succ index)
          in ByteString.foldr step (const (return ())) byteString
 
 -- | Strict text
 {-# INLINEABLE text #-}
 text :: Text -> TextBuilder
-text text@(C.Text array offset length) =
+text text@(TextInternal.Text array offset length) =
   TextBuilder action length (Text.length text)
   where
     action =
       Action $ \builderArray builderOffset -> do
 #if MIN_VERSION_text(2,0,0)
-        B.copyI length builderArray builderOffset array offset
+        TextArray.copyI length builderArray builderOffset array offset
 #else
-        B.copyI builderArray builderOffset array offset (builderOffset + length)
+        TextArray.copyI builderArray builderOffset array offset (builderOffset + length)
 #endif
 
 -- | Lazy text
