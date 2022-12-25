@@ -6,6 +6,7 @@ module TextBuilderDev.Allocator
     Allocator,
     force,
     text,
+    asciiByteString,
     char,
     unicodeCodePoint,
     utf8CodeUnits1,
@@ -17,6 +18,7 @@ module TextBuilderDev.Allocator
   )
 where
 
+import qualified Data.ByteString as ByteString
 import qualified Data.Text as Text
 import qualified Data.Text.Array as TextArray
 import qualified Data.Text.IO as Text
@@ -102,6 +104,23 @@ text text@(TextInternal.Text array offset length) =
         TextArray.copyI builderArray builderOffset array offset builderOffsetAfter
         return builderOffsetAfter
 #endif
+
+-- | ASCII byte string.
+--
+-- It's your responsibility to ensure that the bytes are in proper range,
+-- otherwise the produced text will be broken.
+{-# INLINEABLE asciiByteString #-}
+asciiByteString :: ByteString -> Allocator
+asciiByteString byteString =
+  Allocator action length
+  where
+    length = ByteString.length byteString
+    action =
+      ArrayWriter $ \array ->
+        let step byte next index = do
+              TextArray.unsafeWrite array index (fromIntegral byte)
+              next (succ index)
+         in ByteString.foldr step return byteString
 
 -- | Unicode character.
 {-# INLINE char #-}
