@@ -1,4 +1,21 @@
-module TextBuilderDev.Allocator where
+module TextBuilderDev.Allocator
+  ( -- * Execution
+    allocate,
+
+    -- * Definition
+    Allocator,
+    force,
+    text,
+    char,
+    unicodeCodePoint,
+    utf8CodeUnits1,
+    utf8CodeUnits2,
+    utf8CodeUnits3,
+    utf8CodeUnits4,
+    utf16CodeUnits1,
+    utf16CodeUnits2,
+  )
+where
 
 import qualified Data.Text as Text
 import qualified Data.Text.Array as TextArray
@@ -54,6 +71,16 @@ instance Monoid Allocator where
   {-# INLINE mempty #-}
   mempty = Allocator mempty 0
 
+-- |
+-- Run the builder and pack the produced text into a new builder.
+--
+-- Useful to have around builders that you reuse,
+-- because a forced builder is much faster,
+-- since it's virtually a single call @memcopy@.
+{-# INLINE force #-}
+force :: Allocator -> Allocator
+force = text . allocate
+
 -- | Strict text.
 {-# INLINEABLE text #-}
 text :: Text -> Allocator
@@ -75,16 +102,6 @@ text text@(TextInternal.Text array offset length) =
         TextArray.copyI builderArray builderOffset array offset builderOffsetAfter
         return builderOffsetAfter
 #endif
-
--- |
--- Run the builder and pack the produced text into a new builder.
---
--- Useful to have around builders that you reuse,
--- because a forced builder is much faster,
--- since it's virtually a single call @memcopy@.
-{-# INLINE force #-}
-force :: Allocator -> Allocator
-force = text . allocate
 
 -- | Unicode character.
 {-# INLINE char #-}
