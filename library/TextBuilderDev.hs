@@ -149,25 +149,24 @@ data TextBuilder
   = TextBuilder !Action !Int !Int
 
 newtype Action
-  = Action (forall s. TextArray.MArray s -> Int -> ST s ())
+  = Action (forall s. TextArray.MArray s -> Int -> ST s Int)
 
 instance Semigroup TextBuilder where
-  (<>) (TextBuilder (Action action1) arraySize1 charsAmount1) (TextBuilder (Action action2) arraySize2 charsAmount2) =
-    TextBuilder action arraySize charsAmount
+  (<>) (TextBuilder (Action action1) estimatedArraySize1 textLength1) (TextBuilder (Action action2) estimatedArraySize2 textLength2) =
+    TextBuilder action estimatedArraySize textLength
     where
-      action =
-        Action $ \array offset -> do
-          action1 array offset
-          action2 array (offset + arraySize1)
-      arraySize =
-        arraySize1 + arraySize2
-      charsAmount =
-        charsAmount1 + charsAmount2
+      action = Action $ \array offset -> do
+        offsetAfter1 <- action1 array offset
+        action2 array offsetAfter1
+      estimatedArraySize =
+        estimatedArraySize1 + estimatedArraySize2
+      textLength =
+        textLength1 + textLength2
 
 instance Monoid TextBuilder where
   {-# INLINE mempty #-}
   mempty =
-    TextBuilder (Action (\_ _ -> return ())) 0 0
+    TextBuilder (Action (const return)) 0 0
 
 instance IsString TextBuilder where
   fromString = string
@@ -219,14 +218,12 @@ null = (== 0) . length
 
 -- | Execute a builder producing a strict text.
 buildText :: TextBuilder -> Text
-buildText (TextBuilder (Action action) arraySize _) =
-  TextInternal.text array 0 arraySize
-  where
-    array =
-      runST $ do
-        array <- TextArray.new arraySize
-        action array 0
-        TextArray.unsafeFreeze array
+buildText (TextBuilder (Action action) sizeBound _) =
+  runST $ do
+    array <- TextArray.new sizeBound
+    offsetAfter <- action array 0
+    frozenArray <- TextArray.unsafeFreeze array
+    return $ TextInternal.text frozenArray 0 offsetAfter
 
 -- ** Output IO
 
@@ -261,8 +258,7 @@ force = text . buildText
 -- | Unicode character.
 {-# INLINE char #-}
 char :: Char -> TextBuilder
-char x =
-  unicodeCodePoint (ord x)
+char = unicodeCodePoint . ord
 
 #if MIN_VERSION_text(2,0,0)
 
@@ -275,31 +271,40 @@ unicodeCodePoint x =
 {-# INLINEABLE utf8CodeUnits1 #-}
 utf8CodeUnits1 :: Word8 -> TextBuilder
 utf8CodeUnits1 unit1 = TextBuilder action 1 1
-  where action = Action $ \array offset -> TextArray.unsafeWrite array offset unit1
+  where
+    action = Action $ \array offset ->
+      TextArray.unsafeWrite array offset unit1
+        $> succ offset
 
 {-# INLINEABLE utf8CodeUnits2 #-}
 utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilder
 utf8CodeUnits2 unit1 unit2 = TextBuilder action 2 1
-  where action = Action $ \array offset -> do
-          TextArray.unsafeWrite array (offset + 0) unit1
-          TextArray.unsafeWrite array (offset + 1) unit2
+  where
+    action = Action $ \array offset -> do
+      TextArray.unsafeWrite array (offset + 0) unit1
+      TextArray.unsafeWrite array (offset + 1) unit2
+      return $ offset + 2
 
 {-# INLINEABLE utf8CodeUnits3 #-}
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits3 unit1 unit2 unit3 = TextBuilder action 3 1
-  where action = Action $ \array offset -> do
-          TextArray.unsafeWrite array (offset + 0) unit1
-          TextArray.unsafeWrite array (offset + 1) unit2
-          TextArray.unsafeWrite array (offset + 2) unit3
+  where
+    action = Action $ \array offset -> do
+      TextArray.unsafeWrite array (offset + 0) unit1
+      TextArray.unsafeWrite array (offset + 1) unit2
+      TextArray.unsafeWrite array (offset + 2) unit3
+      return $ offset + 3
 
 {-# INLINEABLE utf8CodeUnits4 #-}
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits4 unit1 unit2 unit3 unit4 = TextBuilder action 4 1
-  where action = Action $ \array offset -> do
-          TextArray.unsafeWrite array (offset + 0) unit1
-          TextArray.unsafeWrite array (offset + 1) unit2
-          TextArray.unsafeWrite array (offset + 2) unit3
-          TextArray.unsafeWrite array (offset + 3) unit4
+  where
+    action = Action $ \array offset -> do
+      TextArray.unsafeWrite array (offset + 0) unit1
+      TextArray.unsafeWrite array (offset + 1) unit2
+      TextArray.unsafeWrite array (offset + 2) unit3
+      TextArray.unsafeWrite array (offset + 3) unit4
+      return $ offset + 4
 
 {-# INLINE utf16CodeUnits1 #-}
 utf16CodeUnits1 :: Word16 -> TextBuilder
@@ -326,7 +331,9 @@ utf16CodeUnits1 unit =
   TextBuilder action 1 1
   where
     action =
-      Action $ \array offset -> TextArray.unsafeWrite array offset unit
+      Action $ \array offset ->
+        TextArray.unsafeWrite array offset unit
+          $> succ offset
 
 -- | Double code-unit UTF-16 character.
 {-# INLINEABLE utf16CodeUnits2 #-}
@@ -338,6 +345,7 @@ utf16CodeUnits2 unit1 unit2 =
       Action $ \array offset -> do
         TextArray.unsafeWrite array offset unit1
         TextArray.unsafeWrite array (succ offset) unit2
+        return $ offset + 2
 
 -- | Single code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits1 #-}
@@ -380,20 +388,27 @@ asciiByteString byteString =
         let step byte next index = do
               TextArray.unsafeWrite array index (fromIntegral byte)
               next (succ index)
-         in ByteString.foldr step (const (return ())) byteString
+         in ByteString.foldr step return byteString
 
 -- | Strict text.
 {-# INLINEABLE text #-}
 text :: Text -> TextBuilder
+#if MIN_VERSION_text(2,0,0)
 text text@(TextInternal.Text array offset length) =
   TextBuilder action length (Text.length text)
   where
     action =
       Action $ \builderArray builderOffset -> do
-#if MIN_VERSION_text(2,0,0)
         TextArray.copyI length builderArray builderOffset array offset
+        return $ builderOffset + length
 #else
+text text@(TextInternal.Text array offset length) =
+  TextBuilder action length (Text.length text)
+  where
+    action =
+      Action $ \builderArray builderOffset -> do
         TextArray.copyI builderArray builderOffset array offset (builderOffset + length)
+        return $ builderOffset + length
 #endif
 
 -- | Lazy text.
