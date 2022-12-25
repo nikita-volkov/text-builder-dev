@@ -11,8 +11,8 @@ jobs:
 
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
-      - uses: mrkkrp/ormolu-action@v4
+      - uses: actions/checkout@v3.2.0
+      - uses: mrkkrp/ormolu-action@v8
 
   build:
 
@@ -26,7 +26,7 @@ jobs:
 
     steps:
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3.2.0
 
       - name: Setup Haskell
         uses: haskell/actions/setup@v2
