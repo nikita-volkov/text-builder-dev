@@ -1,4 +1,4 @@
-module TextBuilderDev.Builder where
+module TextBuilderDev.Allocator where
 
 import qualified Data.Text as Text
 import qualified Data.Text.Array as TextArray
@@ -26,11 +26,11 @@ instance Monoid Action where
   {-# INLINE mempty #-}
   mempty = Action $ const $ return
 
--- * Builder
+-- * Allocator
 
 -- | Execute a builder producing a strict text.
-build :: Builder -> Text
-build (Builder (Action action) sizeBound) =
+allocate :: Allocator -> Text
+allocate (Allocator (Action action) sizeBound) =
   runST $ do
     array <- TextArray.new sizeBound
     offsetAfter <- action array 0
@@ -40,26 +40,26 @@ build (Builder (Action action) sizeBound) =
 -- |
 -- Specification of how to efficiently construct strict 'Text'.
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
-data Builder
-  = Builder !Action !Int
+data Allocator
+  = Allocator !Action !Int
 
-instance Semigroup Builder where
-  (<>) (Builder action1 estimatedArraySize1) (Builder action2 estimatedArraySize2) =
-    Builder action estimatedArraySize
+instance Semigroup Allocator where
+  (<>) (Allocator action1 estimatedArraySize1) (Allocator action2 estimatedArraySize2) =
+    Allocator action estimatedArraySize
     where
       action = action1 <> action2
       estimatedArraySize = estimatedArraySize1 + estimatedArraySize2
 
-instance Monoid Builder where
+instance Monoid Allocator where
   {-# INLINE mempty #-}
-  mempty = Builder mempty 0
+  mempty = Allocator mempty 0
 
 -- | Strict text.
 {-# INLINEABLE text #-}
-text :: Text -> Builder
+text :: Text -> Allocator
 #if MIN_VERSION_text(2,0,0)
 text text@(TextInternal.Text array offset length) =
-  Builder action length
+  Allocator action length
   where
     action =
       Action $ \builderArray builderOffset -> do
@@ -67,7 +67,7 @@ text text@(TextInternal.Text array offset length) =
         return $ builderOffset + length
 #else
 text text@(TextInternal.Text array offset length) =
-  Builder action length
+  Allocator action length
   where
     action =
       Action $ \builderArray builderOffset -> do
@@ -76,25 +76,40 @@ text text@(TextInternal.Text array offset length) =
         return builderOffsetAfter
 #endif
 
+-- |
+-- Run the builder and pack the produced text into a new builder.
+--
+-- Useful to have around builders that you reuse,
+-- because a forced builder is much faster,
+-- since it's virtually a single call @memcopy@.
+{-# INLINE force #-}
+force :: Allocator -> Allocator
+force = text . allocate
+
+-- | Unicode character.
+{-# INLINE char #-}
+char :: Char -> Allocator
+char = unicodeCodePoint . ord
+
 #if MIN_VERSION_text(2,0,0)
 
 -- | Unicode code point.
 {-# INLINE unicodeCodePoint #-}
-unicodeCodePoint :: Int -> Builder
+unicodeCodePoint :: Int -> Allocator
 unicodeCodePoint x =
   Utf8View.unicodeCodePoint x utf8CodeUnits1 utf8CodeUnits2 utf8CodeUnits3 utf8CodeUnits4
 
 {-# INLINEABLE utf8CodeUnits1 #-}
-utf8CodeUnits1 :: Word8 -> Builder
-utf8CodeUnits1 unit1 = Builder action 1 
+utf8CodeUnits1 :: Word8 -> Allocator
+utf8CodeUnits1 unit1 = Allocator action 1 
   where
     action = Action $ \array offset ->
       TextArray.unsafeWrite array offset unit1
         $> succ offset
 
 {-# INLINEABLE utf8CodeUnits2 #-}
-utf8CodeUnits2 :: Word8 -> Word8 -> Builder
-utf8CodeUnits2 unit1 unit2 = Builder action 2 
+utf8CodeUnits2 :: Word8 -> Word8 -> Allocator
+utf8CodeUnits2 unit1 unit2 = Allocator action 2 
   where
     action = Action $ \array offset -> do
       TextArray.unsafeWrite array (offset + 0) unit1
@@ -102,8 +117,8 @@ utf8CodeUnits2 unit1 unit2 = Builder action 2
       return $ offset + 2
 
 {-# INLINEABLE utf8CodeUnits3 #-}
-utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Builder
-utf8CodeUnits3 unit1 unit2 unit3 = Builder action 3 
+utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Allocator
+utf8CodeUnits3 unit1 unit2 unit3 = Allocator action 3 
   where
     action = Action $ \array offset -> do
       TextArray.unsafeWrite array (offset + 0) unit1
@@ -112,8 +127,8 @@ utf8CodeUnits3 unit1 unit2 unit3 = Builder action 3
       return $ offset + 3
 
 {-# INLINEABLE utf8CodeUnits4 #-}
-utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Builder
-utf8CodeUnits4 unit1 unit2 unit3 unit4 = Builder action 4 
+utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Allocator
+utf8CodeUnits4 unit1 unit2 unit3 unit4 = Allocator action 4 
   where
     action = Action $ \array offset -> do
       TextArray.unsafeWrite array (offset + 0) unit1
@@ -123,11 +138,11 @@ utf8CodeUnits4 unit1 unit2 unit3 unit4 = Builder action 4
       return $ offset + 4
 
 {-# INLINE utf16CodeUnits1 #-}
-utf16CodeUnits1 :: Word16 -> Builder
+utf16CodeUnits1 :: Word16 -> Allocator
 utf16CodeUnits1 = unicodeCodePoint . fromIntegral
 
 {-# INLINE utf16CodeUnits2 #-}
-utf16CodeUnits2 :: Word16 -> Word16 -> Builder
+utf16CodeUnits2 :: Word16 -> Word16 -> Allocator
 utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
   where
     cp = (((fromIntegral unit1 .&. 0x3FF) `shiftL` 10) .|. (fromIntegral unit2 .&. 0x3FF)) + 0x10000
@@ -136,15 +151,15 @@ utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
 
 -- | Unicode code point.
 {-# INLINE unicodeCodePoint #-}
-unicodeCodePoint :: Int -> Builder
+unicodeCodePoint :: Int -> Allocator
 unicodeCodePoint x =
   Utf16View.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
 
 -- | Single code-unit UTF-16 character.
 {-# INLINEABLE utf16CodeUnits1 #-}
-utf16CodeUnits1 :: Word16 -> Builder
+utf16CodeUnits1 :: Word16 -> Allocator
 utf16CodeUnits1 unit =
-  Builder action 1
+  Allocator action 1
   where
     action =
       Action $ \array offset ->
@@ -153,9 +168,9 @@ utf16CodeUnits1 unit =
 
 -- | Double code-unit UTF-16 character.
 {-# INLINEABLE utf16CodeUnits2 #-}
-utf16CodeUnits2 :: Word16 -> Word16 -> Builder
+utf16CodeUnits2 :: Word16 -> Word16 -> Allocator
 utf16CodeUnits2 unit1 unit2 =
-  Builder action 2
+  Allocator action 2
   where
     action =
       Action $ \array offset -> do
@@ -165,25 +180,25 @@ utf16CodeUnits2 unit1 unit2 =
 
 -- | Single code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits1 #-}
-utf8CodeUnits1 :: Word8 -> Builder
+utf8CodeUnits1 :: Word8 -> Allocator
 utf8CodeUnits1 unit1 =
   Utf16View.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
 
 -- | Double code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits2 #-}
-utf8CodeUnits2 :: Word8 -> Word8 -> Builder
+utf8CodeUnits2 :: Word8 -> Word8 -> Allocator
 utf8CodeUnits2 unit1 unit2 =
   Utf16View.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
 
 -- | Triple code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits3 #-}
-utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Builder
+utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Allocator
 utf8CodeUnits3 unit1 unit2 unit3 =
   Utf16View.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
 
 -- | UTF-8 character out of 4 code units.
 {-# INLINE utf8CodeUnits4 #-}
-utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Builder
+utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Allocator
 utf8CodeUnits4 unit1 unit2 unit3 unit4 =
   Utf16View.utf8CodeUnits4 unit1 unit2 unit3 unit4 utf16CodeUnits1 utf16CodeUnits2
 
