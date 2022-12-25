@@ -27,30 +27,30 @@ import TextBuilderDev.Prelude
 import qualified TextBuilderDev.Utf16View as Utf16View
 import qualified TextBuilderDev.Utf8View as Utf8View
 
--- * Action
+-- * ArrayWriter
 
-newtype Action
-  = Action (forall s. TextArray.MArray s -> Int -> ST s Int)
+newtype ArrayWriter
+  = ArrayWriter (forall s. TextArray.MArray s -> Int -> ST s Int)
 
-instance Semigroup Action where
+instance Semigroup ArrayWriter where
   {-# INLINE (<>) #-}
-  Action writeL <> Action writeR =
-    Action $ \array offset -> do
+  ArrayWriter writeL <> ArrayWriter writeR =
+    ArrayWriter $ \array offset -> do
       offsetAfter1 <- writeL array offset
       writeR array offsetAfter1
 
-instance Monoid Action where
+instance Monoid ArrayWriter where
   {-# INLINE mempty #-}
-  mempty = Action $ const $ return
+  mempty = ArrayWriter $ const $ return
 
 -- * Allocator
 
 -- | Execute a builder producing a strict text.
 allocate :: Allocator -> Text
-allocate (Allocator (Action action) sizeBound) =
+allocate (Allocator (ArrayWriter write) sizeBound) =
   runST $ do
     array <- TextArray.new sizeBound
-    offsetAfter <- action array 0
+    offsetAfter <- write array 0
     frozenArray <- TextArray.unsafeFreeze array
     return $ TextInternal.text frozenArray 0 offsetAfter
 
@@ -58,13 +58,13 @@ allocate (Allocator (Action action) sizeBound) =
 -- Specification of how to efficiently construct strict 'Text'.
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
 data Allocator
-  = Allocator !Action !Int
+  = Allocator !ArrayWriter !Int
 
 instance Semigroup Allocator where
-  (<>) (Allocator action1 estimatedArraySize1) (Allocator action2 estimatedArraySize2) =
-    Allocator action estimatedArraySize
+  (<>) (Allocator writer1 estimatedArraySize1) (Allocator writer2 estimatedArraySize2) =
+    Allocator writer estimatedArraySize
     where
-      action = action1 <> action2
+      writer = writer1 <> writer2
       estimatedArraySize = estimatedArraySize1 + estimatedArraySize2
 
 instance Monoid Allocator where
@@ -86,18 +86,18 @@ force = text . allocate
 text :: Text -> Allocator
 #if MIN_VERSION_text(2,0,0)
 text text@(TextInternal.Text array offset length) =
-  Allocator action length
+  Allocator writer length
   where
-    action =
-      Action $ \builderArray builderOffset -> do
+    writer =
+      ArrayWriter $ \builderArray builderOffset -> do
         TextArray.copyI length builderArray builderOffset array offset
         return $ builderOffset + length
 #else
 text text@(TextInternal.Text array offset length) =
-  Allocator action length
+  Allocator writer length
   where
-    action =
-      Action $ \builderArray builderOffset -> do
+    writer =
+      ArrayWriter $ \builderArray builderOffset -> do
         let builderOffsetAfter = builderOffset + length
         TextArray.copyI builderArray builderOffset array offset builderOffsetAfter
         return builderOffsetAfter
@@ -123,9 +123,9 @@ unicodeCodePoint x =
 {-# INLINEABLE utf8CodeUnits1 #-}
 utf8CodeUnits1 :: Word8 -> Allocator
 #if MIN_VERSION_text(2,0,0)
-utf8CodeUnits1 unit1 = Allocator action 1 
+utf8CodeUnits1 unit1 = Allocator writer 1 
   where
-    action = Action $ \array offset ->
+    writer = ArrayWriter $ \array offset ->
       TextArray.unsafeWrite array offset unit1
         $> succ offset
 #else
@@ -137,9 +137,9 @@ utf8CodeUnits1 unit1 =
 {-# INLINEABLE utf8CodeUnits2 #-}
 utf8CodeUnits2 :: Word8 -> Word8 -> Allocator
 #if MIN_VERSION_text(2,0,0)
-utf8CodeUnits2 unit1 unit2 = Allocator action 2 
+utf8CodeUnits2 unit1 unit2 = Allocator writer 2 
   where
-    action = Action $ \array offset -> do
+    writer = ArrayWriter $ \array offset -> do
       TextArray.unsafeWrite array offset unit1
       TextArray.unsafeWrite array (offset + 1) unit2
       return $ offset + 2
@@ -152,9 +152,9 @@ utf8CodeUnits2 unit1 unit2 =
 {-# INLINEABLE utf8CodeUnits3 #-}
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Allocator
 #if MIN_VERSION_text(2,0,0)
-utf8CodeUnits3 unit1 unit2 unit3 = Allocator action 3 
+utf8CodeUnits3 unit1 unit2 unit3 = Allocator writer 3 
   where
-    action = Action $ \array offset -> do
+    writer = ArrayWriter $ \array offset -> do
       TextArray.unsafeWrite array offset unit1
       TextArray.unsafeWrite array (offset + 1) unit2
       TextArray.unsafeWrite array (offset + 2) unit3
@@ -168,9 +168,9 @@ utf8CodeUnits3 unit1 unit2 unit3 =
 {-# INLINEABLE utf8CodeUnits4 #-}
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Allocator
 #if MIN_VERSION_text(2,0,0)
-utf8CodeUnits4 unit1 unit2 unit3 unit4 = Allocator action 4 
+utf8CodeUnits4 unit1 unit2 unit3 unit4 = Allocator writer 4 
   where
-    action = Action $ \array offset -> do
+    writer = ArrayWriter $ \array offset -> do
       TextArray.unsafeWrite array offset unit1
       TextArray.unsafeWrite array (offset + 1) unit2
       TextArray.unsafeWrite array (offset + 2) unit3
@@ -188,10 +188,10 @@ utf16CodeUnits1 :: Word16 -> Allocator
 utf16CodeUnits1 = unicodeCodePoint . fromIntegral
 #else
 utf16CodeUnits1 unit =
-  Allocator action 1
+  Allocator writer 1
   where
-    action =
-      Action $ \array offset ->
+    writer =
+      ArrayWriter $ \array offset ->
         TextArray.unsafeWrite array offset unit
           $> succ offset
 #endif
@@ -205,10 +205,10 @@ utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
     cp = (((fromIntegral unit1 .&. 0x3FF) `shiftL` 10) .|. (fromIntegral unit2 .&. 0x3FF)) + 0x10000
 #else
 utf16CodeUnits2 unit1 unit2 =
-  Allocator action 2
+  Allocator writer 2
   where
-    action =
-      Action $ \array offset -> do
+    writer =
+      ArrayWriter $ \array offset -> do
         TextArray.unsafeWrite array offset unit1
         TextArray.unsafeWrite array (succ offset) unit2
         return $ offset + 2
