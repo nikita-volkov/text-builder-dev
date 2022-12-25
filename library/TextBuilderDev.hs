@@ -207,17 +207,17 @@ instance IsomorphicTo TextLazyBuilder.Builder TextBuilder where
 
 -- * Accessors
 
--- | Get the amount of characters
+-- | Get the amount of characters.
 {-# INLINE length #-}
 length :: TextBuilder -> Int
 length (TextBuilder _ _ x) = x
 
--- | Check whether the builder is empty
+-- | Check whether the builder is empty.
 {-# INLINE null #-}
 null :: TextBuilder -> Bool
 null = (== 0) . length
 
--- | Execute a builder producing a strict text
+-- | Execute a builder producing a strict text.
 buildText :: TextBuilder -> Text
 buildText (TextBuilder (Action action) arraySize _) =
   TextInternal.text array 0 arraySize
@@ -230,19 +230,19 @@ buildText (TextBuilder (Action action) arraySize _) =
 
 -- ** Output IO
 
--- | Put builder, to stdout
+-- | Put builder, to stdout.
 putToStdOut :: TextBuilder -> IO ()
 putToStdOut = Text.hPutStr stdout . buildText
 
--- | Put builder, to stderr
+-- | Put builder, to stderr.
 putToStdErr :: TextBuilder -> IO ()
 putToStdErr = Text.hPutStr stderr . buildText
 
--- | Put builder, followed by a line, to stdout
+-- | Put builder, followed by a line, to stdout.
 putLnToStdOut :: TextBuilder -> IO ()
 putLnToStdOut = Text.hPutStrLn stdout . buildText
 
--- | Put builder, followed by a line, to stderr
+-- | Put builder, followed by a line, to stderr.
 putLnToStdErr :: TextBuilder -> IO ()
 putLnToStdErr = Text.hPutStrLn stderr . buildText
 
@@ -258,7 +258,7 @@ putLnToStdErr = Text.hPutStrLn stderr . buildText
 force :: TextBuilder -> TextBuilder
 force = text . buildText
 
--- | Unicode character
+-- | Unicode character.
 {-# INLINE char #-}
 char :: Char -> TextBuilder
 char x =
@@ -266,7 +266,7 @@ char x =
 
 #if MIN_VERSION_text(2,0,0)
 
--- | Unicode code point
+-- | Unicode code point.
 {-# INLINE unicodeCodePoint #-}
 unicodeCodePoint :: Int -> TextBuilder
 unicodeCodePoint x =
@@ -313,13 +313,13 @@ utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
 
 #else
 
--- | Unicode code point
+-- | Unicode code point.
 {-# INLINE unicodeCodePoint #-}
 unicodeCodePoint :: Int -> TextBuilder
 unicodeCodePoint x =
   Utf16View.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
 
--- | Single code-unit UTF-16 character
+-- | Single code-unit UTF-16 character.
 {-# INLINEABLE utf16CodeUnits1 #-}
 utf16CodeUnits1 :: Word16 -> TextBuilder
 utf16CodeUnits1 unit =
@@ -328,7 +328,7 @@ utf16CodeUnits1 unit =
     action =
       Action $ \array offset -> TextArray.unsafeWrite array offset unit
 
--- | Double code-unit UTF-16 character
+-- | Double code-unit UTF-16 character.
 {-# INLINEABLE utf16CodeUnits2 #-}
 utf16CodeUnits2 :: Word16 -> Word16 -> TextBuilder
 utf16CodeUnits2 unit1 unit2 =
@@ -339,25 +339,25 @@ utf16CodeUnits2 unit1 unit2 =
         TextArray.unsafeWrite array offset unit1
         TextArray.unsafeWrite array (succ offset) unit2
 
--- | Single code-unit UTF-8 character
+-- | Single code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits1 #-}
 utf8CodeUnits1 :: Word8 -> TextBuilder
 utf8CodeUnits1 unit1 =
   Utf16View.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
 
--- | Double code-unit UTF-8 character
+-- | Double code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits2 #-}
 utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilder
 utf8CodeUnits2 unit1 unit2 =
   Utf16View.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
 
--- | Triple code-unit UTF-8 character
+-- | Triple code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits3 #-}
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits3 unit1 unit2 unit3 =
   Utf16View.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
 
--- | UTF-8 character out of 4 code units
+-- | UTF-8 character out of 4 code units.
 {-# INLINE utf8CodeUnits4 #-}
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilder
 utf8CodeUnits4 unit1 unit2 unit3 unit4 =
@@ -365,7 +365,10 @@ utf8CodeUnits4 unit1 unit2 unit3 unit4 =
 
 #endif
 
--- | ASCII byte string
+-- | ASCII byte string.
+--
+-- It's your responsibility to ensure that the bytes are in proper range,
+-- otherwise the produced text will be broken.
 {-# INLINEABLE asciiByteString #-}
 asciiByteString :: ByteString -> TextBuilder
 asciiByteString byteString =
@@ -379,7 +382,7 @@ asciiByteString byteString =
               next (succ index)
          in ByteString.foldr step (const (return ())) byteString
 
--- | Strict text
+-- | Strict text.
 {-# INLINEABLE text #-}
 text :: Text -> TextBuilder
 text text@(TextInternal.Text array offset length) =
@@ -393,19 +396,19 @@ text text@(TextInternal.Text array offset length) =
         TextArray.copyI builderArray builderOffset array offset (builderOffset + length)
 #endif
 
--- | Lazy text
+-- | Lazy text.
 {-# INLINE lazyText #-}
 lazyText :: TextLazy.Text -> TextBuilder
 lazyText =
   TextLazy.foldrChunks (mappend . text) mempty
 
--- | String
+-- | String.
 {-# INLINE string #-}
 string :: String -> TextBuilder
 string =
   foldMap char
 
--- | Decimal representation of an integral value
+-- | Decimal representation of an integral value.
 {-# INLINEABLE decimal #-}
 decimal :: Integral a => a -> TextBuilder
 decimal i =
@@ -413,13 +416,13 @@ decimal i =
     then unsignedDecimal i
     else unicodeCodePoint 45 <> unsignedDecimal (negate i)
 
--- | Decimal representation of an unsigned integral value
+-- | Decimal representation of an unsigned integral value.
 {-# INLINEABLE unsignedDecimal #-}
 unsignedDecimal :: Integral a => a -> TextBuilder
 unsignedDecimal =
   foldMap decimalDigit . Unfoldr.decimalDigits
 
--- | Decimal representation of an integral value with thousands separated by the specified character
+-- | Decimal representation of an integral value with thousands separated by the specified character.
 {-# INLINEABLE thousandSeparatedDecimal #-}
 thousandSeparatedDecimal :: Integral a => Char -> a -> TextBuilder
 thousandSeparatedDecimal separatorChar a =
@@ -427,7 +430,7 @@ thousandSeparatedDecimal separatorChar a =
     then thousandSeparatedUnsignedDecimal separatorChar a
     else unicodeCodePoint 45 <> thousandSeparatedUnsignedDecimal separatorChar (negate a)
 
--- | Decimal representation of an unsigned integral value with thousands separated by the specified character
+-- | Decimal representation of an unsigned integral value with thousands separated by the specified character.
 {-# INLINEABLE thousandSeparatedUnsignedDecimal #-}
 thousandSeparatedUnsignedDecimal :: Integral a => Char -> a -> TextBuilder
 thousandSeparatedUnsignedDecimal separatorChar a =
@@ -475,19 +478,19 @@ dividedDecimal separatorChar divisor n =
         then thousandSeparatedDecimal separatorChar byExtraTen
         else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
 
--- | Unsigned binary number
+-- | Unsigned binary number.
 {-# INLINE unsignedBinary #-}
 unsignedBinary :: Integral a => a -> TextBuilder
 unsignedBinary =
   foldMap decimalDigit . Unfoldr.binaryDigits
 
--- | Unsigned binary number
+-- | Unsigned binary number.
 {-# INLINE unsignedPaddedBinary #-}
 unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilder
 unsignedPaddedBinary a =
   padFromLeft (finiteBitSize a) '0' $ foldMap decimalDigit $ Unfoldr.binaryDigits a
 
--- | Hexadecimal representation of an integral value
+-- | Hexadecimal representation of an integral value.
 {-# INLINE hexadecimal #-}
 hexadecimal :: Integral a => a -> TextBuilder
 hexadecimal i =
@@ -495,19 +498,19 @@ hexadecimal i =
     then unsignedHexadecimal i
     else unicodeCodePoint 45 <> unsignedHexadecimal (negate i)
 
--- | Unsigned hexadecimal representation of an integral value
+-- | Unsigned hexadecimal representation of an integral value.
 {-# INLINE unsignedHexadecimal #-}
 unsignedHexadecimal :: Integral a => a -> TextBuilder
 unsignedHexadecimal =
   foldMap hexadecimalDigit . Unfoldr.hexadecimalDigits
 
--- | Decimal digit
+-- | Decimal digit.
 {-# INLINE decimalDigit #-}
 decimalDigit :: Integral a => a -> TextBuilder
 decimalDigit n =
   unicodeCodePoint (fromIntegral n + 48)
 
--- | Hexadecimal digit
+-- | Hexadecimal digit.
 {-# INLINE hexadecimalDigit #-}
 hexadecimalDigit :: Integral a => a -> TextBuilder
 hexadecimalDigit n =
@@ -515,7 +518,7 @@ hexadecimalDigit n =
     then unicodeCodePoint (fromIntegral n + 48)
     else unicodeCodePoint (fromIntegral n + 87)
 
--- | Intercalate builders
+-- | Intercalate builders.
 {-# INLINE intercalate #-}
 intercalate :: Foldable f => TextBuilder -> f TextBuilder -> TextBuilder
 intercalate separator = extract . foldl' step init
@@ -528,7 +531,7 @@ intercalate separator = extract . foldl' step init
           else element
     extract (Product2 _ builder) = builder
 
--- | Intercalate projecting values to builder
+-- | Intercalate projecting values to builder.
 {-# INLINE intercalateMap #-}
 intercalateMap :: Foldable f => TextBuilder -> (a -> TextBuilder) -> f a -> TextBuilder
 intercalateMap separator mapper = extract . foldl' step init
@@ -540,7 +543,7 @@ intercalateMap separator mapper = extract . foldl' step init
         Just acc -> acc <> separator <> mapper element
     extract = fromMaybe mempty
 
--- | Pad a builder from the left side to the specified length with the specified character
+-- | Pad a builder from the left side to the specified length with the specified character.
 {-# INLINEABLE padFromLeft #-}
 padFromLeft :: Int -> Char -> TextBuilder -> TextBuilder
 padFromLeft paddedLength paddingChar builder =
@@ -549,7 +552,7 @@ padFromLeft paddedLength paddingChar builder =
         then builder
         else foldMap char (replicate (paddedLength - builderLength) paddingChar) <> builder
 
--- | Pad a builder from the right side to the specified length with the specified character
+-- | Pad a builder from the right side to the specified length with the specified character.
 {-# INLINEABLE padFromRight #-}
 padFromRight :: Int -> Char -> TextBuilder -> TextBuilder
 padFromRight paddedLength paddingChar builder =
