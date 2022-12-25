@@ -137,6 +137,11 @@ instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
   toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
   fromTextBuilder = TextLazyBuilder.fromText . buildText
 
+-- * Action
+
+newtype Action
+  = Action (forall s. TextArray.MArray s -> Int -> ST s Int)
+
 -- * --
 
 -- |
@@ -144,9 +149,6 @@ instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
 data TextBuilder
   = TextBuilder !Action !Int !Int
-
-newtype Action
-  = Action (forall s. TextArray.MArray s -> Int -> ST s Int)
 
 instance Semigroup TextBuilder where
   (<>) (TextBuilder (Action action1) estimatedArraySize1 textLength1) (TextBuilder (Action action2) estimatedArraySize2 textLength2) =
