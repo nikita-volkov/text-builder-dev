@@ -123,7 +123,7 @@ utf8CodeUnits2 :: Word8 -> Word8 -> Allocator
 utf8CodeUnits2 unit1 unit2 = Allocator action 2 
   where
     action = Action $ \array offset -> do
-      TextArray.unsafeWrite array (offset + 0) unit1
+      TextArray.unsafeWrite array offset unit1
       TextArray.unsafeWrite array (offset + 1) unit2
       return $ offset + 2
 #else
@@ -138,7 +138,7 @@ utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Allocator
 utf8CodeUnits3 unit1 unit2 unit3 = Allocator action 3 
   where
     action = Action $ \array offset -> do
-      TextArray.unsafeWrite array (offset + 0) unit1
+      TextArray.unsafeWrite array offset unit1
       TextArray.unsafeWrite array (offset + 1) unit2
       TextArray.unsafeWrite array (offset + 2) unit3
       return $ offset + 3
@@ -154,7 +154,7 @@ utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Allocator
 utf8CodeUnits4 unit1 unit2 unit3 unit4 = Allocator action 4 
   where
     action = Action $ \array offset -> do
-      TextArray.unsafeWrite array (offset + 0) unit1
+      TextArray.unsafeWrite array offset unit1
       TextArray.unsafeWrite array (offset + 1) unit2
       TextArray.unsafeWrite array (offset + 2) unit3
       TextArray.unsafeWrite array (offset + 3) unit4
