@@ -22,12 +22,12 @@ source-repository head
   type: git
   location: git://github.com/nikita-volkov/text-builder-dev.git
 
-common language-settings
+common base-settings
   default-extensions: BangPatterns, ConstraintKinds, CPP, DataKinds, DefaultSignatures, DeriveDataTypeable, DeriveFoldable, DeriveFunctor, DeriveGeneric, DeriveTraversable, EmptyDataDecls, FlexibleContexts, FlexibleInstances, FunctionalDependencies, GADTs, GeneralizedNewtypeDeriving, InstanceSigs, LambdaCase, LiberalTypeSynonyms, MagicHash, MultiParamTypeClasses, MultiWayIf, NoImplicitPrelude, NoMonomorphismRestriction, OverloadedStrings, PatternGuards, ParallelListComp, QuasiQuotes, RankNTypes, RecordWildCards, ScopedTypeVariables, StandaloneDeriving, TemplateHaskell, TupleSections, TypeApplications, TypeFamilies, TypeOperators, ViewPatterns
   default-language: Haskell2010
 
 library
-  import: language-settings
+  import: base-settings
   hs-source-dirs: library
   exposed-modules:
     TextBuilderDev
@@ -46,7 +46,7 @@ library
     transformers >=0.5 && <0.7,
 
 test-suite test
-  import: language-settings
+  import: base-settings
   type: exitcode-stdio-1.0
   hs-source-dirs: test
   main-is: Main.hs
@@ -62,8 +62,9 @@ test-suite test
     text-builder-dev,
 
 benchmark benchmark-text
-  import: language-settings
+  import: base-settings
   type: exitcode-stdio-1.0
+  ghc-options: -O2
   hs-source-dirs: benchmark-text
   main-is: Main.hs
   build-depends:
@@ -72,8 +73,9 @@ benchmark benchmark-text
     text-builder-dev,
 
 benchmark benchmark-char
-  import: language-settings
+  import: base-settings
   type: exitcode-stdio-1.0
+  ghc-options: -O2
   hs-source-dirs: benchmark-char
   main-is: Main.hs
   build-depends:
