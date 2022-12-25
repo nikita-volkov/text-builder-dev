@@ -18,8 +18,11 @@ jobs:
 
     strategy:
       matrix:
-        ghc: ['8.6', '9.4']
-        text: ['1.2.5.0', '2.0']
+        include:
+          - ghc: '8.6'
+            text: '1.2.5.0'
+          - ghc: '9.4'
+            text: '2.0.1'
       fail-fast: false
 
     runs-on: ubuntu-latest
