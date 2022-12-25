@@ -621,7 +621,8 @@ intervalInSeconds interval = flip evalState (round interval) $ do
   hours <- state (swap . flip divMod 24)
   days <- get
   return $
-    padFromLeft 2 '0' (decimal days) <> ":"
+    padFromLeft 2 '0' (decimal days)
+      <> ":"
       <> padFromLeft 2 '0' (decimal hours)
       <> ":"
       <> padFromLeft 2 '0' (decimal minutes)
@@ -650,7 +651,8 @@ doublePercent decimalPlaces x = fixedDouble decimalPlaces (x * 100) <> "%"
 {-# INLINE hexData #-}
 hexData :: ByteString -> TextBuilder
 hexData =
-  intercalate " " . fmap mconcat
+  intercalate " "
+    . fmap mconcat
     . Split.chunksOf 2
     . fmap byte
     . ByteString.unpack

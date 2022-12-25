@@ -52,8 +52,8 @@ main =
         testProperty "Decimal" $ \(x :: Integer) ->
           (fromString . show) x === (B.buildText (B.decimal x)),
         testProperty "Hexadecimal vs std show" $ \(x :: Integer) ->
-          x >= 0
-            ==> (fromString . showHex x) "" === (B.buildText . B.hexadecimal) x,
+          x >= 0 ==>
+            (fromString . showHex x) "" === (B.buildText . B.hexadecimal) x,
         testProperty "TextBuilderDev.null is isomorphic to Text.null" $ \(text :: Text) ->
           B.null (B.toTextBuilder text) === Text.null text,
         testProperty "(TextBuilderDev.unicodeCodePoint <>) is isomorphic to Text.cons" $
