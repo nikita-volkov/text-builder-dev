@@ -145,7 +145,9 @@ newtype Action
 instance Semigroup Action where
   {-# INLINE (<>) #-}
   Action writeL <> Action writeR =
-    Action $ \array -> writeL array >=> writeR array
+    Action $ \array offset -> do
+      offsetAfter1 <- writeL array offset
+      writeR array offsetAfter1
 
 instance Monoid Action where
   {-# INLINE mempty #-}
