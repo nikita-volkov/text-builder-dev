@@ -453,12 +453,29 @@ thousandSeparatedDecimal separatorChar a =
 -- | Decimal representation of an unsigned integral value with thousands separated by the specified character.
 {-# INLINEABLE thousandSeparatedUnsignedDecimal #-}
 thousandSeparatedUnsignedDecimal :: Integral a => Char -> a -> TextBuilder
-thousandSeparatedUnsignedDecimal separatorChar a =
-  fold $ do
-    (index, digit) <- Unfoldr.zipWithReverseIndex $ Unfoldr.decimalDigits a
-    if mod index 3 == 0 && index /= 0
-      then return (decimalDigit digit <> char separatorChar)
-      else return (decimalDigit digit)
+thousandSeparatedUnsignedDecimal separatorChar =
+  processRightmostDigit
+  where
+    processRightmostDigit value =
+      case divMod value 10 of
+        (value, digit) ->
+          processAnotherDigit [decimalDigit digit] 1 value
+    processAnotherDigit builders index value =
+      if value == 0
+        then mconcat builders
+        else case divMod value 10 of
+          (value, digit) ->
+            if mod index 3 == 0
+              then
+                processAnotherDigit
+                  (decimalDigit digit : char separatorChar : builders)
+                  (succ index)
+                  value
+              else
+                processAnotherDigit
+                  (decimalDigit digit : builders)
+                  (succ index)
+                  value
 
 -- | Data size in decimal notation over amount of bytes.
 {-# INLINEABLE dataSizeInBytesInDecimal #-}
