@@ -84,11 +84,8 @@ import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified DeferredFolds.Unfoldr as Unfoldr
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
-#if MIN_VERSION_text(2,0,0)
-import qualified TextBuilderDev.Utf8View as Utf8View
-#else
 import qualified TextBuilderDev.Utf16View as Utf16View
-#endif
+import qualified TextBuilderDev.Utf8View as Utf8View
 
 -- * --
 
