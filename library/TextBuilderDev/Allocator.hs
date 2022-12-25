@@ -91,33 +91,50 @@ force = text . allocate
 char :: Char -> Allocator
 char = unicodeCodePoint . ord
 
-#if MIN_VERSION_text(2,0,0)
-
 -- | Unicode code point.
 {-# INLINE unicodeCodePoint #-}
 unicodeCodePoint :: Int -> Allocator
+#if MIN_VERSION_text(2,0,0)
 unicodeCodePoint x =
   Utf8View.unicodeCodePoint x utf8CodeUnits1 utf8CodeUnits2 utf8CodeUnits3 utf8CodeUnits4
+#else
+unicodeCodePoint x =
+  Utf16View.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
+#endif
 
+-- | Single code-unit UTF-8 character.
 {-# INLINEABLE utf8CodeUnits1 #-}
 utf8CodeUnits1 :: Word8 -> Allocator
+#if MIN_VERSION_text(2,0,0)
 utf8CodeUnits1 unit1 = Allocator action 1 
   where
     action = Action $ \array offset ->
       TextArray.unsafeWrite array offset unit1
         $> succ offset
+#else
+utf8CodeUnits1 unit1 =
+  Utf16View.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
+#endif
 
+-- | Double code-unit UTF-8 character.
 {-# INLINEABLE utf8CodeUnits2 #-}
 utf8CodeUnits2 :: Word8 -> Word8 -> Allocator
+#if MIN_VERSION_text(2,0,0)
 utf8CodeUnits2 unit1 unit2 = Allocator action 2 
   where
     action = Action $ \array offset -> do
       TextArray.unsafeWrite array (offset + 0) unit1
       TextArray.unsafeWrite array (offset + 1) unit2
       return $ offset + 2
+#else
+utf8CodeUnits2 unit1 unit2 =
+  Utf16View.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
+#endif
 
+-- | Triple code-unit UTF-8 character.
 {-# INLINEABLE utf8CodeUnits3 #-}
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Allocator
+#if MIN_VERSION_text(2,0,0)
 utf8CodeUnits3 unit1 unit2 unit3 = Allocator action 3 
   where
     action = Action $ \array offset -> do
@@ -125,9 +142,15 @@ utf8CodeUnits3 unit1 unit2 unit3 = Allocator action 3
       TextArray.unsafeWrite array (offset + 1) unit2
       TextArray.unsafeWrite array (offset + 2) unit3
       return $ offset + 3
+#else
+utf8CodeUnits3 unit1 unit2 unit3 =
+  Utf16View.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
+#endif
 
+-- | UTF-8 character out of 4 code units.
 {-# INLINEABLE utf8CodeUnits4 #-}
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Allocator
+#if MIN_VERSION_text(2,0,0)
 utf8CodeUnits4 unit1 unit2 unit3 unit4 = Allocator action 4 
   where
     action = Action $ \array offset -> do
@@ -136,28 +159,17 @@ utf8CodeUnits4 unit1 unit2 unit3 unit4 = Allocator action 4
       TextArray.unsafeWrite array (offset + 2) unit3
       TextArray.unsafeWrite array (offset + 3) unit4
       return $ offset + 4
-
-{-# INLINE utf16CodeUnits1 #-}
-utf16CodeUnits1 :: Word16 -> Allocator
-utf16CodeUnits1 = unicodeCodePoint . fromIntegral
-
-{-# INLINE utf16CodeUnits2 #-}
-utf16CodeUnits2 :: Word16 -> Word16 -> Allocator
-utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
-  where
-    cp = (((fromIntegral unit1 .&. 0x3FF) `shiftL` 10) .|. (fromIntegral unit2 .&. 0x3FF)) + 0x10000
-
 #else
-
--- | Unicode code point.
-{-# INLINE unicodeCodePoint #-}
-unicodeCodePoint :: Int -> Allocator
-unicodeCodePoint x =
-  Utf16View.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
+utf8CodeUnits4 unit1 unit2 unit3 unit4 =
+  Utf16View.utf8CodeUnits4 unit1 unit2 unit3 unit4 utf16CodeUnits1 utf16CodeUnits2
+#endif
 
 -- | Single code-unit UTF-16 character.
 {-# INLINEABLE utf16CodeUnits1 #-}
 utf16CodeUnits1 :: Word16 -> Allocator
+#if MIN_VERSION_text(2,0,0)
+utf16CodeUnits1 = unicodeCodePoint . fromIntegral
+#else
 utf16CodeUnits1 unit =
   Allocator action 1
   where
@@ -165,10 +177,16 @@ utf16CodeUnits1 unit =
       Action $ \array offset ->
         TextArray.unsafeWrite array offset unit
           $> succ offset
+#endif
 
 -- | Double code-unit UTF-16 character.
 {-# INLINEABLE utf16CodeUnits2 #-}
 utf16CodeUnits2 :: Word16 -> Word16 -> Allocator
+#if MIN_VERSION_text(2,0,0)
+utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
+  where
+    cp = (((fromIntegral unit1 .&. 0x3FF) `shiftL` 10) .|. (fromIntegral unit2 .&. 0x3FF)) + 0x10000
+#else
 utf16CodeUnits2 unit1 unit2 =
   Allocator action 2
   where
@@ -177,29 +195,4 @@ utf16CodeUnits2 unit1 unit2 =
         TextArray.unsafeWrite array offset unit1
         TextArray.unsafeWrite array (succ offset) unit2
         return $ offset + 2
-
--- | Single code-unit UTF-8 character.
-{-# INLINE utf8CodeUnits1 #-}
-utf8CodeUnits1 :: Word8 -> Allocator
-utf8CodeUnits1 unit1 =
-  Utf16View.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
-
--- | Double code-unit UTF-8 character.
-{-# INLINE utf8CodeUnits2 #-}
-utf8CodeUnits2 :: Word8 -> Word8 -> Allocator
-utf8CodeUnits2 unit1 unit2 =
-  Utf16View.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
-
--- | Triple code-unit UTF-8 character.
-{-# INLINE utf8CodeUnits3 #-}
-utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Allocator
-utf8CodeUnits3 unit1 unit2 unit3 =
-  Utf16View.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
-
--- | UTF-8 character out of 4 code units.
-{-# INLINE utf8CodeUnits4 #-}
-utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Allocator
-utf8CodeUnits4 unit1 unit2 unit3 unit4 =
-  Utf16View.utf8CodeUnits4 unit1 unit2 unit3 unit4 utf16CodeUnits1 utf16CodeUnits2
-
 #endif
