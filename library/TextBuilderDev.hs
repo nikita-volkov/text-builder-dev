@@ -151,12 +151,12 @@ data TextBuilder
   = TextBuilder !Action !Int !Int
 
 instance Semigroup TextBuilder where
-  (<>) (TextBuilder (Action action1) estimatedArraySize1 textLength1) (TextBuilder (Action action2) estimatedArraySize2 textLength2) =
+  (<>) (TextBuilder (Action writeL) estimatedArraySize1 textLength1) (TextBuilder (Action writeR) estimatedArraySize2 textLength2) =
     TextBuilder action estimatedArraySize textLength
     where
       action = Action $ \array offset -> do
-        offsetAfter1 <- action1 array offset
-        action2 array offsetAfter1
+        offsetAfter1 <- writeL array offset
+        writeR array offsetAfter1
       estimatedArraySize =
         estimatedArraySize1 + estimatedArraySize2
       textLength =
