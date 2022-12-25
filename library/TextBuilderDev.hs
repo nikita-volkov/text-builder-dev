@@ -142,6 +142,17 @@ instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
 newtype Action
   = Action (forall s. TextArray.MArray s -> Int -> ST s Int)
 
+instance Semigroup Action where
+  {-# INLINE (<>) #-}
+  Action writeL <> Action writeR =
+    Action $ \array offset -> do
+      offsetAfter1 <- writeL array offset
+      writeR array offsetAfter1
+
+instance Monoid Action where
+  {-# INLINE mempty #-}
+  mempty = Action $ const $ return
+
 -- * --
 
 -- |
@@ -151,21 +162,16 @@ data TextBuilder
   = TextBuilder !Action !Int !Int
 
 instance Semigroup TextBuilder where
-  (<>) (TextBuilder (Action writeL) estimatedArraySize1 textLength1) (TextBuilder (Action writeR) estimatedArraySize2 textLength2) =
+  (<>) (TextBuilder action1 estimatedArraySize1 textLength1) (TextBuilder action2 estimatedArraySize2 textLength2) =
     TextBuilder action estimatedArraySize textLength
     where
-      action = Action $ \array offset -> do
-        offsetAfter1 <- writeL array offset
-        writeR array offsetAfter1
-      estimatedArraySize =
-        estimatedArraySize1 + estimatedArraySize2
-      textLength =
-        textLength1 + textLength2
+      action = action1 <> action2
+      estimatedArraySize = estimatedArraySize1 + estimatedArraySize2
+      textLength = textLength1 + textLength2
 
 instance Monoid TextBuilder where
   {-# INLINE mempty #-}
-  mempty =
-    TextBuilder (Action (const return)) 0 0
+  mempty = TextBuilder mempty 0 0
 
 instance IsString TextBuilder where
   fromString = string
