@@ -63,6 +63,7 @@ data Allocator
   = Allocator !ArrayWriter !Int
 
 instance Semigroup Allocator where
+  {-# INLINE (<>) #-}
   (<>) (Allocator writer1 estimatedArraySize1) (Allocator writer2 estimatedArraySize2) =
     Allocator writer estimatedArraySize
     where
