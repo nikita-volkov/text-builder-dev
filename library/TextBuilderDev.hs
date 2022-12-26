@@ -77,15 +77,12 @@ where
 import qualified Data.ByteString as ByteString
 import qualified Data.List.Split as Split
 import qualified Data.Text as Text
-import qualified Data.Text.Array as TextArray
 import qualified Data.Text.IO as Text
-import qualified Data.Text.Internal as TextInternal
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified DeferredFolds.Unfoldr as Unfoldr
+import qualified TextBuilderDev.Allocator as Allocator
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
-import qualified TextBuilderDev.Utf16View as Utf16View
-import qualified TextBuilderDev.Utf8View as Utf8View
 
 -- * --
 
@@ -137,41 +134,25 @@ instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
   toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
   fromTextBuilder = TextLazyBuilder.fromText . buildText
 
--- * Action
-
-newtype Action
-  = Action (forall s. TextArray.MArray s -> Int -> ST s Int)
-
-instance Semigroup Action where
-  {-# INLINE (<>) #-}
-  Action writeL <> Action writeR =
-    Action $ \array offset -> do
-      offsetAfter1 <- writeL array offset
-      writeR array offsetAfter1
-
-instance Monoid Action where
-  {-# INLINE mempty #-}
-  mempty = Action $ const $ return
-
 -- * --
 
 -- |
 -- Specification of how to efficiently construct strict 'Text'.
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
 data TextBuilder
-  = TextBuilder !Action !Int !Int
+  = TextBuilder
+      {-# UNPACK #-} !Allocator.Allocator
+      !Int
 
 instance Semigroup TextBuilder where
-  (<>) (TextBuilder action1 estimatedArraySize1 textLength1) (TextBuilder action2 estimatedArraySize2 textLength2) =
-    TextBuilder action estimatedArraySize textLength
-    where
-      action = action1 <> action2
-      estimatedArraySize = estimatedArraySize1 + estimatedArraySize2
-      textLength = textLength1 + textLength2
+  (<>) (TextBuilder allocator1 sizeInChars1) (TextBuilder allocator2 sizeInChars2) =
+    TextBuilder
+      (allocator1 <> allocator2)
+      (sizeInChars1 + sizeInChars2)
 
 instance Monoid TextBuilder where
   {-# INLINE mempty #-}
-  mempty = TextBuilder mempty 0 0
+  mempty = TextBuilder mempty 0
 
 instance IsString TextBuilder where
   fromString = string
@@ -214,7 +195,7 @@ instance IsomorphicTo TextLazyBuilder.Builder TextBuilder where
 -- | Get the amount of characters.
 {-# INLINE length #-}
 length :: TextBuilder -> Int
-length (TextBuilder _ _ x) = x
+length (TextBuilder _ x) = x
 
 -- | Check whether the builder is empty.
 {-# INLINE null #-}
@@ -223,12 +204,8 @@ null = (== 0) . length
 
 -- | Execute a builder producing a strict text.
 buildText :: TextBuilder -> Text
-buildText (TextBuilder (Action action) sizeBound _) =
-  runST $ do
-    array <- TextArray.new sizeBound
-    offsetAfter <- action array 0
-    frozenArray <- TextArray.unsafeFreeze array
-    return $ TextInternal.text frozenArray 0 offsetAfter
+buildText (TextBuilder allocator _) =
+  Allocator.allocate allocator
 
 -- ** Output IO
 
@@ -265,118 +242,47 @@ force = text . buildText
 char :: Char -> TextBuilder
 char = unicodeCodePoint . ord
 
-#if MIN_VERSION_text(2,0,0)
-
 -- | Unicode code point.
 {-# INLINE unicodeCodePoint #-}
 unicodeCodePoint :: Int -> TextBuilder
-unicodeCodePoint x =
-  Utf8View.unicodeCodePoint x utf8CodeUnits1 utf8CodeUnits2 utf8CodeUnits3 utf8CodeUnits4
-
-{-# INLINEABLE utf8CodeUnits1 #-}
-utf8CodeUnits1 :: Word8 -> TextBuilder
-utf8CodeUnits1 unit1 = TextBuilder action 1 1
-  where
-    action = Action $ \array offset ->
-      TextArray.unsafeWrite array offset unit1
-        $> succ offset
-
-{-# INLINEABLE utf8CodeUnits2 #-}
-utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilder
-utf8CodeUnits2 unit1 unit2 = TextBuilder action 2 1
-  where
-    action = Action $ \array offset -> do
-      TextArray.unsafeWrite array (offset + 0) unit1
-      TextArray.unsafeWrite array (offset + 1) unit2
-      return $ offset + 2
-
-{-# INLINEABLE utf8CodeUnits3 #-}
-utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilder
-utf8CodeUnits3 unit1 unit2 unit3 = TextBuilder action 3 1
-  where
-    action = Action $ \array offset -> do
-      TextArray.unsafeWrite array (offset + 0) unit1
-      TextArray.unsafeWrite array (offset + 1) unit2
-      TextArray.unsafeWrite array (offset + 2) unit3
-      return $ offset + 3
-
-{-# INLINEABLE utf8CodeUnits4 #-}
-utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilder
-utf8CodeUnits4 unit1 unit2 unit3 unit4 = TextBuilder action 4 1
-  where
-    action = Action $ \array offset -> do
-      TextArray.unsafeWrite array (offset + 0) unit1
-      TextArray.unsafeWrite array (offset + 1) unit2
-      TextArray.unsafeWrite array (offset + 2) unit3
-      TextArray.unsafeWrite array (offset + 3) unit4
-      return $ offset + 4
-
-{-# INLINE utf16CodeUnits1 #-}
-utf16CodeUnits1 :: Word16 -> TextBuilder
-utf16CodeUnits1 = unicodeCodePoint . fromIntegral
-
-{-# INLINE utf16CodeUnits2 #-}
-utf16CodeUnits2 :: Word16 -> Word16 -> TextBuilder
-utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
-  where
-    cp = (((fromIntegral unit1 .&. 0x3FF) `shiftL` 10) .|. (fromIntegral unit2 .&. 0x3FF)) + 0x10000
-
-#else
-
--- | Unicode code point.
-{-# INLINE unicodeCodePoint #-}
-unicodeCodePoint :: Int -> TextBuilder
-unicodeCodePoint x =
-  Utf16View.unicodeCodePoint x utf16CodeUnits1 utf16CodeUnits2
+unicodeCodePoint a =
+  TextBuilder (Allocator.unicodeCodePoint a) 1
 
 -- | Single code-unit UTF-16 character.
 {-# INLINEABLE utf16CodeUnits1 #-}
 utf16CodeUnits1 :: Word16 -> TextBuilder
-utf16CodeUnits1 unit =
-  TextBuilder action 1 1
-  where
-    action =
-      Action $ \array offset ->
-        TextArray.unsafeWrite array offset unit
-          $> succ offset
+utf16CodeUnits1 a =
+  TextBuilder (Allocator.utf16CodeUnits1 a) 1
 
 -- | Double code-unit UTF-16 character.
 {-# INLINEABLE utf16CodeUnits2 #-}
 utf16CodeUnits2 :: Word16 -> Word16 -> TextBuilder
-utf16CodeUnits2 unit1 unit2 =
-  TextBuilder action 2 1
-  where
-    action =
-      Action $ \array offset -> do
-        TextArray.unsafeWrite array offset unit1
-        TextArray.unsafeWrite array (succ offset) unit2
-        return $ offset + 2
+utf16CodeUnits2 a b =
+  TextBuilder (Allocator.utf16CodeUnits2 a b) 1
 
 -- | Single code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits1 #-}
 utf8CodeUnits1 :: Word8 -> TextBuilder
-utf8CodeUnits1 unit1 =
-  Utf16View.utf8CodeUnits1 unit1 utf16CodeUnits1 utf16CodeUnits2
+utf8CodeUnits1 a =
+  TextBuilder (Allocator.utf8CodeUnits1 a) 1
 
 -- | Double code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits2 #-}
 utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilder
-utf8CodeUnits2 unit1 unit2 =
-  Utf16View.utf8CodeUnits2 unit1 unit2 utf16CodeUnits1 utf16CodeUnits2
+utf8CodeUnits2 a b =
+  TextBuilder (Allocator.utf8CodeUnits2 a b) 1
 
 -- | Triple code-unit UTF-8 character.
 {-# INLINE utf8CodeUnits3 #-}
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilder
-utf8CodeUnits3 unit1 unit2 unit3 =
-  Utf16View.utf8CodeUnits3 unit1 unit2 unit3 utf16CodeUnits1 utf16CodeUnits2
+utf8CodeUnits3 a b c =
+  TextBuilder (Allocator.utf8CodeUnits3 a b c) 1
 
 -- | UTF-8 character out of 4 code units.
 {-# INLINE utf8CodeUnits4 #-}
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilder
-utf8CodeUnits4 unit1 unit2 unit3 unit4 =
-  Utf16View.utf8CodeUnits4 unit1 unit2 unit3 unit4 utf16CodeUnits1 utf16CodeUnits2
-
-#endif
+utf8CodeUnits4 a b c d =
+  TextBuilder (Allocator.utf8CodeUnits4 a b c d) 1
 
 -- | ASCII byte string.
 --
@@ -385,36 +291,15 @@ utf8CodeUnits4 unit1 unit2 unit3 unit4 =
 {-# INLINEABLE asciiByteString #-}
 asciiByteString :: ByteString -> TextBuilder
 asciiByteString byteString =
-  TextBuilder action length length
-  where
-    length = ByteString.length byteString
-    action =
-      Action $ \array ->
-        let step byte next index = do
-              TextArray.unsafeWrite array index (fromIntegral byte)
-              next (succ index)
-         in ByteString.foldr step return byteString
+  TextBuilder
+    (Allocator.asciiByteString byteString)
+    (ByteString.length byteString)
 
 -- | Strict text.
 {-# INLINEABLE text #-}
 text :: Text -> TextBuilder
-#if MIN_VERSION_text(2,0,0)
-text text@(TextInternal.Text array offset length) =
-  TextBuilder action length (Text.length text)
-  where
-    action =
-      Action $ \builderArray builderOffset -> do
-        TextArray.copyI length builderArray builderOffset array offset
-        return $ builderOffset + length
-#else
-text text@(TextInternal.Text array offset length) =
-  TextBuilder action length (Text.length text)
-  where
-    action =
-      Action $ \builderArray builderOffset -> do
-        TextArray.copyI builderArray builderOffset array offset (builderOffset + length)
-        return $ builderOffset + length
-#endif
+text text =
+  TextBuilder (Allocator.text text) (Text.length text)
 
 -- | Lazy text.
 {-# INLINE lazyText #-}
