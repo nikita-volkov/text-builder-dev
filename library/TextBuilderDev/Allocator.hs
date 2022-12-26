@@ -3,6 +3,7 @@
 module TextBuilderDev.Allocator
   ( -- * Execution
     allocate,
+    sizeBound,
 
     -- * Definition
     Allocator,
@@ -17,6 +18,7 @@ module TextBuilderDev.Allocator
     utf8CodeUnits4,
     utf16CodeUnits1,
     utf16CodeUnits2,
+    finiteBitsUnsignedBinary,
   )
 where
 
@@ -57,6 +59,9 @@ allocate (Allocator (ArrayWriter write) sizeBound) =
     offsetAfter <- write array 0
     frozenArray <- TextArray.unsafeFreeze array
     return $ TextInternal.text frozenArray 0 offsetAfter
+
+sizeBound :: Allocator -> Int
+sizeBound (Allocator _ sizeBound) = sizeBound
 
 -- |
 -- Specification of how to efficiently construct strict 'Text'.
@@ -243,3 +248,23 @@ utf16CodeUnits2 unit1 unit2 =
         TextArray.unsafeWrite array (succ offset) unit2
         return $ offset + 2
 #endif
+
+-- | A less general but faster alternative to 'unsignedBinary'.
+finiteBitsUnsignedBinary :: FiniteBits a => a -> Allocator
+finiteBitsUnsignedBinary val =
+  Allocator writer size
+  where
+    writer =
+      ArrayWriter $ \array arrayStartIndex ->
+        let go val arrayIndex =
+              if arrayIndex >= arrayStartIndex
+                then do
+                  TextArray.unsafeWrite array arrayIndex $
+                    if testBit val 0 then 49 else 48
+                  go (unsafeShiftR val 1) (pred arrayIndex)
+                else return indexAfter
+            indexAfter =
+              arrayStartIndex + size
+         in go val (pred indexAfter)
+    size =
+      max 1 (finiteBitSize val - countLeadingZeros val)

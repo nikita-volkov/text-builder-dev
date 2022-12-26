@@ -52,6 +52,7 @@ module TextBuilderDev
     -- *** Binary
     unsignedBinary,
     unsignedPaddedBinary,
+    finiteBitsUnsignedBinary,
 
     -- *** Hexadecimal
     hexadecimal,
@@ -405,6 +406,14 @@ dividedDecimal separatorChar divisor n =
 unsignedBinary :: Integral a => a -> TextBuilder
 unsignedBinary =
   foldMap decimalDigit . Unfoldr.binaryDigits
+
+-- | A less general but faster alternative to 'unsignedBinary'.
+finiteBitsUnsignedBinary :: FiniteBits a => a -> TextBuilder
+finiteBitsUnsignedBinary a =
+  TextBuilder allocator size
+  where
+    allocator = Allocator.finiteBitsUnsignedBinary a
+    size = Allocator.sizeBound allocator
 
 -- | Unsigned binary number.
 {-# INLINE unsignedPaddedBinary #-}

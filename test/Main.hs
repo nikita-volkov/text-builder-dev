@@ -154,6 +154,11 @@ main =
               [ testProperty "Produces the same output as showBin" $ \(x :: Natural) ->
                   fromString (showBin x "")
                     === B.buildText (B.unsignedBinary x)
+              ],
+            testGroup "finiteBitsUnsignedBinary" $
+              [ testProperty "Produces the same output as showBin" $ \(x :: Word) ->
+                  fromString (showBin x "")
+                    === B.buildText (B.finiteBitsUnsignedBinary x)
               ]
           ],
         testGroup "IsomorphicToTextBuilder instances" $
