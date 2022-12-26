@@ -140,7 +140,9 @@ instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
 -- Specification of how to efficiently construct strict 'Text'.
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
 data TextBuilder
-  = TextBuilder !Allocator.Allocator !Int
+  = TextBuilder
+      {-# UNPACK #-} !Allocator.Allocator
+      !Int
 
 instance Semigroup TextBuilder where
   (<>) (TextBuilder allocator1 sizeInChars1) (TextBuilder allocator2 sizeInChars2) =
