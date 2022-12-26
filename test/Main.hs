@@ -149,7 +149,12 @@ main =
               assertEqual "" "10.0000" (B.buildText (B.fixedDouble 4 10))
               assertEqual "" "0.9000" (B.buildText (B.fixedDouble 4 0.9)),
             testCase "doublePercent" $ do
-              assertEqual "" "90.4%" (B.buildText (B.doublePercent 1 0.904))
+              assertEqual "" "90.4%" (B.buildText (B.doublePercent 1 0.904)),
+            testGroup "unsignedBinary" $
+              [ testProperty "Produces the same output as showBin" $ \(x :: Natural) ->
+                  fromString (showBin x "")
+                    === B.buildText (B.unsignedBinary x)
+              ]
           ],
         testGroup "IsomorphicToTextBuilder instances" $
           [ Extras.isomorphismLaws "Text" $ Proxy @Text,
