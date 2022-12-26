@@ -60,7 +60,9 @@ allocate (Allocator (ArrayWriter write) sizeBound) =
 -- Specification of how to efficiently construct strict 'Text'.
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
 data Allocator
-  = Allocator !ArrayWriter !Int
+  = Allocator
+      !ArrayWriter
+      {-# UNPACK #-} !Int
 
 instance Semigroup Allocator where
   {-# INLINE (<>) #-}

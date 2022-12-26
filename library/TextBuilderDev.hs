@@ -142,7 +142,7 @@ instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
 data TextBuilder
   = TextBuilder
       {-# UNPACK #-} !Allocator.Allocator
-      !Int
+      {-# UNPACK #-} !Int
 
 instance Semigroup TextBuilder where
   (<>) (TextBuilder allocator1 sizeInChars1) (TextBuilder allocator2 sizeInChars2) =
