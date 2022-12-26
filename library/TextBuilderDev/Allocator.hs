@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module TextBuilderDev.Allocator
   ( -- * Execution
     allocate,
