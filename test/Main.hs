@@ -6,6 +6,7 @@ import qualified Data.Text as Text
 import qualified Data.Text.Encoding as Text
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
+import Test.QuickCheck.Classes
 import Test.QuickCheck.Instances
 import Test.Tasty
 import Test.Tasty.HUnit
@@ -166,7 +167,13 @@ main =
             Extras.isomorphismLaws "Lazy Text" $ Proxy @TextLazy.Text,
             Extras.isomorphismLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder,
             Extras.isomorphismLaws "String" $ Proxy @String
-          ]
+          ],
+        testLaws $ semigroupLaws (Proxy @B.TextBuilder),
+        testLaws $ monoidLaws (Proxy @B.TextBuilder)
       ]
   where
     bigTest = 10000
+
+testLaws :: Laws -> TestTree
+testLaws Laws {..} =
+  testProperties lawsTypeclass lawsProperties

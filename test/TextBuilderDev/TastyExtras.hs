@@ -15,10 +15,6 @@ instance Arbitrary TextLazyBuilder.Builder where
   arbitrary =
     TextLazyBuilder.fromLazyText <$> arbitrary
 
-instance Arbitrary B.TextBuilder where
-  arbitrary =
-    B.lazyText <$> arbitrary
-
 -- * --
 
 isomorphismLaws ::

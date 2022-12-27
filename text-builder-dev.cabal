@@ -42,6 +42,8 @@ library
     bytestring >=0.10 && <0.12,
     deferred-folds >=0.9.10.1 && <0.10,
     isomorphism-class >=0.1.0.1 && <0.2,
+    QuickCheck >=2.14 && <3,
+    quickcheck-instances >=0.3.28 && <0.4,
     split >=0.2.3.4 && <0.3,
     text >=1.0 && <3,
     transformers >=0.5 && <0.7,
@@ -54,8 +56,9 @@ test-suite test
   other-modules:
     TextBuilderDev.TastyExtras
   build-depends:
-    QuickCheck >=2.13 && <3,
-    quickcheck-instances >=0.3.22 && <0.4,
+    QuickCheck >=2.14 && <3,
+    quickcheck-instances >=0.3.28 && <0.4,
+    quickcheck-classes >=0.6.5 && <0.7,
     rerebase <2,
     tasty >=1.2.3 && <2,
     tasty-hunit >=0.10.0.2 && <0.11,

@@ -63,6 +63,7 @@ import GHC.Generics as Exports (Generic)
 import GHC.IO.Exception as Exports
 import IsomorphismClass as Exports
 import Numeric as Exports
+import Numeric.Natural as Exports (Natural)
 import System.Environment as Exports
 import System.Exit as Exports
 import System.IO as Exports
@@ -71,6 +72,8 @@ import System.IO.Unsafe as Exports
 import System.Mem as Exports
 import System.Mem.StableName as Exports
 import System.Timeout as Exports
+import Test.QuickCheck.Arbitrary as Exports
+import Test.QuickCheck.Instances ()
 import Text.ParserCombinators.ReadP as Exports (ReadP, ReadS, readP_to_S, readS_to_P)
 import Text.ParserCombinators.ReadPrec as Exports (ReadPrec, readP_to_Prec, readPrec_to_P, readPrec_to_S, readS_to_Prec)
 import Text.Printf as Exports (hPrintf, printf)

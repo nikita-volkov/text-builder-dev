@@ -82,6 +82,7 @@ import qualified Data.Text.IO as Text
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified DeferredFolds.Unfoldr as Unfoldr
+import qualified Test.QuickCheck.Gen as QcGen
 import qualified TextBuilderDev.Allocator as Allocator
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
@@ -163,6 +164,41 @@ instance Show TextBuilder where
 
 instance Eq TextBuilder where
   (==) = on (==) buildText
+
+instance Arbitrary TextBuilder where
+  arbitrary =
+    QcGen.oneof
+      [ QcGen.scale (flip div 2) $
+          QcGen.oneof
+            [ (<>) <$> arbitrary <*> arbitrary,
+              sconcat <$> arbitrary,
+              stimes <$> arbitrary @Word8 <*> arbitrary,
+              pure mempty,
+              mconcat <$> arbitrary
+            ],
+        text <$> arbitrary,
+        lazyText <$> arbitrary,
+        string <$> arbitrary,
+        asciiByteString . ByteString.filter (< 128) <$> arbitrary,
+        hexData <$> arbitrary,
+        char <$> arbitrary,
+        decimal @Integer <$> arbitrary,
+        unsignedDecimal @Natural <$> arbitrary,
+        thousandSeparatedDecimal @Integer <$> arbitrary <*> arbitrary,
+        thousandSeparatedUnsignedDecimal @Natural <$> arbitrary <*> arbitrary,
+        dataSizeInBytesInDecimal @Natural <$> arbitrary <*> arbitrary,
+        unsignedBinary @Natural <$> arbitrary,
+        unsignedPaddedBinary @Word <$> arbitrary,
+        finiteBitsUnsignedBinary @Word <$> arbitrary,
+        hexadecimal @Integer <$> arbitrary,
+        unsignedHexadecimal @Natural <$> arbitrary,
+        decimalDigit <$> QcGen.choose (0, 9),
+        hexadecimalDigit <$> QcGen.choose (0, 15),
+        fixedDouble <$> QcGen.choose (0, 19) <*> arbitrary,
+        doublePercent <$> QcGen.choose (0, 19) <*> arbitrary,
+        utcTimestampInIso8601 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary,
+        intervalInSeconds @Double <$> arbitrary
+      ]
 
 instance IsomorphicTo TextBuilder TextBuilder where
   to = id
