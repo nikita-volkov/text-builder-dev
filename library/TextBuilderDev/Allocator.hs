@@ -106,6 +106,11 @@ instance Monoid Allocator where
 force :: Allocator -> Allocator
 force = text . allocate
 
+{-# INLINE sizedWriter #-}
+sizedWriter :: Int -> (forall s. TextArray.MArray s -> Int -> ST s Int) -> Allocator
+sizedWriter size write =
+  Allocator (ArrayWriter write) size
+
 -- | Strict text.
 {-# INLINEABLE text #-}
 text :: Text -> Allocator
