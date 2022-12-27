@@ -44,6 +44,15 @@ instance Semigroup ArrayWriter where
     ArrayWriter $ \array offset -> do
       offsetAfter1 <- writeL array offset
       writeR array offsetAfter1
+  stimes n (ArrayWriter write) =
+    ArrayWriter $ \array ->
+      let go n offset =
+            if n > 0
+              then do
+                offset <- write array offset
+                go (pred n) offset
+              else return offset
+       in go n
 
 instance Monoid ArrayWriter where
   {-# INLINE mempty #-}
@@ -78,6 +87,10 @@ instance Semigroup Allocator where
     where
       writer = writer1 <> writer2
       estimatedArraySize = estimatedArraySize1 + estimatedArraySize2
+  stimes n (Allocator writer sizeBound) =
+    Allocator
+      (stimes n writer)
+      (sizeBound * fromIntegral n)
 
 instance Monoid Allocator where
   {-# INLINE mempty #-}

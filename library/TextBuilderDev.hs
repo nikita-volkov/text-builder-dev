@@ -151,6 +151,8 @@ instance Semigroup TextBuilder where
     TextBuilder
       (allocator1 <> allocator2)
       (sizeInChars1 + sizeInChars2)
+  stimes n (TextBuilder allocator size) =
+    TextBuilder (stimes n allocator) (size * fromIntegral n)
 
 instance Monoid TextBuilder where
   {-# INLINE mempty #-}
