@@ -19,6 +19,7 @@ module TextBuilderDev.Allocator
     utf16CodeUnits1,
     utf16CodeUnits2,
     finiteBitsUnsignedBinary,
+    fixedUnsignedDecimal,
   )
 where
 
@@ -286,3 +287,26 @@ finiteBitsUnsignedBinary val =
          in go val (pred indexAfter)
     size =
       max 1 (finiteBitSize val - countLeadingZeros val)
+
+-- | Fixed-size decimal.
+fixedUnsignedDecimal :: Integral a => Int -> a -> Allocator
+fixedUnsignedDecimal size val =
+  sizedWriter size $ \array startOffset ->
+    let offsetAfter = startOffset + size
+        writeValue val offset =
+          if offset >= startOffset
+            then
+              if val /= 0
+                then case divMod val 10 of
+                  (val, digit) -> do
+                    TextArray.unsafeWrite array offset $ 48 + fromIntegral digit
+                    writeValue val (pred offset)
+                else writePadding offset
+            else return offsetAfter
+        writePadding offset =
+          if offset >= startOffset
+            then do
+              TextArray.unsafeWrite array offset 48
+              writePadding (pred offset)
+            else return offsetAfter
+     in writeValue val (pred offsetAfter)

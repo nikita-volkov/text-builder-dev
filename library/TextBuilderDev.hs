@@ -45,6 +45,7 @@ module TextBuilderDev
     -- *** Decimal
     decimal,
     unsignedDecimal,
+    fixedUnsignedDecimal,
     thousandSeparatedDecimal,
     thousandSeparatedUnsignedDecimal,
     dataSizeInBytesInDecimal,
@@ -365,6 +366,10 @@ decimal i =
 unsignedDecimal :: Integral a => a -> TextBuilder
 unsignedDecimal =
   foldMap (decimalDigit . fromIntegral) . Unfoldr.decimalDigits
+
+fixedUnsignedDecimal :: Integral a => Int -> a -> TextBuilder
+fixedUnsignedDecimal size val =
+  TextBuilder (Allocator.fixedUnsignedDecimal size val) size
 
 -- | Decimal representation of an integral value with thousands separated by the specified character.
 {-# INLINEABLE thousandSeparatedDecimal #-}

@@ -160,6 +160,18 @@ main =
               [ testProperty "Produces the same output as showBin" $ \(x :: Word) ->
                   fromString (showBin x "")
                     === B.buildText (B.finiteBitsUnsignedBinary x)
+              ],
+            testGroup "fixedUnsignedDecimal" $
+              [ testProperty "Same as printf" $ \(size :: Word8, val :: Natural) ->
+                  let rendered = show val
+                      renderedLength = length rendered
+                      intSize = fromIntegral size
+                      padded =
+                        if renderedLength > intSize
+                          then drop (renderedLength - intSize) rendered
+                          else replicate (intSize - renderedLength) '0' <> rendered
+                   in fromString padded
+                        === B.buildText (B.fixedUnsignedDecimal (fromIntegral size) val)
               ]
           ],
         testGroup "IsomorphicToTextBuilder instances" $
