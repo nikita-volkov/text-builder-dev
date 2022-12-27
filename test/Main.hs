@@ -172,6 +172,13 @@ main =
                           else replicate (intSize - renderedLength) '0' <> rendered
                    in fromString padded
                         === B.buildText (B.fixedUnsignedDecimal (fromIntegral size) val)
+              ],
+            testGroup "utcTimeInIso8601" $
+              [ testProperty "Same as iso8601Show" $ \x ->
+                  let roundedToSecondsTime =
+                        x {utctDayTime = (fromIntegral . round . utctDayTime) x}
+                   in (fromString . flip mappend "Z" . take 19 . iso8601Show) roundedToSecondsTime
+                        === B.buildText (B.utcTimeInIso8601 roundedToSecondsTime)
               ]
           ],
         testGroup "IsomorphicToTextBuilder instances" $

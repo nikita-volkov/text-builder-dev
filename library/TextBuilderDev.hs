@@ -68,6 +68,7 @@ module TextBuilderDev
     doublePercent,
 
     -- ** Time
+    utcTimeInIso8601,
     utcTimestampInIso8601,
     intervalInSeconds,
 
@@ -535,6 +536,14 @@ padFromRight paddedLength paddingChar builder =
         then builder
         else builder <> foldMap char (replicate (paddedLength - builderLength) paddingChar)
 
+utcTimeInIso8601 :: UTCTime -> TextBuilder
+utcTimeInIso8601 UTCTime {..} =
+  let (year, month, day) = toGregorian utctDay
+      daySeconds = round utctDayTime
+      (dayMinutes, second) = divMod daySeconds 60
+      (hour, minute) = divMod dayMinutes 60
+   in utcTimestampInIso8601 (fromIntegral year) month day hour minute second
+
 -- |
 -- General template for formatting date values according to the ISO8601 standard.
 -- The format is the following:
@@ -558,17 +567,17 @@ utcTimestampInIso8601 ::
   TextBuilder
 utcTimestampInIso8601 y mo d h mi s =
   mconcat
-    [ padFromLeft 4 '0' $ decimal y,
+    [ fixedUnsignedDecimal 4 y,
       "-",
-      padFromLeft 2 '0' $ decimal mo,
+      fixedUnsignedDecimal 2 mo,
       "-",
-      padFromLeft 2 '0' $ decimal d,
+      fixedUnsignedDecimal 2 d,
       "T",
-      padFromLeft 2 '0' $ decimal h,
+      fixedUnsignedDecimal 2 h,
       ":",
-      padFromLeft 2 '0' $ decimal mi,
+      fixedUnsignedDecimal 2 mi,
       ":",
-      padFromLeft 2 '0' $ decimal s,
+      fixedUnsignedDecimal 2 s,
       "Z"
     ]
 
