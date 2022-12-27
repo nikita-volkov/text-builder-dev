@@ -168,6 +168,8 @@ main =
             Extras.isomorphismLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder,
             Extras.isomorphismLaws "String" $ Proxy @String
           ],
+        testLaws $ showLaws (Proxy @B.TextBuilder),
+        testLaws $ eqLaws (Proxy @B.TextBuilder),
         testLaws $ semigroupLaws (Proxy @B.TextBuilder),
         testLaws $ monoidLaws (Proxy @B.TextBuilder)
       ]
