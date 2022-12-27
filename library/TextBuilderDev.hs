@@ -326,7 +326,7 @@ decimal i =
 {-# INLINEABLE unsignedDecimal #-}
 unsignedDecimal :: Integral a => a -> TextBuilder
 unsignedDecimal =
-  foldMap decimalDigit . Unfoldr.decimalDigits
+  foldMap (decimalDigit . fromIntegral) . Unfoldr.decimalDigits
 
 -- | Decimal representation of an integral value with thousands separated by the specified character.
 {-# INLINEABLE thousandSeparatedDecimal #-}
@@ -345,7 +345,7 @@ thousandSeparatedUnsignedDecimal separatorChar =
     processRightmostDigit value =
       case divMod value 10 of
         (value, digit) ->
-          processAnotherDigit [decimalDigit digit] 1 value
+          processAnotherDigit [decimalDigit (fromIntegral digit)] 1 value
     processAnotherDigit builders index value =
       if value == 0
         then mconcat builders
@@ -354,12 +354,12 @@ thousandSeparatedUnsignedDecimal separatorChar =
             if mod index 3 == 0
               then
                 processAnotherDigit
-                  (decimalDigit digit : char separatorChar : builders)
+                  (decimalDigit (fromIntegral digit) : char separatorChar : builders)
                   (succ index)
                   value
               else
                 processAnotherDigit
-                  (decimalDigit digit : builders)
+                  (decimalDigit (fromIntegral digit) : builders)
                   (succ index)
                   value
 
@@ -399,13 +399,13 @@ dividedDecimal separatorChar divisor n =
       remainder = byDivisor - byExtraTen * 10
    in if remainder == 0 || byExtraTen >= 10
         then thousandSeparatedDecimal separatorChar byExtraTen
-        else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
+        else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit (fromIntegral remainder)
 
 -- | Unsigned binary number.
 {-# INLINE unsignedBinary #-}
 unsignedBinary :: Integral a => a -> TextBuilder
 unsignedBinary =
-  foldMap decimalDigit . Unfoldr.binaryDigits
+  foldMap (decimalDigit . fromIntegral) . Unfoldr.binaryDigits
 
 -- | A less general but faster alternative to 'unsignedBinary'.
 finiteBitsUnsignedBinary :: FiniteBits a => a -> TextBuilder
@@ -419,7 +419,7 @@ finiteBitsUnsignedBinary a =
 {-# INLINE unsignedPaddedBinary #-}
 unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilder
 unsignedPaddedBinary a =
-  padFromLeft (finiteBitSize a) '0' $ foldMap decimalDigit $ Unfoldr.binaryDigits a
+  padFromLeft (finiteBitSize a) '0' $ foldMap (decimalDigit . fromIntegral) $ Unfoldr.binaryDigits a
 
 -- | Hexadecimal representation of an integral value.
 {-# INLINE hexadecimal #-}
@@ -433,21 +433,21 @@ hexadecimal i =
 {-# INLINE unsignedHexadecimal #-}
 unsignedHexadecimal :: Integral a => a -> TextBuilder
 unsignedHexadecimal =
-  foldMap hexadecimalDigit . Unfoldr.hexadecimalDigits
+  foldMap (hexadecimalDigit . fromIntegral) . Unfoldr.hexadecimalDigits
 
 -- | Decimal digit.
 {-# INLINE decimalDigit #-}
-decimalDigit :: Integral a => a -> TextBuilder
+decimalDigit :: Int -> TextBuilder
 decimalDigit n =
-  unicodeCodePoint (fromIntegral n + 48)
+  unicodeCodePoint (n + 48)
 
 -- | Hexadecimal digit.
 {-# INLINE hexadecimalDigit #-}
-hexadecimalDigit :: Integral a => a -> TextBuilder
+hexadecimalDigit :: Int -> TextBuilder
 hexadecimalDigit n =
   if n <= 9
-    then unicodeCodePoint (fromIntegral n + 48)
-    else unicodeCodePoint (fromIntegral n + 87)
+    then unicodeCodePoint (n + 48)
+    else unicodeCodePoint (n + 87)
 
 -- | Intercalate builders.
 {-# INLINE intercalate #-}
