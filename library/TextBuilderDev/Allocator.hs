@@ -288,7 +288,9 @@ finiteBitsUnsignedBinary val =
     size =
       max 1 (finiteBitSize val - countLeadingZeros val)
 
--- | Fixed-size decimal.
+-- | Fixed-length decimal.
+-- Padded with zeros or trimmed depending on whether it's shorter or longer
+-- than specified.
 fixedUnsignedDecimal :: Integral a => Int -> a -> Allocator
 fixedUnsignedDecimal size val =
   sizedWriter size $ \array startOffset ->
