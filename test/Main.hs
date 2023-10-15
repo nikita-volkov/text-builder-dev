@@ -5,6 +5,7 @@ import qualified Data.Char as Char
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
+import Numeric.Compat
 import Test.QuickCheck.Classes
 import Test.QuickCheck.Instances ()
 import Test.Tasty
@@ -12,7 +13,7 @@ import Test.Tasty.HUnit
 import Test.Tasty.QuickCheck hiding ((.&.))
 import qualified TextBuilderDev as B
 import qualified TextBuilderDev.TastyExtras as Extras
-import Prelude hiding (choose)
+import Prelude hiding (choose, showBin)
 
 main :: IO ()
 main =
