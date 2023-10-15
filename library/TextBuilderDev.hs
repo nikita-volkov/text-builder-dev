@@ -196,8 +196,8 @@ instance Arbitrary TextBuilder where
         finiteBitsUnsignedBinary @Word <$> arbitrary,
         hexadecimal @Integer <$> arbitrary,
         unsignedHexadecimal @Natural <$> arbitrary,
-        decimalDigit <$> QcGen.choose (0, 9),
-        hexadecimalDigit <$> QcGen.choose (0, 15),
+        decimalDigit <$> QcGen.choose @Int (0, 9),
+        hexadecimalDigit <$> QcGen.choose @Int (0, 15),
         fixedDouble <$> QcGen.choose (0, 19) <*> arbitrary,
         doublePercent <$> QcGen.choose (0, 19) <*> arbitrary,
         utcTimestampInIso8601 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary,
@@ -481,14 +481,14 @@ unsignedHexadecimal =
 
 -- | Decimal digit.
 {-# INLINE decimalDigit #-}
-decimalDigit :: Int -> TextBuilder
-decimalDigit n =
+decimalDigit :: (Integral a) => a -> TextBuilder
+decimalDigit (fromIntegral -> n) =
   unicodeCodePoint (n + 48)
 
 -- | Hexadecimal digit.
 {-# INLINE hexadecimalDigit #-}
-hexadecimalDigit :: Int -> TextBuilder
-hexadecimalDigit n =
+hexadecimalDigit :: (Integral a) => a -> TextBuilder
+hexadecimalDigit (fromIntegral -> n) =
   if n <= 9
     then unicodeCodePoint (n + 48)
     else unicodeCodePoint (n + 87)
