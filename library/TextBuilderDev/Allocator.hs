@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module TextBuilderDev.Allocator
   ( -- * Execution
@@ -269,7 +270,7 @@ utf16CodeUnits2 unit1 unit2 =
 #endif
 
 -- | A less general but faster alternative to 'unsignedBinary'.
-finiteBitsUnsignedBinary :: FiniteBits a => a -> Allocator
+finiteBitsUnsignedBinary :: (FiniteBits a) => a -> Allocator
 finiteBitsUnsignedBinary val =
   Allocator writer size
   where
@@ -278,8 +279,8 @@ finiteBitsUnsignedBinary val =
         let go val arrayIndex =
               if arrayIndex >= arrayStartIndex
                 then do
-                  TextArray.unsafeWrite array arrayIndex $
-                    if testBit val 0 then 49 else 48
+                  TextArray.unsafeWrite array arrayIndex
+                    $ if testBit val 0 then 49 else 48
                   go (unsafeShiftR val 1) (pred arrayIndex)
                 else return indexAfter
             indexAfter =
@@ -291,7 +292,7 @@ finiteBitsUnsignedBinary val =
 -- | Fixed-length decimal.
 -- Padded with zeros or trimmed depending on whether it's shorter or longer
 -- than specified.
-fixedUnsignedDecimal :: Integral a => Int -> a -> Allocator
+fixedUnsignedDecimal :: (Integral a) => Int -> a -> Allocator
 fixedUnsignedDecimal size val =
   sizedWriter size $ \array startOffset ->
     let offsetAfter = startOffset + size

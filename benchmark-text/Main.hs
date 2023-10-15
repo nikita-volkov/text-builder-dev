@@ -1,24 +1,24 @@
 module Main where
 
 import Criterion.Main
-import qualified Data.Text as D
 import qualified Data.Text.Lazy as C
 import qualified Data.Text.Lazy.Builder as B
 import qualified TextBuilderDev as A
 import Prelude
 
+main :: IO ()
 main =
-  defaultMain $
-    [ subjectBenchmark "builderSubject" builderSubject,
-      subjectBenchmark "lazyTextBuilderDevSubject" lazyTextBuilderDevSubject
-    ]
+  defaultMain
+    $ [ subjectBenchmark "builderSubject" builderSubject,
+        subjectBenchmark "lazyTextBuilderDevSubject" lazyTextBuilderDevSubject
+      ]
 
 subjectBenchmark :: String -> Subject -> Benchmark
 subjectBenchmark title subject =
-  bgroup title $
-    [ benchmark "Small input" smallSample subject,
-      benchmark "Large input" largeSample subject
-    ]
+  bgroup title
+    $ [ benchmark "Small input" smallSample subject,
+        benchmark "Large input" largeSample subject
+      ]
 
 benchmark :: String -> Sample -> Subject -> Benchmark
 benchmark title sample subject =
@@ -41,13 +41,17 @@ lazyTextBuilderDevSubject =
 {-# NOINLINE smallSample #-}
 smallSample :: Sample
 smallSample (Subject text (<>) mempty run) =
-  run $
-    text "abcd" <> (text "ABCD" <> text "Фываолдж") <> text "漢"
+  run
+    $ text "abcd"
+    <> (text "ABCD" <> text "Фываолдж")
+    <> text "漢"
 
 {-# NOINLINE largeSample #-}
 largeSample :: Sample
 largeSample (Subject text (<>) mempty run) =
-  run $
-    foldl' (<>) mempty $
-      replicate 100000 $
-        text "abcd" <> (text "ABCD" <> text "Фываолдж") <> text "漢"
+  run
+    $ foldl' (<>) mempty
+    $ replicate 100000
+    $ text "abcd"
+    <> (text "ABCD" <> text "Фываолдж")
+    <> text "漢"
