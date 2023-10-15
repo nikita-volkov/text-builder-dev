@@ -172,8 +172,8 @@ instance Eq TextBuilder where
 instance Arbitrary TextBuilder where
   arbitrary =
     QcGen.oneof
-      [ QcGen.scale (flip div 2) $
-          QcGen.oneof
+      [ QcGen.scale (flip div 2)
+          $ QcGen.oneof
             [ (<>) <$> arbitrary <*> arbitrary,
               sconcat <$> arbitrary,
               stimes <$> arbitrary @Word8 <*> arbitrary,
@@ -356,7 +356,7 @@ string =
 
 -- | Decimal representation of an integral value.
 {-# INLINEABLE decimal #-}
-decimal :: Integral a => a -> TextBuilder
+decimal :: (Integral a) => a -> TextBuilder
 decimal i =
   if i >= 0
     then unsignedDecimal i
@@ -364,17 +364,17 @@ decimal i =
 
 -- | Decimal representation of an unsigned integral value.
 {-# INLINEABLE unsignedDecimal #-}
-unsignedDecimal :: Integral a => a -> TextBuilder
+unsignedDecimal :: (Integral a) => a -> TextBuilder
 unsignedDecimal =
   foldMap (decimalDigit . fromIntegral) . Unfoldr.decimalDigits
 
-fixedUnsignedDecimal :: Integral a => Int -> a -> TextBuilder
+fixedUnsignedDecimal :: (Integral a) => Int -> a -> TextBuilder
 fixedUnsignedDecimal size val =
   TextBuilder (Allocator.fixedUnsignedDecimal size val) size
 
 -- | Decimal representation of an integral value with thousands separated by the specified character.
 {-# INLINEABLE thousandSeparatedDecimal #-}
-thousandSeparatedDecimal :: Integral a => Char -> a -> TextBuilder
+thousandSeparatedDecimal :: (Integral a) => Char -> a -> TextBuilder
 thousandSeparatedDecimal separatorChar a =
   if a >= 0
     then thousandSeparatedUnsignedDecimal separatorChar a
@@ -382,7 +382,7 @@ thousandSeparatedDecimal separatorChar a =
 
 -- | Decimal representation of an unsigned integral value with thousands separated by the specified character.
 {-# INLINEABLE thousandSeparatedUnsignedDecimal #-}
-thousandSeparatedUnsignedDecimal :: Integral a => Char -> a -> TextBuilder
+thousandSeparatedUnsignedDecimal :: (Integral a) => Char -> a -> TextBuilder
 thousandSeparatedUnsignedDecimal separatorChar =
   processRightmostDigit
   where
@@ -409,7 +409,7 @@ thousandSeparatedUnsignedDecimal separatorChar =
 
 -- | Data size in decimal notation over amount of bytes.
 {-# INLINEABLE dataSizeInBytesInDecimal #-}
-dataSizeInBytesInDecimal :: Integral a => Char -> a -> TextBuilder
+dataSizeInBytesInDecimal :: (Integral a) => Char -> a -> TextBuilder
 dataSizeInBytesInDecimal separatorChar amount =
   if amount < 1000
     then unsignedDecimal amount <> "B"
@@ -436,7 +436,7 @@ dataSizeInBytesInDecimal separatorChar amount =
                                 then dividedDecimal separatorChar 100000000000000000000 amount <> "ZB"
                                 else dividedDecimal separatorChar 100000000000000000000000 amount <> "YB"
 
-dividedDecimal :: Integral a => Char -> a -> a -> TextBuilder
+dividedDecimal :: (Integral a) => Char -> a -> a -> TextBuilder
 dividedDecimal separatorChar divisor n =
   let byDivisor = div n divisor
       byExtraTen = div byDivisor 10
@@ -447,12 +447,12 @@ dividedDecimal separatorChar divisor n =
 
 -- | Unsigned binary number.
 {-# INLINE unsignedBinary #-}
-unsignedBinary :: Integral a => a -> TextBuilder
+unsignedBinary :: (Integral a) => a -> TextBuilder
 unsignedBinary =
   foldMap (decimalDigit . fromIntegral) . Unfoldr.binaryDigits
 
 -- | A less general but faster alternative to 'unsignedBinary'.
-finiteBitsUnsignedBinary :: FiniteBits a => a -> TextBuilder
+finiteBitsUnsignedBinary :: (FiniteBits a) => a -> TextBuilder
 finiteBitsUnsignedBinary a =
   TextBuilder allocator size
   where
@@ -467,7 +467,7 @@ unsignedPaddedBinary a =
 
 -- | Hexadecimal representation of an integral value.
 {-# INLINE hexadecimal #-}
-hexadecimal :: Integral a => a -> TextBuilder
+hexadecimal :: (Integral a) => a -> TextBuilder
 hexadecimal i =
   if i >= 0
     then unsignedHexadecimal i
@@ -475,7 +475,7 @@ hexadecimal i =
 
 -- | Unsigned hexadecimal representation of an integral value.
 {-# INLINE unsignedHexadecimal #-}
-unsignedHexadecimal :: Integral a => a -> TextBuilder
+unsignedHexadecimal :: (Integral a) => a -> TextBuilder
 unsignedHexadecimal =
   foldMap (hexadecimalDigit . fromIntegral) . Unfoldr.hexadecimalDigits
 
@@ -495,20 +495,20 @@ hexadecimalDigit n =
 
 -- | Intercalate builders.
 {-# INLINE intercalate #-}
-intercalate :: Foldable f => TextBuilder -> f TextBuilder -> TextBuilder
+intercalate :: (Foldable f) => TextBuilder -> f TextBuilder -> TextBuilder
 intercalate separator = extract . foldl' step init
   where
     init = Product2 False mempty
     step (Product2 isNotFirst builder) element =
-      Product2 True $
-        if isNotFirst
+      Product2 True
+        $ if isNotFirst
           then builder <> separator <> element
           else element
     extract (Product2 _ builder) = builder
 
 -- | Intercalate projecting values to builder.
 {-# INLINE intercalateMap #-}
-intercalateMap :: Foldable f => TextBuilder -> (a -> TextBuilder) -> f a -> TextBuilder
+intercalateMap :: (Foldable f) => TextBuilder -> (a -> TextBuilder) -> f a -> TextBuilder
 intercalateMap separator mapper = extract . foldl' step init
   where
     init = Nothing
@@ -585,20 +585,20 @@ utcTimestampInIso8601 y mo d h mi s =
 -- Time interval in seconds.
 -- Directly applicable to 'DiffTime' and 'NominalDiffTime'.
 {-# INLINEABLE intervalInSeconds #-}
-intervalInSeconds :: RealFrac seconds => seconds -> TextBuilder
+intervalInSeconds :: (RealFrac seconds) => seconds -> TextBuilder
 intervalInSeconds interval = flip evalState (round interval) $ do
   seconds <- state (swap . flip divMod 60)
   minutes <- state (swap . flip divMod 60)
   hours <- state (swap . flip divMod 24)
   days <- get
-  return $
-    padFromLeft 2 '0' (decimal days)
-      <> ":"
-      <> padFromLeft 2 '0' (decimal hours)
-      <> ":"
-      <> padFromLeft 2 '0' (decimal minutes)
-      <> ":"
-      <> padFromLeft 2 '0' (decimal seconds)
+  return
+    $ padFromLeft 2 '0' (decimal days)
+    <> ":"
+    <> padFromLeft 2 '0' (decimal hours)
+    <> ":"
+    <> padFromLeft 2 '0' (decimal minutes)
+    <> ":"
+    <> padFromLeft 2 '0' (decimal seconds)
 
 -- | Double with a fixed number of decimal places.
 {-# INLINE fixedDouble #-}
