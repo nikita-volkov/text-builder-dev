@@ -1,4 +1,5 @@
 {-# LANGUAGE CPP #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module TextBuilderDev.Allocator
   ( -- * Execution
@@ -19,6 +20,7 @@ module TextBuilderDev.Allocator
     utf16CodeUnits1,
     utf16CodeUnits2,
     finiteBitsUnsignedBinary,
+    fixedUnsignedDecimal,
   )
 where
 
@@ -44,6 +46,15 @@ instance Semigroup ArrayWriter where
     ArrayWriter $ \array offset -> do
       offsetAfter1 <- writeL array offset
       writeR array offsetAfter1
+  stimes n (ArrayWriter write) =
+    ArrayWriter $ \array ->
+      let go n offset =
+            if n > 0
+              then do
+                offset <- write array offset
+                go (pred n) offset
+              else return offset
+       in go n
 
 instance Monoid ArrayWriter where
   {-# INLINE mempty #-}
@@ -78,6 +89,10 @@ instance Semigroup Allocator where
     where
       writer = writer1 <> writer2
       estimatedArraySize = estimatedArraySize1 + estimatedArraySize2
+  stimes n (Allocator writer sizeBound) =
+    Allocator
+      (stimes n writer)
+      (sizeBound * fromIntegral n)
 
 instance Monoid Allocator where
   {-# INLINE mempty #-}
@@ -92,6 +107,11 @@ instance Monoid Allocator where
 {-# INLINE force #-}
 force :: Allocator -> Allocator
 force = text . allocate
+
+{-# INLINE sizedWriter #-}
+sizedWriter :: Int -> (forall s. TextArray.MArray s -> Int -> ST s Int) -> Allocator
+sizedWriter size write =
+  Allocator (ArrayWriter write) size
 
 -- | Strict text.
 {-# INLINEABLE text #-}
@@ -250,7 +270,7 @@ utf16CodeUnits2 unit1 unit2 =
 #endif
 
 -- | A less general but faster alternative to 'unsignedBinary'.
-finiteBitsUnsignedBinary :: FiniteBits a => a -> Allocator
+finiteBitsUnsignedBinary :: (FiniteBits a) => a -> Allocator
 finiteBitsUnsignedBinary val =
   Allocator writer size
   where
@@ -259,8 +279,8 @@ finiteBitsUnsignedBinary val =
         let go val arrayIndex =
               if arrayIndex >= arrayStartIndex
                 then do
-                  TextArray.unsafeWrite array arrayIndex $
-                    if testBit val 0 then 49 else 48
+                  TextArray.unsafeWrite array arrayIndex
+                    $ if testBit val 0 then 49 else 48
                   go (unsafeShiftR val 1) (pred arrayIndex)
                 else return indexAfter
             indexAfter =
@@ -268,3 +288,28 @@ finiteBitsUnsignedBinary val =
          in go val (pred indexAfter)
     size =
       max 1 (finiteBitSize val - countLeadingZeros val)
+
+-- | Fixed-length decimal.
+-- Padded with zeros or trimmed depending on whether it's shorter or longer
+-- than specified.
+fixedUnsignedDecimal :: (Integral a) => Int -> a -> Allocator
+fixedUnsignedDecimal size val =
+  sizedWriter size $ \array startOffset ->
+    let offsetAfter = startOffset + size
+        writeValue val offset =
+          if offset >= startOffset
+            then
+              if val /= 0
+                then case divMod val 10 of
+                  (val, digit) -> do
+                    TextArray.unsafeWrite array offset $ 48 + fromIntegral digit
+                    writeValue val (pred offset)
+                else writePadding offset
+            else return offsetAfter
+        writePadding offset =
+          if offset >= startOffset
+            then do
+              TextArray.unsafeWrite array offset 48
+              writePadding (pred offset)
+            else return offsetAfter
+     in writeValue val (pred offsetAfter)

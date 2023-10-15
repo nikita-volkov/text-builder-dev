@@ -45,6 +45,7 @@ module TextBuilderDev
     -- *** Decimal
     decimal,
     unsignedDecimal,
+    fixedUnsignedDecimal,
     thousandSeparatedDecimal,
     thousandSeparatedUnsignedDecimal,
     dataSizeInBytesInDecimal,
@@ -67,6 +68,7 @@ module TextBuilderDev
     doublePercent,
 
     -- ** Time
+    utcTimeInIso8601,
     utcTimestampInIso8601,
     intervalInSeconds,
 
@@ -82,6 +84,7 @@ import qualified Data.Text.IO as Text
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified DeferredFolds.Unfoldr as Unfoldr
+import qualified Test.QuickCheck.Gen as QcGen
 import qualified TextBuilderDev.Allocator as Allocator
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
@@ -150,6 +153,8 @@ instance Semigroup TextBuilder where
     TextBuilder
       (allocator1 <> allocator2)
       (sizeInChars1 + sizeInChars2)
+  stimes n (TextBuilder allocator size) =
+    TextBuilder (stimes n allocator) (size * fromIntegral n)
 
 instance Monoid TextBuilder where
   {-# INLINE mempty #-}
@@ -163,6 +168,41 @@ instance Show TextBuilder where
 
 instance Eq TextBuilder where
   (==) = on (==) buildText
+
+instance Arbitrary TextBuilder where
+  arbitrary =
+    QcGen.oneof
+      [ QcGen.scale (flip div 2)
+          $ QcGen.oneof
+            [ (<>) <$> arbitrary <*> arbitrary,
+              sconcat <$> arbitrary,
+              stimes <$> arbitrary @Word8 <*> arbitrary,
+              pure mempty,
+              mconcat <$> arbitrary
+            ],
+        text <$> arbitrary,
+        lazyText <$> arbitrary,
+        string <$> arbitrary,
+        asciiByteString . ByteString.filter (< 128) <$> arbitrary,
+        hexData <$> arbitrary,
+        char <$> arbitrary,
+        decimal @Integer <$> arbitrary,
+        unsignedDecimal @Natural <$> arbitrary,
+        thousandSeparatedDecimal @Integer <$> arbitrary <*> arbitrary,
+        thousandSeparatedUnsignedDecimal @Natural <$> arbitrary <*> arbitrary,
+        dataSizeInBytesInDecimal @Natural <$> arbitrary <*> arbitrary,
+        unsignedBinary @Natural <$> arbitrary,
+        unsignedPaddedBinary @Word <$> arbitrary,
+        finiteBitsUnsignedBinary @Word <$> arbitrary,
+        hexadecimal @Integer <$> arbitrary,
+        unsignedHexadecimal @Natural <$> arbitrary,
+        decimalDigit <$> QcGen.choose (0, 9),
+        hexadecimalDigit <$> QcGen.choose (0, 15),
+        fixedDouble <$> QcGen.choose (0, 19) <*> arbitrary,
+        doublePercent <$> QcGen.choose (0, 19) <*> arbitrary,
+        utcTimestampInIso8601 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary,
+        intervalInSeconds @Double <$> arbitrary
+      ]
 
 instance IsomorphicTo TextBuilder TextBuilder where
   to = id
@@ -316,7 +356,7 @@ string =
 
 -- | Decimal representation of an integral value.
 {-# INLINEABLE decimal #-}
-decimal :: Integral a => a -> TextBuilder
+decimal :: (Integral a) => a -> TextBuilder
 decimal i =
   if i >= 0
     then unsignedDecimal i
@@ -324,13 +364,17 @@ decimal i =
 
 -- | Decimal representation of an unsigned integral value.
 {-# INLINEABLE unsignedDecimal #-}
-unsignedDecimal :: Integral a => a -> TextBuilder
+unsignedDecimal :: (Integral a) => a -> TextBuilder
 unsignedDecimal =
-  foldMap decimalDigit . Unfoldr.decimalDigits
+  foldMap (decimalDigit . fromIntegral) . Unfoldr.decimalDigits
+
+fixedUnsignedDecimal :: (Integral a) => Int -> a -> TextBuilder
+fixedUnsignedDecimal size val =
+  TextBuilder (Allocator.fixedUnsignedDecimal size val) size
 
 -- | Decimal representation of an integral value with thousands separated by the specified character.
 {-# INLINEABLE thousandSeparatedDecimal #-}
-thousandSeparatedDecimal :: Integral a => Char -> a -> TextBuilder
+thousandSeparatedDecimal :: (Integral a) => Char -> a -> TextBuilder
 thousandSeparatedDecimal separatorChar a =
   if a >= 0
     then thousandSeparatedUnsignedDecimal separatorChar a
@@ -338,14 +382,14 @@ thousandSeparatedDecimal separatorChar a =
 
 -- | Decimal representation of an unsigned integral value with thousands separated by the specified character.
 {-# INLINEABLE thousandSeparatedUnsignedDecimal #-}
-thousandSeparatedUnsignedDecimal :: Integral a => Char -> a -> TextBuilder
+thousandSeparatedUnsignedDecimal :: (Integral a) => Char -> a -> TextBuilder
 thousandSeparatedUnsignedDecimal separatorChar =
   processRightmostDigit
   where
     processRightmostDigit value =
       case divMod value 10 of
         (value, digit) ->
-          processAnotherDigit [decimalDigit digit] 1 value
+          processAnotherDigit [decimalDigit (fromIntegral digit)] 1 value
     processAnotherDigit builders index value =
       if value == 0
         then mconcat builders
@@ -354,18 +398,18 @@ thousandSeparatedUnsignedDecimal separatorChar =
             if mod index 3 == 0
               then
                 processAnotherDigit
-                  (decimalDigit digit : char separatorChar : builders)
+                  (decimalDigit (fromIntegral digit) : char separatorChar : builders)
                   (succ index)
                   value
               else
                 processAnotherDigit
-                  (decimalDigit digit : builders)
+                  (decimalDigit (fromIntegral digit) : builders)
                   (succ index)
                   value
 
 -- | Data size in decimal notation over amount of bytes.
 {-# INLINEABLE dataSizeInBytesInDecimal #-}
-dataSizeInBytesInDecimal :: Integral a => Char -> a -> TextBuilder
+dataSizeInBytesInDecimal :: (Integral a) => Char -> a -> TextBuilder
 dataSizeInBytesInDecimal separatorChar amount =
   if amount < 1000
     then unsignedDecimal amount <> "B"
@@ -392,23 +436,23 @@ dataSizeInBytesInDecimal separatorChar amount =
                                 then dividedDecimal separatorChar 100000000000000000000 amount <> "ZB"
                                 else dividedDecimal separatorChar 100000000000000000000000 amount <> "YB"
 
-dividedDecimal :: Integral a => Char -> a -> a -> TextBuilder
+dividedDecimal :: (Integral a) => Char -> a -> a -> TextBuilder
 dividedDecimal separatorChar divisor n =
   let byDivisor = div n divisor
       byExtraTen = div byDivisor 10
       remainder = byDivisor - byExtraTen * 10
    in if remainder == 0 || byExtraTen >= 10
         then thousandSeparatedDecimal separatorChar byExtraTen
-        else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
+        else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit (fromIntegral remainder)
 
 -- | Unsigned binary number.
 {-# INLINE unsignedBinary #-}
-unsignedBinary :: Integral a => a -> TextBuilder
+unsignedBinary :: (Integral a) => a -> TextBuilder
 unsignedBinary =
-  foldMap decimalDigit . Unfoldr.binaryDigits
+  foldMap (decimalDigit . fromIntegral) . Unfoldr.binaryDigits
 
 -- | A less general but faster alternative to 'unsignedBinary'.
-finiteBitsUnsignedBinary :: FiniteBits a => a -> TextBuilder
+finiteBitsUnsignedBinary :: (FiniteBits a) => a -> TextBuilder
 finiteBitsUnsignedBinary a =
   TextBuilder allocator size
   where
@@ -419,11 +463,11 @@ finiteBitsUnsignedBinary a =
 {-# INLINE unsignedPaddedBinary #-}
 unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilder
 unsignedPaddedBinary a =
-  padFromLeft (finiteBitSize a) '0' $ foldMap decimalDigit $ Unfoldr.binaryDigits a
+  padFromLeft (finiteBitSize a) '0' $ foldMap (decimalDigit . fromIntegral) $ Unfoldr.binaryDigits a
 
 -- | Hexadecimal representation of an integral value.
 {-# INLINE hexadecimal #-}
-hexadecimal :: Integral a => a -> TextBuilder
+hexadecimal :: (Integral a) => a -> TextBuilder
 hexadecimal i =
   if i >= 0
     then unsignedHexadecimal i
@@ -431,40 +475,40 @@ hexadecimal i =
 
 -- | Unsigned hexadecimal representation of an integral value.
 {-# INLINE unsignedHexadecimal #-}
-unsignedHexadecimal :: Integral a => a -> TextBuilder
+unsignedHexadecimal :: (Integral a) => a -> TextBuilder
 unsignedHexadecimal =
-  foldMap hexadecimalDigit . Unfoldr.hexadecimalDigits
+  foldMap (hexadecimalDigit . fromIntegral) . Unfoldr.hexadecimalDigits
 
 -- | Decimal digit.
 {-# INLINE decimalDigit #-}
-decimalDigit :: Integral a => a -> TextBuilder
+decimalDigit :: Int -> TextBuilder
 decimalDigit n =
-  unicodeCodePoint (fromIntegral n + 48)
+  unicodeCodePoint (n + 48)
 
 -- | Hexadecimal digit.
 {-# INLINE hexadecimalDigit #-}
-hexadecimalDigit :: Integral a => a -> TextBuilder
+hexadecimalDigit :: Int -> TextBuilder
 hexadecimalDigit n =
   if n <= 9
-    then unicodeCodePoint (fromIntegral n + 48)
-    else unicodeCodePoint (fromIntegral n + 87)
+    then unicodeCodePoint (n + 48)
+    else unicodeCodePoint (n + 87)
 
 -- | Intercalate builders.
 {-# INLINE intercalate #-}
-intercalate :: Foldable f => TextBuilder -> f TextBuilder -> TextBuilder
+intercalate :: (Foldable f) => TextBuilder -> f TextBuilder -> TextBuilder
 intercalate separator = extract . foldl' step init
   where
     init = Product2 False mempty
     step (Product2 isNotFirst builder) element =
-      Product2 True $
-        if isNotFirst
+      Product2 True
+        $ if isNotFirst
           then builder <> separator <> element
           else element
     extract (Product2 _ builder) = builder
 
 -- | Intercalate projecting values to builder.
 {-# INLINE intercalateMap #-}
-intercalateMap :: Foldable f => TextBuilder -> (a -> TextBuilder) -> f a -> TextBuilder
+intercalateMap :: (Foldable f) => TextBuilder -> (a -> TextBuilder) -> f a -> TextBuilder
 intercalateMap separator mapper = extract . foldl' step init
   where
     init = Nothing
@@ -492,6 +536,14 @@ padFromRight paddedLength paddingChar builder =
         then builder
         else builder <> foldMap char (replicate (paddedLength - builderLength) paddingChar)
 
+utcTimeInIso8601 :: UTCTime -> TextBuilder
+utcTimeInIso8601 UTCTime {..} =
+  let (year, month, day) = toGregorian utctDay
+      daySeconds = round utctDayTime
+      (dayMinutes, second) = divMod daySeconds 60
+      (hour, minute) = divMod dayMinutes 60
+   in utcTimestampInIso8601 (fromIntegral year) month day hour minute second
+
 -- |
 -- General template for formatting date values according to the ISO8601 standard.
 -- The format is the following:
@@ -515,17 +567,17 @@ utcTimestampInIso8601 ::
   TextBuilder
 utcTimestampInIso8601 y mo d h mi s =
   mconcat
-    [ padFromLeft 4 '0' $ decimal y,
+    [ fixedUnsignedDecimal 4 y,
       "-",
-      padFromLeft 2 '0' $ decimal mo,
+      fixedUnsignedDecimal 2 mo,
       "-",
-      padFromLeft 2 '0' $ decimal d,
+      fixedUnsignedDecimal 2 d,
       "T",
-      padFromLeft 2 '0' $ decimal h,
+      fixedUnsignedDecimal 2 h,
       ":",
-      padFromLeft 2 '0' $ decimal mi,
+      fixedUnsignedDecimal 2 mi,
       ":",
-      padFromLeft 2 '0' $ decimal s,
+      fixedUnsignedDecimal 2 s,
       "Z"
     ]
 
@@ -533,20 +585,20 @@ utcTimestampInIso8601 y mo d h mi s =
 -- Time interval in seconds.
 -- Directly applicable to 'DiffTime' and 'NominalDiffTime'.
 {-# INLINEABLE intervalInSeconds #-}
-intervalInSeconds :: RealFrac seconds => seconds -> TextBuilder
+intervalInSeconds :: (RealFrac seconds) => seconds -> TextBuilder
 intervalInSeconds interval = flip evalState (round interval) $ do
   seconds <- state (swap . flip divMod 60)
   minutes <- state (swap . flip divMod 60)
   hours <- state (swap . flip divMod 24)
   days <- get
-  return $
-    padFromLeft 2 '0' (decimal days)
-      <> ":"
-      <> padFromLeft 2 '0' (decimal hours)
-      <> ":"
-      <> padFromLeft 2 '0' (decimal minutes)
-      <> ":"
-      <> padFromLeft 2 '0' (decimal seconds)
+  return
+    $ padFromLeft 2 '0' (decimal days)
+    <> ":"
+    <> padFromLeft 2 '0' (decimal hours)
+    <> ":"
+    <> padFromLeft 2 '0' (decimal minutes)
+    <> ":"
+    <> padFromLeft 2 '0' (decimal seconds)
 
 -- | Double with a fixed number of decimal places.
 {-# INLINE fixedDouble #-}

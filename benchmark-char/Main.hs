@@ -7,20 +7,21 @@ import qualified Data.Text.Lazy.Builder as B
 import qualified TextBuilderDev as A
 import Prelude
 
+main :: IO ()
 main =
-  defaultMain $
-    [ subjectBenchmark "builderSubject" builderSubject,
-      subjectBenchmark "lazyTextBuilderDevSubject" lazyTextBuilderDevSubject,
-      subjectBenchmark "plainTextPackingSubject" plainTextPackingSubject
-    ]
+  defaultMain
+    $ [ subjectBenchmark "builderSubject" builderSubject,
+        subjectBenchmark "lazyTextBuilderDevSubject" lazyTextBuilderDevSubject,
+        subjectBenchmark "plainTextPackingSubject" plainTextPackingSubject
+      ]
 
 subjectBenchmark :: String -> Subject -> Benchmark
 subjectBenchmark title subject =
-  bgroup title $
-    [ benchmark "Small input" smallInput subject,
-      benchmark "Medium input" mediumInput subject,
-      benchmark "Large input" largeInput subject
-    ]
+  bgroup title
+    $ [ benchmark "Small input" smallInput subject,
+        benchmark "Medium input" mediumInput subject,
+        benchmark "Large input" largeInput subject
+      ]
 
 benchmark :: String -> [Int] -> Subject -> Benchmark
 benchmark title input subject =
