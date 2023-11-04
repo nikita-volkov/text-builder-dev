@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name:          text-builder-dev
-version:       0.3.4.1
+version:       0.3.4.2
 category:      Text, Builders
 synopsis:      Edge of developments for "text-builder"
 description:
@@ -77,7 +77,7 @@ library
 
   build-depends:
     , base >=4.11 && <5
-    , bytestring >=0.10 && <0.12
+    , bytestring >=0.10 && <0.13
     , deferred-folds >=0.9.10.1 && <0.10
     , isomorphism-class >=0.1.0.1 && <0.2
     , QuickCheck >=2.14 && <3
