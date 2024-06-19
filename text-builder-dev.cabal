@@ -94,7 +94,7 @@ test-suite test
   main-is:        Main.hs
   other-modules:  TextBuilderDev.TastyExtras
   build-depends:
-    , base-compat ^>=0.13.1
+    , base-compat ^>=0.14
     , quickcheck-classes >=0.6.5 && <0.7
     , quickcheck-instances >=0.3.28 && <0.4
     , rerebase <2
