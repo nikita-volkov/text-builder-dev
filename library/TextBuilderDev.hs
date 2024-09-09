@@ -1,3 +1,5 @@
+{-# LANGUAGE CPP #-}
+
 module TextBuilderDev
   ( TextBuilder,
 
@@ -88,6 +90,10 @@ import qualified Test.QuickCheck.Gen as QcGen
 import qualified TextBuilderDev.Allocator as Allocator
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
+#if MIN_VERSION_text(2,0,2)
+import qualified Data.Text.Encoding as TextEncoding
+#endif
+
 -- * --
 
 -- |
@@ -137,6 +143,12 @@ instance IsomorphicToTextBuilder TextLazy.Text where
 instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
   toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
   fromTextBuilder = TextLazyBuilder.fromText . buildText
+
+#if MIN_VERSION_text(2,0,2)
+instance IsomorphicToTextBuilder TextEncoding.StrictBuilder where
+  toTextBuilder = toTextBuilder . TextEncoding.strictBuilderToText
+  fromTextBuilder = TextEncoding.textToStrictBuilder . fromTextBuilder
+#endif
 
 -- * --
 
