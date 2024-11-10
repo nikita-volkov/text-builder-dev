@@ -73,6 +73,8 @@ module TextBuilderDev
     utcTimeInIso8601,
     utcTimestampInIso8601,
     intervalInSeconds,
+    diffTimeCompact,
+    picosecondsCompact,
 
     -- * Classes
     IsomorphicToTextBuilder (..),
@@ -611,6 +613,31 @@ intervalInSeconds interval = flip evalState (round interval) $ do
     <> padFromLeft 2 '0' (decimal minutes)
     <> ":"
     <> padFromLeft 2 '0' (decimal seconds)
+
+-- | DiffTime in a compact decimal format based on 'picosecondsCompact'.
+diffTimeCompact :: DiffTime -> TextBuilder
+diffTimeCompact = picosecondsCompact . diffTimeToPicoseconds
+
+-- | Amount of picoseconds represented in a compact decimal format using suffixes.
+--
+-- E.g., the following is @1_230_000_000@ picoseconds or 1.23 milliseconds or 1230 microseconds:
+--
+-- > 1230us
+picosecondsCompact :: Integer -> TextBuilder
+picosecondsCompact x =
+  attemptOr 1_000_000_000_000 "s"
+    $ attemptOr 1_000_000_000 "ms"
+    $ attemptOr 1_000_000 "us"
+    $ attemptOr 1_000 "ns"
+    $ decimal x
+    <> "ps"
+  where
+    attemptOr factor suffix alternative =
+      if x == divided * factor
+        then decimal divided <> suffix
+        else alternative
+      where
+        divided = div x factor
 
 -- | Double with a fixed number of decimal places.
 {-# INLINE fixedDouble #-}
