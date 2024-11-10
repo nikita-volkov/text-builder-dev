@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name:          text-builder-dev
-version:       0.3.4.4
+version:       0.3.4.5
 category:      Text, Builders
 synopsis:      Edge of developments for "text-builder"
 description:
