@@ -595,6 +595,11 @@ utcTimestampInIso8601 y mo d h mi s =
 
 -- |
 -- Time interval in seconds.
+-- 
+-- The format is the following:
+-- 
+-- > DD:HH:MM:SS
+-- 
 -- Directly applicable to 'DiffTime' and 'NominalDiffTime'.
 {-# INLINEABLE intervalInSeconds #-}
 intervalInSeconds :: (RealFrac seconds) => seconds -> TextBuilder
