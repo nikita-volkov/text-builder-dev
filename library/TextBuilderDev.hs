@@ -218,33 +218,49 @@ instance Arbitrary TextBuilder where
         intervalInSeconds @Double <$> arbitrary
       ]
 
-instance IsomorphicTo TextBuilder TextBuilder where
-  to = id
-
-instance IsomorphicTo TextBuilder String where
-  to = TextBuilderDev.string
-
-instance IsomorphicTo TextBuilder Text where
+instance IsSome TextBuilder Text where
   to = TextBuilderDev.text
 
-instance IsomorphicTo TextBuilder TextLazy.Text where
-  to = TextBuilderDev.lazyText
-
-instance IsomorphicTo TextBuilder TextLazyBuilder.Builder where
-  to = to . to @TextLazy.Text
-
-instance IsomorphicTo String TextBuilder where
-  to = to . to @Text
-
-instance IsomorphicTo Text TextBuilder where
+instance IsSome Text TextBuilder where
   to = TextBuilderDev.buildText
 
-instance IsomorphicTo TextLazy.Text TextBuilder where
+instance Is Text TextBuilder
+
+instance Is TextBuilder Text
+
+instance IsSome TextBuilder TextLazy.Text where
+  to = TextBuilderDev.lazyText
+
+instance IsSome TextLazy.Text TextBuilder where
   to = to . to @Text
 
-instance IsomorphicTo TextLazyBuilder.Builder TextBuilder where
+instance Is TextLazy.Text TextBuilder
+
+instance Is TextBuilder TextLazy.Text
+
+instance IsSome TextBuilder TextLazyBuilder.Builder where
+  to = to . to @TextLazy.Text
+
+instance IsSome TextLazyBuilder.Builder TextBuilder where
   to = to . to @Text
 
+instance Is TextLazyBuilder.Builder TextBuilder
+
+instance Is TextBuilder TextLazyBuilder.Builder
+
+#if MIN_VERSION_text(2,0,2)
+
+instance IsSome TextBuilder TextEncoding.StrictBuilder where
+  to = to . TextEncoding.strictBuilderToText
+
+instance IsSome TextEncoding.StrictBuilder TextBuilder where
+  to = TextEncoding.textToStrictBuilder . to
+
+instance Is TextBuilder TextEncoding.StrictBuilder
+
+instance Is TextEncoding.StrictBuilder TextBuilder
+
+#endif
 -- * Accessors
 
 -- | Get the amount of characters.
