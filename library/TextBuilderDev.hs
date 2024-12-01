@@ -380,7 +380,7 @@ decimal i =
 {-# INLINEABLE unsignedDecimal #-}
 unsignedDecimal :: (Integral a) => a -> TextBuilder
 unsignedDecimal =
-  foldMap (decimalDigit . fromIntegral) . Unfoldr.decimalDigits
+  foldMap decimalDigit . Unfoldr.decimalDigits
 
 fixedUnsignedDecimal :: (Integral a) => Int -> a -> TextBuilder
 fixedUnsignedDecimal size val =
@@ -403,7 +403,7 @@ thousandSeparatedUnsignedDecimal separatorChar =
     processRightmostDigit value =
       case divMod value 10 of
         (value, digit) ->
-          processAnotherDigit [decimalDigit (fromIntegral digit)] 1 value
+          processAnotherDigit [decimalDigit digit] (1 :: Int) value
     processAnotherDigit builders index value =
       if value == 0
         then mconcat builders
@@ -412,12 +412,12 @@ thousandSeparatedUnsignedDecimal separatorChar =
             if mod index 3 == 0
               then
                 processAnotherDigit
-                  (decimalDigit (fromIntegral digit) : char separatorChar : builders)
+                  (decimalDigit digit : char separatorChar : builders)
                   (succ index)
                   value
               else
                 processAnotherDigit
-                  (decimalDigit (fromIntegral digit) : builders)
+                  (decimalDigit digit : builders)
                   (succ index)
                   value
 
@@ -457,13 +457,13 @@ dividedDecimal separatorChar divisor n =
       remainder = byDivisor - byExtraTen * 10
    in if remainder == 0 || byExtraTen >= 10
         then thousandSeparatedDecimal separatorChar byExtraTen
-        else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit (fromIntegral remainder)
+        else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
 
 -- | Unsigned binary number.
 {-# INLINE unsignedBinary #-}
 unsignedBinary :: (Integral a) => a -> TextBuilder
 unsignedBinary =
-  foldMap (decimalDigit . fromIntegral) . Unfoldr.binaryDigits
+  foldMap decimalDigit . Unfoldr.binaryDigits
 
 -- | A less general but faster alternative to 'unsignedBinary'.
 finiteBitsUnsignedBinary :: (FiniteBits a) => a -> TextBuilder
@@ -477,7 +477,7 @@ finiteBitsUnsignedBinary a =
 {-# INLINE unsignedPaddedBinary #-}
 unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilder
 unsignedPaddedBinary a =
-  padFromLeft (finiteBitSize a) '0' $ foldMap (decimalDigit . fromIntegral) $ Unfoldr.binaryDigits a
+  padFromLeft (finiteBitSize a) '0' $ foldMap decimalDigit $ Unfoldr.binaryDigits a
 
 -- | Hexadecimal representation of an integral value.
 {-# INLINE hexadecimal #-}
@@ -491,7 +491,7 @@ hexadecimal i =
 {-# INLINE unsignedHexadecimal #-}
 unsignedHexadecimal :: (Integral a) => a -> TextBuilder
 unsignedHexadecimal =
-  foldMap (hexadecimalDigit . fromIntegral) . Unfoldr.hexadecimalDigits
+  foldMap hexadecimalDigit . Unfoldr.hexadecimalDigits
 
 -- | Decimal digit.
 {-# INLINE decimalDigit #-}
@@ -605,7 +605,7 @@ utcTimestampInIso8601 y mo d h mi s =
 -- Directly applicable to 'DiffTime' and 'NominalDiffTime'.
 {-# INLINEABLE intervalInSeconds #-}
 intervalInSeconds :: (RealFrac seconds) => seconds -> TextBuilder
-intervalInSeconds interval = flip evalState (round interval) $ do
+intervalInSeconds interval = flip evalState (round interval :: Int) $ do
   seconds <- state (swap . flip divMod 60)
   minutes <- state (swap . flip divMod 60)
   hours <- state (swap . flip divMod 24)

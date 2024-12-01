@@ -117,7 +117,7 @@ sizedWriter size write =
 {-# INLINEABLE text #-}
 text :: Text -> Allocator
 #if MIN_VERSION_text(2,0,0)
-text text@(TextInternal.Text array offset length) =
+text (TextInternal.Text array offset length) =
   Allocator writer length
   where
     writer =
@@ -125,7 +125,7 @@ text text@(TextInternal.Text array offset length) =
         TextArray.copyI length builderArray builderOffset array offset
         return $ builderOffset + length
 #else
-text text@(TextInternal.Text array offset length) =
+text (TextInternal.Text array offset length) =
   Allocator writer length
   where
     writer =

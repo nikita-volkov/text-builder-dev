@@ -58,11 +58,11 @@ main =
           $ \(text :: Text) (c :: Char) ->
             B.buildText (B.unicodeCodePoint (Char.ord c) <> B.text text) === Text.cons c text,
         testGroup "Time interval"
-          $ [ testCase "59s" $ assertEqual "" "00:00:00:59" $ B.buildText $ B.intervalInSeconds 59,
-              testCase "minute" $ assertEqual "" "00:00:01:00" $ B.buildText $ B.intervalInSeconds 60,
-              testCase "90s" $ assertEqual "" "00:00:01:30" $ B.buildText $ B.intervalInSeconds 90,
-              testCase "hour" $ assertEqual "" "00:01:00:00" $ B.buildText $ B.intervalInSeconds 3600,
-              testCase "day" $ assertEqual "" "01:00:00:00" $ B.buildText $ B.intervalInSeconds 86400
+          $ [ testCase "59s" $ assertEqual "" "00:00:00:59" $ B.buildText $ B.intervalInSeconds @Double 59,
+              testCase "minute" $ assertEqual "" "00:00:01:00" $ B.buildText $ B.intervalInSeconds @Double 60,
+              testCase "90s" $ assertEqual "" "00:00:01:30" $ B.buildText $ B.intervalInSeconds @Double 90,
+              testCase "hour" $ assertEqual "" "00:01:00:00" $ B.buildText $ B.intervalInSeconds @Double 3600,
+              testCase "day" $ assertEqual "" "01:00:00:00" $ B.buildText $ B.intervalInSeconds @Double 86400
             ],
         testGroup "By function name"
           $ [ testGroup "utf8CodeUnitsN"
@@ -112,10 +112,10 @@ main =
                          in B.buildText (cuBuilder <> B.text text) === Text.cons c text
                   ],
               testCase "thousandSeparatedUnsignedDecimal" $ do
-                assertEqual "" "0" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 0))
-                assertEqual "" "123" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 123))
-                assertEqual "" "1,234" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 1234))
-                assertEqual "" "1,234,567" (B.buildText (B.thousandSeparatedUnsignedDecimal ',' 1234567)),
+                assertEqual "" "0" (B.buildText (B.thousandSeparatedUnsignedDecimal @Integer ',' 0))
+                assertEqual "" "123" (B.buildText (B.thousandSeparatedUnsignedDecimal @Integer ',' 123))
+                assertEqual "" "1,234" (B.buildText (B.thousandSeparatedUnsignedDecimal @Integer ',' 1234))
+                assertEqual "" "1,234,567" (B.buildText (B.thousandSeparatedUnsignedDecimal @Integer ',' 1234567)),
               testCase "padFromLeft" $ do
                 assertEqual "" "00" (B.buildText (B.padFromLeft 2 '0' ""))
                 assertEqual "" "00" (B.buildText (B.padFromLeft 2 '0' "0"))
@@ -134,20 +134,20 @@ main =
               testGroup "hexadecimal"
                 $ [ testProperty "show isomorphism" $ \(x :: Integer) ->
                       x >= 0 ==>
-                        (fromString . showHex x) "" === (B.buildText . B.hexadecimal) x,
+                        (fromString . showHex x) "" === (B.buildText . B.hexadecimal @Integer) x,
                     testCase "Positive"
-                      $ assertEqual "" "1f23" (B.buildText (B.hexadecimal 0x01f23)),
+                      $ assertEqual "" "1f23" (B.buildText (B.hexadecimal @Integer 0x01f23)),
                     testCase "Negative"
-                      $ assertEqual "" "-1f23" (B.buildText (B.hexadecimal (-0x01f23)))
+                      $ assertEqual "" "-1f23" (B.buildText (B.hexadecimal @Integer (-0x01f23)))
                   ],
               testCase "dataSizeInBytesInDecimal" $ do
-                assertEqual "" "999B" (B.buildText (B.dataSizeInBytesInDecimal ',' 999))
-                assertEqual "" "1kB" (B.buildText (B.dataSizeInBytesInDecimal ',' 1000))
-                assertEqual "" "1.1kB" (B.buildText (B.dataSizeInBytesInDecimal ',' 1100))
-                assertEqual "" "1.1MB" (B.buildText (B.dataSizeInBytesInDecimal ',' 1150000))
-                assertEqual "" "9.9MB" (B.buildText (B.dataSizeInBytesInDecimal ',' 9990000))
-                assertEqual "" "10MB" (B.buildText (B.dataSizeInBytesInDecimal ',' 10100000))
-                assertEqual "" "1,000YB" (B.buildText (B.dataSizeInBytesInDecimal ',' 1000000000000000000000000000)),
+                assertEqual "" "999B" (B.buildText (B.dataSizeInBytesInDecimal @Integer ',' 999))
+                assertEqual "" "1kB" (B.buildText (B.dataSizeInBytesInDecimal @Integer ',' 1000))
+                assertEqual "" "1.1kB" (B.buildText (B.dataSizeInBytesInDecimal @Integer ',' 1100))
+                assertEqual "" "1.1MB" (B.buildText (B.dataSizeInBytesInDecimal @Integer ',' 1150000))
+                assertEqual "" "9.9MB" (B.buildText (B.dataSizeInBytesInDecimal @Integer ',' 9990000))
+                assertEqual "" "10MB" (B.buildText (B.dataSizeInBytesInDecimal @Integer ',' 10100000))
+                assertEqual "" "1,000YB" (B.buildText (B.dataSizeInBytesInDecimal @Integer ',' 1000000000000000000000000000)),
               testCase "fixedDouble" $ do
                 assertEqual "" "0.0" (B.buildText (B.fixedDouble 1 0.05))
                 assertEqual "" "0.1" (B.buildText (B.fixedDouble 1 0.06))
@@ -180,7 +180,7 @@ main =
               testGroup "utcTimeInIso8601"
                 $ [ testProperty "Same as iso8601Show" $ \x ->
                       let roundedToSecondsTime =
-                            x {utctDayTime = (fromIntegral . round . utctDayTime) x}
+                            x {utctDayTime = (fromIntegral @Int . round . utctDayTime) x}
                        in (fromString . flip mappend "Z" . take 19 . iso8601Show) roundedToSecondsTime
                             === B.buildText (B.utcTimeInIso8601 roundedToSecondsTime)
                   ]
