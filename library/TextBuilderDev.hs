@@ -218,47 +218,31 @@ instance Arbitrary TextBuilder where
         intervalInSeconds @Double <$> arbitrary
       ]
 
-instance IsSome TextBuilder Text where
+instance IsomorphicTo TextBuilder Text where
   to = TextBuilderDev.text
 
-instance IsSome Text TextBuilder where
+instance IsomorphicTo Text TextBuilder where
   to = TextBuilderDev.buildText
 
-instance Is Text TextBuilder
-
-instance Is TextBuilder Text
-
-instance IsSome TextBuilder TextLazy.Text where
+instance IsomorphicTo TextBuilder TextLazy.Text where
   to = TextBuilderDev.lazyText
 
-instance IsSome TextLazy.Text TextBuilder where
+instance IsomorphicTo TextLazy.Text TextBuilder where
   to = to . to @Text
 
-instance Is TextLazy.Text TextBuilder
-
-instance Is TextBuilder TextLazy.Text
-
-instance IsSome TextBuilder TextLazyBuilder.Builder where
+instance IsomorphicTo TextBuilder TextLazyBuilder.Builder where
   to = to . to @TextLazy.Text
 
-instance IsSome TextLazyBuilder.Builder TextBuilder where
+instance IsomorphicTo TextLazyBuilder.Builder TextBuilder where
   to = to . to @Text
-
-instance Is TextLazyBuilder.Builder TextBuilder
-
-instance Is TextBuilder TextLazyBuilder.Builder
 
 #if MIN_VERSION_text(2,0,2)
 
-instance IsSome TextBuilder TextEncoding.StrictBuilder where
+instance IsomorphicTo TextBuilder TextEncoding.StrictBuilder where
   to = to . TextEncoding.strictBuilderToText
 
-instance IsSome TextEncoding.StrictBuilder TextBuilder where
+instance IsomorphicTo TextEncoding.StrictBuilder TextBuilder where
   to = TextEncoding.textToStrictBuilder . to
-
-instance Is TextBuilder TextEncoding.StrictBuilder
-
-instance Is TextEncoding.StrictBuilder TextBuilder
 
 #endif
 -- * Accessors
