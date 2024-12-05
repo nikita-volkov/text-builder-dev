@@ -236,7 +236,15 @@ instance IsomorphicTo TextBuilder TextLazyBuilder.Builder where
 instance IsomorphicTo TextLazyBuilder.Builder TextBuilder where
   to = to . to @Text
 
-#if MIN_VERSION_text(2,0,2)
+#if MIN_VERSION_text(2,1,2)
+
+instance IsomorphicTo TextBuilder TextEncoding.StrictTextBuilder where
+  to = to . TextEncoding.strictBuilderToText
+
+instance IsomorphicTo TextEncoding.StrictTextBuilder TextBuilder where
+  to = TextEncoding.textToStrictBuilder . to
+
+#elif MIN_VERSION_text(2,0,2)
 
 instance IsomorphicTo TextBuilder TextEncoding.StrictBuilder where
   to = to . TextEncoding.strictBuilderToText
