@@ -130,28 +130,6 @@ instance IsomorphicToTextBuilder TextBuilder where
   toTextBuilder = id
   fromTextBuilder = id
 
-instance IsomorphicToTextBuilder Text where
-  toTextBuilder = text
-  fromTextBuilder = buildText
-
-instance IsomorphicToTextBuilder String where
-  toTextBuilder = fromString
-  fromTextBuilder = Text.unpack . buildText
-
-instance IsomorphicToTextBuilder TextLazy.Text where
-  toTextBuilder = lazyText
-  fromTextBuilder = TextLazy.fromStrict . buildText
-
-instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
-  toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
-  fromTextBuilder = TextLazyBuilder.fromText . buildText
-
-#if MIN_VERSION_text(2,0,2)
-instance IsomorphicToTextBuilder TextEncoding.StrictBuilder where
-  toTextBuilder = toTextBuilder . TextEncoding.strictBuilderToText
-  fromTextBuilder = TextEncoding.textToStrictBuilder . fromTextBuilder
-#endif
-
 -- * --
 
 -- |
@@ -218,11 +196,29 @@ instance Arbitrary TextBuilder where
         intervalInSeconds @Double <$> arbitrary
       ]
 
+-- ** Strict Text
+
+instance IsomorphicToTextBuilder Text where
+  toTextBuilder = text
+  fromTextBuilder = buildText
+
 instance IsomorphicTo TextBuilder Text where
   to = TextBuilderDev.text
 
 instance IsomorphicTo Text TextBuilder where
   to = TextBuilderDev.buildText
+
+-- ** String
+
+instance IsomorphicToTextBuilder String where
+  toTextBuilder = fromString
+  fromTextBuilder = Text.unpack . buildText
+
+-- ** Lazy Text
+
+instance IsomorphicToTextBuilder TextLazy.Text where
+  toTextBuilder = lazyText
+  fromTextBuilder = TextLazy.fromStrict . buildText
 
 instance IsomorphicTo TextBuilder TextLazy.Text where
   to = TextBuilderDev.lazyText
@@ -230,13 +226,25 @@ instance IsomorphicTo TextBuilder TextLazy.Text where
 instance IsomorphicTo TextLazy.Text TextBuilder where
   to = to . to @Text
 
+-- ** Lazy Text Builder
+
+instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
+  toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
+  fromTextBuilder = TextLazyBuilder.fromText . buildText
+
 instance IsomorphicTo TextBuilder TextLazyBuilder.Builder where
   to = to . to @TextLazy.Text
 
 instance IsomorphicTo TextLazyBuilder.Builder TextBuilder where
   to = to . to @Text
 
+-- ** Strict Text Builder
+
 #if MIN_VERSION_text(2,1,2)
+
+instance IsomorphicToTextBuilder TextEncoding.StrictTextBuilder where
+  toTextBuilder = toTextBuilder . TextEncoding.strictBuilderToText
+  fromTextBuilder = TextEncoding.textToStrictBuilder . fromTextBuilder
 
 instance IsomorphicTo TextBuilder TextEncoding.StrictTextBuilder where
   to = to . TextEncoding.strictBuilderToText
@@ -246,6 +254,10 @@ instance IsomorphicTo TextEncoding.StrictTextBuilder TextBuilder where
 
 #elif MIN_VERSION_text(2,0,2)
 
+instance IsomorphicToTextBuilder TextEncoding.StrictBuilder where
+  toTextBuilder = toTextBuilder . TextEncoding.strictBuilderToText
+  fromTextBuilder = TextEncoding.textToStrictBuilder . fromTextBuilder
+
 instance IsomorphicTo TextBuilder TextEncoding.StrictBuilder where
   to = to . TextEncoding.strictBuilderToText
 
@@ -253,6 +265,7 @@ instance IsomorphicTo TextEncoding.StrictBuilder TextBuilder where
   to = TextEncoding.textToStrictBuilder . to
 
 #endif
+
 -- * Accessors
 
 -- | Get the amount of characters.
