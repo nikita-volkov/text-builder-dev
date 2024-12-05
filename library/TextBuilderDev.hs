@@ -88,6 +88,7 @@ import qualified Data.Text.IO as Text
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified DeferredFolds.Unfoldr as Unfoldr
+import qualified LawfulConversions
 import qualified Test.QuickCheck.Gen as QcGen
 import qualified TextBuilderDev.Allocator as Allocator
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
@@ -208,11 +209,32 @@ instance IsomorphicTo TextBuilder Text where
 instance IsomorphicTo Text TextBuilder where
   to = TextBuilderDev.buildText
 
+instance LawfulConversions.IsSome TextBuilder Text where
+  to = TextBuilderDev.text
+
+instance LawfulConversions.IsSome Text TextBuilder where
+  to = TextBuilderDev.buildText
+
+instance LawfulConversions.IsMany TextBuilder Text
+
+instance LawfulConversions.IsMany Text TextBuilder
+
+instance LawfulConversions.Is TextBuilder Text
+
+instance LawfulConversions.Is Text TextBuilder
+
 -- ** String
 
 instance IsomorphicToTextBuilder String where
   toTextBuilder = fromString
   fromTextBuilder = Text.unpack . buildText
+
+instance LawfulConversions.IsSome String TextBuilder where
+  to = Text.unpack . buildText
+  maybeFrom = fmap text . LawfulConversions.maybeFrom
+
+instance LawfulConversions.IsMany String TextBuilder where
+  from = text . LawfulConversions.from
 
 -- ** Lazy Text
 
@@ -226,6 +248,20 @@ instance IsomorphicTo TextBuilder TextLazy.Text where
 instance IsomorphicTo TextLazy.Text TextBuilder where
   to = to . to @Text
 
+instance LawfulConversions.IsSome TextBuilder TextLazy.Text where
+  to = lazyText
+
+instance LawfulConversions.IsSome TextLazy.Text TextBuilder where
+  to = TextLazy.fromStrict . buildText
+
+instance LawfulConversions.IsMany TextBuilder TextLazy.Text
+
+instance LawfulConversions.IsMany TextLazy.Text TextBuilder
+
+instance LawfulConversions.Is TextBuilder TextLazy.Text
+
+instance LawfulConversions.Is TextLazy.Text TextBuilder
+
 -- ** Lazy Text Builder
 
 instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
@@ -237,6 +273,20 @@ instance IsomorphicTo TextBuilder TextLazyBuilder.Builder where
 
 instance IsomorphicTo TextLazyBuilder.Builder TextBuilder where
   to = to . to @Text
+
+instance LawfulConversions.IsSome TextBuilder TextLazyBuilder.Builder where
+  to = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
+
+instance LawfulConversions.IsSome TextLazyBuilder.Builder TextBuilder where
+  to = TextLazyBuilder.fromText . buildText
+
+instance LawfulConversions.IsMany TextBuilder TextLazyBuilder.Builder
+
+instance LawfulConversions.IsMany TextLazyBuilder.Builder TextBuilder
+
+instance LawfulConversions.Is TextBuilder TextLazyBuilder.Builder
+
+instance LawfulConversions.Is TextLazyBuilder.Builder TextBuilder
 
 -- ** Strict Text Builder
 
@@ -252,6 +302,20 @@ instance IsomorphicTo TextBuilder TextEncoding.StrictTextBuilder where
 instance IsomorphicTo TextEncoding.StrictTextBuilder TextBuilder where
   to = TextEncoding.textToStrictBuilder . to
 
+instance LawfulConversions.IsSome TextBuilder TextEncoding.StrictTextBuilder where
+  to = toTextBuilder . TextEncoding.strictBuilderToText
+
+instance LawfulConversions.IsSome TextEncoding.StrictTextBuilder TextBuilder where
+  to = TextEncoding.textToStrictBuilder . fromTextBuilder
+
+instance LawfulConversions.IsMany TextBuilder TextEncoding.StrictTextBuilder
+
+instance LawfulConversions.IsMany TextEncoding.StrictTextBuilder TextBuilder
+
+instance LawfulConversions.Is TextBuilder TextEncoding.StrictTextBuilder
+
+instance LawfulConversions.Is TextEncoding.StrictTextBuilder TextBuilder
+
 #elif MIN_VERSION_text(2,0,2)
 
 instance IsomorphicToTextBuilder TextEncoding.StrictBuilder where
@@ -263,6 +327,20 @@ instance IsomorphicTo TextBuilder TextEncoding.StrictBuilder where
 
 instance IsomorphicTo TextEncoding.StrictBuilder TextBuilder where
   to = TextEncoding.textToStrictBuilder . to
+
+instance LawfulConversions.IsSome TextBuilder TextEncoding.StrictBuilder where
+  to = toTextBuilder . TextEncoding.strictBuilderToText
+
+instance LawfulConversions.IsSome TextEncoding.StrictBuilder TextBuilder where
+  to = TextEncoding.textToStrictBuilder . fromTextBuilder
+
+instance LawfulConversions.IsMany TextBuilder TextEncoding.StrictBuilder
+
+instance LawfulConversions.IsMany TextEncoding.StrictBuilder TextBuilder
+
+instance LawfulConversions.Is TextBuilder TextEncoding.StrictBuilder
+
+instance LawfulConversions.Is TextEncoding.StrictBuilder TextBuilder
 
 #endif
 
