@@ -20,7 +20,7 @@ license-file: LICENSE
 
 source-repository head
   type: git
-  location: git://github.com/nikita-volkov/text-builder-dev.git
+  location: https://github.com/nikita-volkov/text-builder-dev
 
 common base-settings
   default-extensions:
