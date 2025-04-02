@@ -4,6 +4,7 @@ module TextBuilderDev
   ( TextBuilder,
 
     -- * Accessors
+    toText,
     buildText,
     length,
     null,
@@ -158,10 +159,10 @@ instance IsString TextBuilder where
   fromString = string
 
 instance Show TextBuilder where
-  show = Text.unpack . buildText
+  show = Text.unpack . toText
 
 instance Eq TextBuilder where
-  (==) = on (==) buildText
+  (==) = on (==) toText
 
 instance Arbitrary TextBuilder where
   arbitrary =
@@ -202,19 +203,19 @@ instance Arbitrary TextBuilder where
 
 instance IsomorphicToTextBuilder Text where
   toTextBuilder = text
-  fromTextBuilder = buildText
+  fromTextBuilder = toText
 
 instance IsomorphismClass.IsomorphicTo TextBuilder Text where
   to = TextBuilderDev.text
 
 instance IsomorphismClass.IsomorphicTo Text TextBuilder where
-  to = TextBuilderDev.buildText
+  to = TextBuilderDev.toText
 
 instance LawfulConversions.IsSome TextBuilder Text where
   to = TextBuilderDev.text
 
 instance LawfulConversions.IsSome Text TextBuilder where
-  to = TextBuilderDev.buildText
+  to = TextBuilderDev.toText
 
 instance LawfulConversions.IsMany TextBuilder Text
 
@@ -228,10 +229,10 @@ instance LawfulConversions.Is Text TextBuilder
 
 instance IsomorphicToTextBuilder String where
   toTextBuilder = fromString
-  fromTextBuilder = Text.unpack . buildText
+  fromTextBuilder = Text.unpack . toText
 
 instance LawfulConversions.IsSome String TextBuilder where
-  to = Text.unpack . buildText
+  to = Text.unpack . toText
   maybeFrom = fmap text . LawfulConversions.maybeFrom
 
 instance LawfulConversions.IsMany String TextBuilder where
@@ -241,7 +242,7 @@ instance LawfulConversions.IsMany String TextBuilder where
 
 instance IsomorphicToTextBuilder TextLazy.Text where
   toTextBuilder = lazyText
-  fromTextBuilder = TextLazy.fromStrict . buildText
+  fromTextBuilder = TextLazy.fromStrict . toText
 
 instance IsomorphismClass.IsomorphicTo TextBuilder TextLazy.Text where
   to = TextBuilderDev.lazyText
@@ -253,7 +254,7 @@ instance LawfulConversions.IsSome TextBuilder TextLazy.Text where
   to = lazyText
 
 instance LawfulConversions.IsSome TextLazy.Text TextBuilder where
-  to = TextLazy.fromStrict . buildText
+  to = TextLazy.fromStrict . toText
 
 instance LawfulConversions.IsMany TextBuilder TextLazy.Text
 
@@ -267,7 +268,7 @@ instance LawfulConversions.Is TextLazy.Text TextBuilder
 
 instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
   toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
-  fromTextBuilder = TextLazyBuilder.fromText . buildText
+  fromTextBuilder = TextLazyBuilder.fromText . toText
 
 instance IsomorphismClass.IsomorphicTo TextBuilder TextLazyBuilder.Builder where
   to = IsomorphismClass.to . IsomorphismClass.to @TextLazy.Text
@@ -279,7 +280,7 @@ instance LawfulConversions.IsSome TextBuilder TextLazyBuilder.Builder where
   to = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
 
 instance LawfulConversions.IsSome TextLazyBuilder.Builder TextBuilder where
-  to = TextLazyBuilder.fromText . buildText
+  to = TextLazyBuilder.fromText . toText
 
 instance LawfulConversions.IsMany TextBuilder TextLazyBuilder.Builder
 
@@ -357,28 +358,34 @@ length (TextBuilder _ x) = x
 null :: TextBuilder -> Bool
 null = (== 0) . length
 
--- | Execute a builder producing a strict text.
-buildText :: TextBuilder -> Text
-buildText (TextBuilder allocator _) =
+-- | Execute the builder producing a strict text.
+toText :: TextBuilder -> Text
+toText (TextBuilder allocator _) =
   Allocator.allocate allocator
+
+{-# DEPRECATED buildText "Use toText instead" #-}
+
+-- | Alias to 'toText'.
+buildText :: TextBuilder -> Text
+buildText = toText
 
 -- ** Output IO
 
 -- | Put builder, to stdout.
 putToStdOut :: TextBuilder -> IO ()
-putToStdOut = Text.hPutStr stdout . buildText
+putToStdOut = Text.hPutStr stdout . toText
 
 -- | Put builder, to stderr.
 putToStdErr :: TextBuilder -> IO ()
-putToStdErr = Text.hPutStr stderr . buildText
+putToStdErr = Text.hPutStr stderr . toText
 
 -- | Put builder, followed by a line, to stdout.
 putLnToStdOut :: TextBuilder -> IO ()
-putLnToStdOut = Text.hPutStrLn stdout . buildText
+putLnToStdOut = Text.hPutStrLn stdout . toText
 
 -- | Put builder, followed by a line, to stderr.
 putLnToStdErr :: TextBuilder -> IO ()
-putLnToStdErr = Text.hPutStrLn stderr . buildText
+putLnToStdErr = Text.hPutStrLn stderr . toText
 
 -- * Constructors
 
@@ -390,7 +397,7 @@ putLnToStdErr = Text.hPutStrLn stderr . buildText
 -- since it's virtually a single call @memcopy@.
 {-# INLINE force #-}
 force :: TextBuilder -> TextBuilder
-force = text . buildText
+force = text . toText
 
 -- | Unicode character.
 {-# INLINE char #-}
