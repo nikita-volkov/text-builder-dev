@@ -32,7 +32,7 @@ type Subject =
 
 builderSubject :: Subject
 builderSubject =
-  A.buildText . A.string . map chr
+  A.toText . A.string . map chr
 
 lazyTextBuilderDevSubject :: Subject
 lazyTextBuilderDevSubject =
