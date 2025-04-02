@@ -22,9 +22,11 @@ source-repository head
   type: git
   location: https://github.com/nikita-volkov/text-builder-dev
 
-common base-settings
+common base
+  default-language: Haskell2010
   default-extensions:
     BangPatterns
+    BlockArguments
     ConstraintKinds
     DataKinds
     DefaultSignatures
@@ -39,7 +41,6 @@ common base-settings
     FunctionalDependencies
     GADTs
     GeneralizedNewtypeDeriving
-    InstanceSigs
     LambdaCase
     LiberalTypeSynonyms
     MagicHash
@@ -61,12 +62,11 @@ common base-settings
     TypeApplications
     TypeFamilies
     TypeOperators
+    UnboxedTuples
     ViewPatterns
 
-  default-language: Haskell2010
-
 library
-  import: base-settings
+  import: base
   hs-source-dirs: library
   exposed-modules: TextBuilderDev
   other-modules:
@@ -90,7 +90,7 @@ library
     transformers >=0.5 && <0.7,
 
 test-suite test
-  import: base-settings
+  import: base
   type: exitcode-stdio-1.0
   hs-source-dirs: test
   main-is: Main.hs
@@ -106,24 +106,18 @@ test-suite test
     tasty-quickcheck >=0.10.1 && <0.12,
     text-builder-dev,
 
-benchmark benchmark-text
-  import: base-settings
+benchmark bench
+  import: base
   type: exitcode-stdio-1.0
-  ghc-options: -O2
-  hs-source-dirs: benchmark-text
-  main-is: Main.hs
-  build-depends:
-    criterion >=1.5.13.0 && <2,
-    rerebase >=1 && <2,
-    text-builder-dev,
+  hs-source-dirs: bench
+  ghc-options:
+    -O2
+    -threaded
+    -with-rtsopts=-N
+    -funbox-strict-fields
 
-benchmark benchmark-char
-  import: base-settings
-  type: exitcode-stdio-1.0
-  ghc-options: -O2
-  hs-source-dirs: benchmark-char
   main-is: Main.hs
   build-depends:
-    criterion >=1.5.13.0 && <2,
+    criterion >=1.5.6.1 && <2,
     rerebase >=1 && <2,
     text-builder-dev,
