@@ -88,6 +88,7 @@ import qualified Data.Text.IO as Text
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified DeferredFolds.Unfoldr as Unfoldr
+import qualified IsomorphismClass
 import qualified LawfulConversions
 import qualified Test.QuickCheck.Gen as QcGen
 import qualified TextBuilderDev.Allocator as Allocator
@@ -203,10 +204,10 @@ instance IsomorphicToTextBuilder Text where
   toTextBuilder = text
   fromTextBuilder = buildText
 
-instance IsomorphicTo TextBuilder Text where
+instance IsomorphismClass.IsomorphicTo TextBuilder Text where
   to = TextBuilderDev.text
 
-instance IsomorphicTo Text TextBuilder where
+instance IsomorphismClass.IsomorphicTo Text TextBuilder where
   to = TextBuilderDev.buildText
 
 instance LawfulConversions.IsSome TextBuilder Text where
@@ -242,11 +243,11 @@ instance IsomorphicToTextBuilder TextLazy.Text where
   toTextBuilder = lazyText
   fromTextBuilder = TextLazy.fromStrict . buildText
 
-instance IsomorphicTo TextBuilder TextLazy.Text where
+instance IsomorphismClass.IsomorphicTo TextBuilder TextLazy.Text where
   to = TextBuilderDev.lazyText
 
-instance IsomorphicTo TextLazy.Text TextBuilder where
-  to = to . to @Text
+instance IsomorphismClass.IsomorphicTo TextLazy.Text TextBuilder where
+  to = IsomorphismClass.to . IsomorphismClass.to @Text
 
 instance LawfulConversions.IsSome TextBuilder TextLazy.Text where
   to = lazyText
@@ -268,11 +269,11 @@ instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
   toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
   fromTextBuilder = TextLazyBuilder.fromText . buildText
 
-instance IsomorphicTo TextBuilder TextLazyBuilder.Builder where
-  to = to . to @TextLazy.Text
+instance IsomorphismClass.IsomorphicTo TextBuilder TextLazyBuilder.Builder where
+  to = IsomorphismClass.to . IsomorphismClass.to @TextLazy.Text
 
-instance IsomorphicTo TextLazyBuilder.Builder TextBuilder where
-  to = to . to @Text
+instance IsomorphismClass.IsomorphicTo TextLazyBuilder.Builder TextBuilder where
+  to = IsomorphismClass.to . IsomorphismClass.to @Text
 
 instance LawfulConversions.IsSome TextBuilder TextLazyBuilder.Builder where
   to = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
@@ -296,11 +297,11 @@ instance IsomorphicToTextBuilder TextEncoding.StrictTextBuilder where
   toTextBuilder = toTextBuilder . TextEncoding.strictBuilderToText
   fromTextBuilder = TextEncoding.textToStrictBuilder . fromTextBuilder
 
-instance IsomorphicTo TextBuilder TextEncoding.StrictTextBuilder where
-  to = to . TextEncoding.strictBuilderToText
+instance IsomorphismClass.IsomorphicTo TextBuilder TextEncoding.StrictTextBuilder where
+  to = IsomorphismClass.to . TextEncoding.strictBuilderToText
 
-instance IsomorphicTo TextEncoding.StrictTextBuilder TextBuilder where
-  to = TextEncoding.textToStrictBuilder . to
+instance IsomorphismClass.IsomorphicTo TextEncoding.StrictTextBuilder TextBuilder where
+  to = TextEncoding.textToStrictBuilder . IsomorphismClass.to
 
 instance LawfulConversions.IsSome TextBuilder TextEncoding.StrictTextBuilder where
   to = toTextBuilder . TextEncoding.strictBuilderToText
@@ -322,11 +323,11 @@ instance IsomorphicToTextBuilder TextEncoding.StrictBuilder where
   toTextBuilder = toTextBuilder . TextEncoding.strictBuilderToText
   fromTextBuilder = TextEncoding.textToStrictBuilder . fromTextBuilder
 
-instance IsomorphicTo TextBuilder TextEncoding.StrictBuilder where
-  to = to . TextEncoding.strictBuilderToText
+instance IsomorphismClass.IsomorphicTo TextBuilder TextEncoding.StrictBuilder where
+  to = IsomorphismClass.to . TextEncoding.strictBuilderToText
 
-instance IsomorphicTo TextEncoding.StrictBuilder TextBuilder where
-  to = TextEncoding.textToStrictBuilder . to
+instance IsomorphismClass.IsomorphicTo TextEncoding.StrictBuilder TextBuilder where
+  to = TextEncoding.textToStrictBuilder . IsomorphismClass.to
 
 instance LawfulConversions.IsSome TextBuilder TextEncoding.StrictBuilder where
   to = toTextBuilder . TextEncoding.strictBuilderToText
