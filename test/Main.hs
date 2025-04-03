@@ -187,11 +187,10 @@ main =
                             === B.toText (B.utcTimeInIso8601 roundedToSecondsTime)
                   ]
             ],
-        testGroup "Embeds instances"
-          $ [ Extras.embedsLaws "Text" $ Proxy @Text,
-              Extras.embedsLaws "Lazy Text" $ Proxy @TextLazy.Text,
-              Extras.embedsLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder,
-              Extras.embedsLaws "String" $ Proxy @String
+        testGroup "IsomorphicTo instances"
+          $ [ Extras.isomorphicToLaws "Text" $ Proxy @Text,
+              Extras.isomorphicToLaws "Lazy Text" $ Proxy @TextLazy.Text,
+              Extras.isomorphicToLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder
             ],
         testLaws $ showLaws (Proxy @B.TextBuilder),
         testLaws $ eqLaws (Proxy @B.TextBuilder),
