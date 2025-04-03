@@ -143,7 +143,8 @@ asciiByteString byteString =
     )
 
 -- | Unicode code point.
--- It is your responsibility to ensure that the code point is in proper range,
+--
+-- __Warning:__ It is your responsibility to ensure that the code point is in proper range,
 -- otherwise the produced text will be broken.
 -- It must be in the range of 0x0000 to 0x10FFFF.
 {-# INLINE unicodeCodePoint #-}
@@ -267,7 +268,7 @@ finiteBitsUnsignedBinary val =
 -- Padded with zeros or trimmed depending on whether it's shorter or longer
 -- than specified.
 --
--- It is your responsibility to ensure that the size is positive and in a reasonable range,
+-- __Warning:__ It is your responsibility to ensure that the size is positive and in a reasonable range,
 -- and that the value is positive, otherwise the produced text will be broken.
 --
 -- >>> fixedUnsignedDecimal 5 123

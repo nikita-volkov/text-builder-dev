@@ -143,13 +143,13 @@ main =
                       $ assertEqual "" "-1f23" (B.toText (B.hexadecimal @Integer (-0x01f23)))
                   ],
               testCase "dataSizeInBytesInDecimal" $ do
-                assertEqual "" "999B" (B.toText (B.dataSizeInBytesInDecimal @Integer ',' 999))
-                assertEqual "" "1kB" (B.toText (B.dataSizeInBytesInDecimal @Integer ',' 1000))
-                assertEqual "" "1.1kB" (B.toText (B.dataSizeInBytesInDecimal @Integer ',' 1100))
-                assertEqual "" "1.1MB" (B.toText (B.dataSizeInBytesInDecimal @Integer ',' 1150000))
-                assertEqual "" "9.9MB" (B.toText (B.dataSizeInBytesInDecimal @Integer ',' 9990000))
-                assertEqual "" "10MB" (B.toText (B.dataSizeInBytesInDecimal @Integer ',' 10100000))
-                assertEqual "" "1,000YB" (B.toText (B.dataSizeInBytesInDecimal @Integer ',' 1000000000000000000000000000)),
+                assertEqual "" "999B" (B.toText (B.dataSizeInBytesInDecimal @Integer 999))
+                assertEqual "" "1kB" (B.toText (B.dataSizeInBytesInDecimal @Integer 1000))
+                assertEqual "" "1.1kB" (B.toText (B.dataSizeInBytesInDecimal @Integer 1100))
+                assertEqual "" "1.1MB" (B.toText (B.dataSizeInBytesInDecimal @Integer 1150000))
+                assertEqual "" "9.9MB" (B.toText (B.dataSizeInBytesInDecimal @Integer 9990000))
+                assertEqual "" "10MB" (B.toText (B.dataSizeInBytesInDecimal @Integer 10100000))
+                assertEqual "" "1,000YB" (B.toText (B.dataSizeInBytesInDecimal @Integer 1000000000000000000000000000)),
               testCase "fixedDouble" $ do
                 assertEqual "" "0.0" (B.toText (B.fixedDouble 1 0.05))
                 assertEqual "" "0.1" (B.toText (B.fixedDouble 1 0.06))

@@ -64,29 +64,64 @@ string :: String -> TextBuilder
 string =
   foldMap char
 
+signed :: (Ord a, Num a) => (a -> TextBuilder) -> a -> TextBuilder
+signed onUnsigned i =
+  if i >= 0
+    then onUnsigned i
+    else unicodeCodePoint 45 <> onUnsigned (negate i)
+
 -- | Decimal representation of an integral value.
+--
+-- >>> decimal 123456
+-- "123456"
+--
+-- >>> decimal (-123456)
+-- "-123456"
+--
+-- >>> decimal 0
+-- "0"
 {-# INLINEABLE decimal #-}
 decimal :: (Integral a) => a -> TextBuilder
-decimal i =
-  if i >= 0
-    then unsignedDecimal i
-    else unicodeCodePoint 45 <> unsignedDecimal (negate i)
+decimal = signed unsignedDecimal
 
 -- | Decimal representation of an unsigned integral value.
+--
+-- __Warning:__ It is your responsibility to ensure that the value is non-negative.
+--
+-- >>> unsignedDecimal 123456
+-- "123456"
+--
+-- >>> unsignedDecimal 0
+-- "0"
 {-# INLINEABLE unsignedDecimal #-}
 unsignedDecimal :: (Integral a) => a -> TextBuilder
 unsignedDecimal =
   foldMap decimalDigit . Unfoldr.decimalDigits
 
 -- | Decimal representation of an integral value with thousands separated by the specified character.
+--
+-- >>> thousandSeparatedDecimal ',' 1234567890
+-- "1,234,567,890"
+--
+-- >>> thousandSeparatedDecimal ',' (-1234567890)
+-- "-1,234,567,890"
 {-# INLINEABLE thousandSeparatedDecimal #-}
 thousandSeparatedDecimal :: (Integral a) => Char -> a -> TextBuilder
-thousandSeparatedDecimal separatorChar a =
-  if a >= 0
-    then thousandSeparatedUnsignedDecimal separatorChar a
-    else unicodeCodePoint 45 <> thousandSeparatedUnsignedDecimal separatorChar (negate a)
+thousandSeparatedDecimal separatorChar =
+  signed (thousandSeparatedUnsignedDecimal separatorChar)
 
 -- | Decimal representation of an unsigned integral value with thousands separated by the specified character.
+--
+-- __Warning:__ It is your responsibility to ensure that the value is non-negative.
+--
+-- >>> thousandSeparatedUnsignedDecimal ',' 1234567890
+-- "1,234,567,890"
+--
+-- >>> thousandSeparatedUnsignedDecimal ' ' 1234567890
+-- "1 234 567 890"
+--
+-- >>> thousandSeparatedUnsignedDecimal ',' 0
+-- "0"
 {-# INLINEABLE thousandSeparatedUnsignedDecimal #-}
 thousandSeparatedUnsignedDecimal :: (Integral a) => Char -> a -> TextBuilder
 thousandSeparatedUnsignedDecimal separatorChar =
@@ -114,42 +149,57 @@ thousandSeparatedUnsignedDecimal separatorChar =
                   value
 
 -- | Data size in decimal notation over amount of bytes.
+--
+-- >>> dataSizeInBytesInDecimal 999
+-- "999B"
+--
+-- >>> dataSizeInBytesInDecimal 9999
+-- "9.9kB"
+--
+-- >>> dataSizeInBytesInDecimal (-9999)
+-- "-9.9kB"
+--
+-- >>> dataSizeInBytesInDecimal 1234567890
+-- "1.2GB"
+--
+-- >>> dataSizeInBytesInDecimal 10000000000000000000000000000000023
+-- "10,000,000,000YB"
 {-# INLINEABLE dataSizeInBytesInDecimal #-}
-dataSizeInBytesInDecimal :: (Integral a) => Char -> a -> TextBuilder
-dataSizeInBytesInDecimal separatorChar amount =
-  if amount < 1000
-    then unsignedDecimal amount <> "B"
+dataSizeInBytesInDecimal :: (Integral a) => a -> TextBuilder
+dataSizeInBytesInDecimal = signed \a ->
+  if a < 1000
+    then unsignedDecimal a <> "B"
     else
-      if amount < 1000000
-        then dividedDecimal separatorChar 100 amount <> "kB"
+      if a < 1000000
+        then dividedDecimal 100 a <> "kB"
         else
-          if amount < 1000000000
-            then dividedDecimal separatorChar 100000 amount <> "MB"
+          if a < 1000000000
+            then dividedDecimal 100000 a <> "MB"
             else
-              if amount < 1000000000000
-                then dividedDecimal separatorChar 100000000 amount <> "GB"
+              if a < 1000000000000
+                then dividedDecimal 100000000 a <> "GB"
                 else
-                  if amount < 1000000000000000
-                    then dividedDecimal separatorChar 100000000000 amount <> "TB"
+                  if a < 1000000000000000
+                    then dividedDecimal 100000000000 a <> "TB"
                     else
-                      if amount < 1000000000000000000
-                        then dividedDecimal separatorChar 100000000000000 amount <> "PB"
+                      if a < 1000000000000000000
+                        then dividedDecimal 100000000000000 a <> "PB"
                         else
-                          if amount < 1000000000000000000000
-                            then dividedDecimal separatorChar 100000000000000000 amount <> "EB"
+                          if a < 1000000000000000000000
+                            then dividedDecimal 100000000000000000 a <> "EB"
                             else
-                              if amount < 1000000000000000000000000
-                                then dividedDecimal separatorChar 100000000000000000000 amount <> "ZB"
-                                else dividedDecimal separatorChar 100000000000000000000000 amount <> "YB"
-
-dividedDecimal :: (Integral a) => Char -> a -> a -> TextBuilder
-dividedDecimal separatorChar divisor n =
-  let byDivisor = div n divisor
-      byExtraTen = div byDivisor 10
-      remainder = byDivisor - byExtraTen * 10
-   in if remainder == 0 || byExtraTen >= 10
-        then thousandSeparatedDecimal separatorChar byExtraTen
-        else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
+                              if a < 1000000000000000000000000
+                                then dividedDecimal 100000000000000000000 a <> "ZB"
+                                else dividedDecimal 100000000000000000000000 a <> "YB"
+  where
+    dividedDecimal divisor n =
+      let byDivisor = div n divisor
+          byExtraTen = div byDivisor 10
+          remainder = byDivisor - byExtraTen * 10
+          separatorChar = ','
+       in if remainder == 0 || byExtraTen >= 10
+            then thousandSeparatedDecimal separatorChar byExtraTen
+            else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
 
 -- | Unsigned binary number.
 {-# INLINE unsignedBinary #-}
@@ -157,7 +207,7 @@ unsignedBinary :: (Integral a) => a -> TextBuilder
 unsignedBinary =
   foldMap decimalDigit . Unfoldr.binaryDigits
 
--- | Unsigned binary number.
+-- | Unsigned binary number padded to the maximum amount of bits supported by the type.
 {-# INLINE unsignedPaddedBinary #-}
 unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilder
 unsignedPaddedBinary a =
@@ -166,10 +216,7 @@ unsignedPaddedBinary a =
 -- | Hexadecimal representation of an integral value.
 {-# INLINE hexadecimal #-}
 hexadecimal :: (Integral a) => a -> TextBuilder
-hexadecimal i =
-  if i >= 0
-    then unsignedHexadecimal i
-    else unicodeCodePoint 45 <> unsignedHexadecimal (negate i)
+hexadecimal = signed unsignedHexadecimal
 
 -- | Unsigned hexadecimal representation of an integral value.
 {-# INLINE unsignedHexadecimal #-}
