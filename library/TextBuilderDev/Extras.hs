@@ -1,5 +1,3 @@
-{-# OPTIONS_GHC -Wno-orphans #-}
-
 -- | Higher-level definitions not dealing with the structure of builder.
 module TextBuilderDev.Extras where
 
@@ -9,53 +7,8 @@ import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import qualified Data.Text.Lazy as TextLazy
 import qualified DeferredFolds.Unfoldr as Unfoldr
-import qualified Test.QuickCheck.Gen as QcGen
 import TextBuilderDev.Base
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
-
-instance IsString TextBuilder where
-  fromString = string
-
-instance Show TextBuilder where
-  show = show . toText
-
-instance Eq TextBuilder where
-  (==) = on (==) toText
-
-instance Arbitrary TextBuilder where
-  arbitrary =
-    QcGen.oneof
-      [ (<>) <$> downscale arbitrary <*> downscale arbitrary,
-        sconcat <$> downscale arbitrary,
-        stimes <$> arbitrary @Word8 <*> downscale arbitrary,
-        mconcat <$> downscale arbitrary,
-        pure mempty,
-        text <$> arbitrary,
-        lazyText <$> arbitrary,
-        string <$> arbitrary,
-        asciiByteString . ByteString.filter (< 128) <$> arbitrary,
-        hexData <$> arbitrary,
-        char <$> arbitrary,
-        decimal @Integer <$> arbitrary,
-        unsignedDecimal @Natural <$> arbitrary,
-        thousandSeparatedDecimal @Integer <$> arbitrary <*> arbitrary,
-        thousandSeparatedUnsignedDecimal @Natural <$> arbitrary <*> arbitrary,
-        dataSizeInBytesInDecimal @Natural <$> arbitrary <*> arbitrary,
-        unsignedBinary @Natural <$> arbitrary,
-        unsignedPaddedBinary @Word <$> arbitrary,
-        finiteBitsUnsignedBinary @Word <$> arbitrary,
-        hexadecimal @Integer <$> arbitrary,
-        unsignedHexadecimal @Natural <$> arbitrary,
-        decimalDigit <$> QcGen.choose @Int (0, 9),
-        hexadecimalDigit <$> QcGen.choose @Int (0, 15),
-        fixedDouble <$> QcGen.choose (0, 19) <*> arbitrary,
-        doublePercent <$> QcGen.choose (0, 19) <*> arbitrary,
-        utcTimestampInIso8601 <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary,
-        intervalInSeconds @Double <$> arbitrary
-      ]
-    where
-      downscale =
-        QcGen.scale (flip div 2)
 
 -- ** Output IO
 

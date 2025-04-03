@@ -30,6 +30,7 @@ import qualified Data.Text.IO as Text
 import qualified Data.Text.Internal as TextInternal
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
+import qualified Test.QuickCheck.Gen as QcGen
 import qualified TextBuilderDev.Base.Utf16View as Utf16View
 import qualified TextBuilderDev.Base.Utf8View as Utf8View
 import TextBuilderDev.Prelude hiding (null)
@@ -59,6 +60,15 @@ data TextBuilder
   = TextBuilder
       !Int
       !(forall s. TextArray.MArray s -> Int -> ST s Int)
+
+instance IsString TextBuilder where
+  fromString = text . fromString
+
+instance Show TextBuilder where
+  show = show . toText
+
+instance Eq TextBuilder where
+  (==) = on (==) toText
 
 instance Semigroup TextBuilder where
   {-# INLINE (<>) #-}
@@ -97,6 +107,27 @@ instance Monoid TextBuilder where
            in go list
       )
 
+instance Arbitrary TextBuilder where
+  arbitrary =
+    QcGen.oneof
+      [ (<>) <$> downscale arbitrary <*> downscale arbitrary,
+        sconcat <$> downscale arbitrary,
+        stimes <$> downscale (arbitrary @Word8) <*> downscale arbitrary,
+        mconcat <$> downscale arbitrary,
+        pure mempty,
+        text <$> arbitrary,
+        asciiByteString . ByteString.filter (< 128) <$> arbitrary,
+        unicodeCodePoint
+          <$> QcGen.suchThat arbitrary (\x -> x >= 0 && x <= 0x10FFFF),
+        finiteBitsUnsignedBinary @Word <$> arbitrary,
+        fixedUnsignedDecimal @Int
+          <$> QcGen.suchThat arbitrary (\x -> x >= 0 && x <= 255)
+          <*> QcGen.suchThat arbitrary (>= 0)
+      ]
+    where
+      downscale =
+        QcGen.scale (flip div 2)
+
 -- | Strict text.
 {-# INLINEABLE text #-}
 text :: Text -> TextBuilder
@@ -130,6 +161,9 @@ asciiByteString byteString =
     )
 
 -- | Unicode code point.
+-- It is your responsibility to ensure that the code point is in proper range,
+-- otherwise the produced text will be broken.
+-- It must be in the range of 0x0000 to 0x10FFFF.
 {-# INLINE unicodeCodePoint #-}
 unicodeCodePoint :: Int -> TextBuilder
 #if MIN_VERSION_text(2,0,0)
@@ -250,6 +284,18 @@ finiteBitsUnsignedBinary val =
 -- | Fixed-length decimal.
 -- Padded with zeros or trimmed depending on whether it's shorter or longer
 -- than specified.
+--
+-- It is your responsibility to ensure that the size is positive and in a reasonable range,
+-- and that the value is positive, otherwise the produced text will be broken.
+--
+-- >>> fixedUnsignedDecimal 5 123
+-- "00123"
+--
+-- >>> fixedUnsignedDecimal 5 123456
+-- "23456"
+--
+-- >>> fixedUnsignedDecimal 0 123
+-- ""
 fixedUnsignedDecimal :: (Integral a) => Int -> a -> TextBuilder
 fixedUnsignedDecimal size val =
   TextBuilder size $ \array startOffset ->
