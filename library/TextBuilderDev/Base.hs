@@ -30,9 +30,9 @@ import qualified Data.Text.IO as Text
 import qualified Data.Text.Internal as TextInternal
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
+import qualified TextBuilderDev.Base.Utf16View as Utf16View
+import qualified TextBuilderDev.Base.Utf8View as Utf8View
 import TextBuilderDev.Prelude hiding (null)
-import qualified TextBuilderDev.Utf16View as Utf16View
-import qualified TextBuilderDev.Utf8View as Utf8View
 
 -- | Execute the builder producing a strict text.
 toText :: TextBuilder -> Text

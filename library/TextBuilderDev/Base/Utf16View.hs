@@ -1,7 +1,7 @@
-module TextBuilderDev.Utf16View where
+module TextBuilderDev.Base.Utf16View where
 
+import qualified TextBuilderDev.Base.Utf16View.Unicode as Unicode
 import TextBuilderDev.Prelude
-import qualified TextBuilderDev.Unicode as Unicode
 
 -- |
 -- A matching function, which chooses the continuation to run.

@@ -72,14 +72,14 @@ library
   exposed-modules: TextBuilderDev
   other-modules:
     TextBuilderDev.Base
+    TextBuilderDev.Base.Utf16View
+    TextBuilderDev.Base.Utf16View.Unicode
+    TextBuilderDev.Base.Utf8View
     TextBuilderDev.Extras
     TextBuilderDev.IsomorphicToTextBuilder
     TextBuilderDev.IsomorphismClass
     TextBuilderDev.LawfulConversions
     TextBuilderDev.Prelude
-    TextBuilderDev.Unicode
-    TextBuilderDev.Utf16View
-    TextBuilderDev.Utf8View
 
   build-depends:
     QuickCheck >=2.14 && <3,

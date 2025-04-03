@@ -1,4 +1,4 @@
-module TextBuilderDev.Utf8View where
+module TextBuilderDev.Base.Utf8View where
 
 import TextBuilderDev.Prelude
 

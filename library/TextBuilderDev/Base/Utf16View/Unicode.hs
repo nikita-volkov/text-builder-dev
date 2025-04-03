@@ -1,6 +1,6 @@
 -- |
 -- Utilities for construction of Unicode codepoints.
-module TextBuilderDev.Unicode where
+module TextBuilderDev.Base.Utf16View.Unicode where
 
 import TextBuilderDev.Prelude
 
