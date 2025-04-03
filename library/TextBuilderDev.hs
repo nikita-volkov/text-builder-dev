@@ -2,8 +2,8 @@ module TextBuilderDev
   ( TextBuilder,
 
     -- * Accessors
-    toString,
     toText,
+    toString,
     null,
 
     -- ** Output IO

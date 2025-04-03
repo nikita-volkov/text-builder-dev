@@ -425,6 +425,15 @@ fixedDouble ::
 fixedDouble decimalPlaces = fromString . printf ("%." ++ show decimalPlaces ++ "f")
 
 -- | Double multiplied by 100 with a fixed number of decimal places applied and followed by a percent-sign.
+--
+-- >>> doublePercent 3 0.123456
+-- "12.346%"
+--
+-- >>> doublePercent 0 2
+-- "200%"
+--
+-- >>> doublePercent 0 (-2)
+-- "-200%"
 {-# INLINE doublePercent #-}
 doublePercent ::
   -- | Amount of decimals after point.
@@ -434,6 +443,9 @@ doublePercent ::
 doublePercent decimalPlaces x = fixedDouble decimalPlaces (x * 100) <> "%"
 
 -- | Hexadecimal readable representation of binary data.
+--
+-- >>> hexData "Hello"
+-- "4865 6c6c 6f"
 {-# INLINE hexData #-}
 hexData :: ByteString -> TextBuilder
 hexData =
