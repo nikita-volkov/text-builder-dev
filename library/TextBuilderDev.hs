@@ -154,6 +154,11 @@ instance Semigroup TextBuilder where
 instance Monoid TextBuilder where
   {-# INLINE mempty #-}
   mempty = TextBuilder mempty 0
+  {-# INLINE mconcat #-}
+  mconcat list =
+    TextBuilder
+      (mconcat (fmap (\(TextBuilder allocator _) -> allocator) list))
+      (foldl' (\acc (TextBuilder _ size) -> acc + size) 0 list)
 
 instance IsString TextBuilder where
   fromString = string

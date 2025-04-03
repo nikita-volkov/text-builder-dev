@@ -80,6 +80,17 @@ instance Semigroup Allocator where
 instance Monoid Allocator where
   {-# INLINE mempty #-}
   mempty = Allocator 0 (const return)
+  {-# INLINE mconcat #-}
+  mconcat list =
+    Allocator
+      (foldl' (\acc (Allocator sizeBound _) -> acc + sizeBound) 0 list)
+      ( \array ->
+          let go [] offset = return offset
+              go (Allocator _ write : xs) offset = do
+                offsetAfter <- write array offset
+                go xs offsetAfter
+           in go list
+      )
 
 -- |
 -- Run the builder and pack the produced text into a new builder.
