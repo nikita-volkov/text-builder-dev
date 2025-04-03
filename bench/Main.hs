@@ -29,8 +29,10 @@ bySize concat =
       replicate 10 "фывапролдж",
     bgroup "1kB" . bySubject concat $
       replicate 100 "фывапролдж",
-    bgroup "1MB" . bySubject concat $
-      replicate 100_000 "фывапролдж"
+    bgroup "10kB" . bySubject concat $
+      replicate 1_000 "фывапролдж",
+    bgroup "100kB" . bySubject concat $
+      replicate 10_000 "фывапролдж"
   ]
 
 bySubject :: (forall a. (Monoid a) => [a] -> a) -> [Text] -> [Benchmark]
