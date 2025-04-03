@@ -17,7 +17,7 @@ instance IsString TextBuilder where
   fromString = string
 
 instance Show TextBuilder where
-  show = Text.unpack . toText
+  show = show . toText
 
 instance Eq TextBuilder where
   (==) = on (==) toText
