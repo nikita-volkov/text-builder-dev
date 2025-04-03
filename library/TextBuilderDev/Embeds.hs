@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 
-module TextBuilderDev.IsomorphicToTextBuilder where
+module TextBuilderDev.Embeds where
 
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as TextLazy
@@ -20,7 +20,7 @@ import qualified Data.Text.Encoding as TextEncoding
 -- Unlike conversion classes from other libs this class is lawful.
 -- The law is:
 --
--- @'toTextBuilder' . 'fromTextBuilder' = 'id'@
+-- @'from' . 'to' = 'id'@
 --
 -- This class does not provide implicit rendering,
 -- such as from integer to its decimal representation.
@@ -37,40 +37,43 @@ import qualified Data.Text.Encoding as TextEncoding
 -- since there can be infinite amount of flavours of
 -- conversions. They are context-dependent and as such
 -- should be defined as part of the domain.
-class IsomorphicToTextBuilder a where
-  toTextBuilder :: a -> TextBuilder
-  fromTextBuilder :: TextBuilder -> a
+class Embeds a where
+  -- | Project the type into "TextBuilder". Surjective.
+  from :: a -> TextBuilder
 
-instance IsomorphicToTextBuilder TextBuilder where
-  toTextBuilder = id
-  fromTextBuilder = id
+  -- | Embed TextBuilder into the type. Injective.
+  to :: TextBuilder -> a
 
-instance IsomorphicToTextBuilder Text where
-  toTextBuilder = text
-  fromTextBuilder = toText
+instance Embeds TextBuilder where
+  from = id
+  to = id
 
-instance IsomorphicToTextBuilder String where
-  toTextBuilder = fromString
-  fromTextBuilder = Text.unpack . toText
+instance Embeds Text where
+  from = text
+  to = toText
 
-instance IsomorphicToTextBuilder TextLazy.Text where
-  toTextBuilder = lazyText
-  fromTextBuilder = TextLazy.fromStrict . toText
+instance Embeds String where
+  from = fromString
+  to = Text.unpack . toText
 
-instance IsomorphicToTextBuilder TextLazyBuilder.Builder where
-  toTextBuilder = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
-  fromTextBuilder = TextLazyBuilder.fromText . toText
+instance Embeds TextLazy.Text where
+  from = lazyText
+  to = TextLazy.fromStrict . toText
+
+instance Embeds TextLazyBuilder.Builder where
+  from = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
+  to = TextLazyBuilder.fromText . toText
 
 #if MIN_VERSION_text(2,1,2)
 
-instance IsomorphicToTextBuilder TextEncoding.StrictTextBuilder where
-  toTextBuilder = toTextBuilder . TextEncoding.strictBuilderToText
-  fromTextBuilder = TextEncoding.textToStrictBuilder . fromTextBuilder
+instance Embeds TextEncoding.StrictTextBuilder where
+  from = from . TextEncoding.strictBuilderToText
+  to = TextEncoding.textToStrictBuilder . to
 
 #elif MIN_VERSION_text(2,0,2)
 
-instance IsomorphicToTextBuilder TextEncoding.StrictBuilder where
-  toTextBuilder = toTextBuilder . TextEncoding.strictBuilderToText
-  fromTextBuilder = TextEncoding.textToStrictBuilder . fromTextBuilder
+instance Embeds TextEncoding.StrictBuilder where
+  from = from . TextEncoding.strictBuilderToText
+  to = TextEncoding.textToStrictBuilder . to
 
 #endif

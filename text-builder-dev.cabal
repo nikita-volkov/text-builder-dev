@@ -75,8 +75,8 @@ library
     TextBuilderDev.Base.Utf16View
     TextBuilderDev.Base.Utf16View.Unicode
     TextBuilderDev.Base.Utf8View
+    TextBuilderDev.Embeds
     TextBuilderDev.Extras
-    TextBuilderDev.IsomorphicToTextBuilder
     TextBuilderDev.IsomorphismClass
     TextBuilderDev.LawfulConversions
     TextBuilderDev.Prelude

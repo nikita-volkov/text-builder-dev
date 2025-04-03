@@ -54,7 +54,7 @@ main =
              in mconcat trimmedTexts
                   === B.toText (mconcat (map B.text trimmedTexts)),
         testProperty "TextBuilderDev.null is isomorphic to Text.null" $ \(text :: Text) ->
-          B.null (B.toTextBuilder text) === Text.null text,
+          B.null (B.from text) === Text.null text,
         testProperty "(TextBuilderDev.unicodeCodePoint <>) is isomorphic to Text.cons"
           $ withMaxSuccess bigTest
           $ \(text :: Text) (c :: Char) ->
@@ -187,11 +187,11 @@ main =
                             === B.toText (B.utcTimeInIso8601 roundedToSecondsTime)
                   ]
             ],
-        testGroup "IsomorphicToTextBuilder instances"
-          $ [ Extras.isomorphismLaws "Text" $ Proxy @Text,
-              Extras.isomorphismLaws "Lazy Text" $ Proxy @TextLazy.Text,
-              Extras.isomorphismLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder,
-              Extras.isomorphismLaws "String" $ Proxy @String
+        testGroup "Embeds instances"
+          $ [ Extras.embedsLaws "Text" $ Proxy @Text,
+              Extras.embedsLaws "Lazy Text" $ Proxy @TextLazy.Text,
+              Extras.embedsLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder,
+              Extras.embedsLaws "String" $ Proxy @String
             ],
         testLaws $ showLaws (Proxy @B.TextBuilder),
         testLaws $ eqLaws (Proxy @B.TextBuilder),

@@ -75,12 +75,12 @@ module TextBuilderDev
     picosecondsCompact,
 
     -- * Classes
-    IsomorphicToTextBuilder (..),
+    Embeds (..),
   )
 where
 
 import TextBuilderDev.Base
+import TextBuilderDev.Embeds
 import TextBuilderDev.Extras
-import TextBuilderDev.IsomorphicToTextBuilder
 import TextBuilderDev.IsomorphismClass ()
 import TextBuilderDev.LawfulConversions ()
