@@ -57,7 +57,7 @@ null = (== 0) . toMaxSize
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
 data TextBuilder
   = TextBuilder
-      {-# UNPACK #-} !Int
+      !Int
       !(forall s. TextArray.MArray s -> Int -> ST s Int)
 
 instance Semigroup TextBuilder where
