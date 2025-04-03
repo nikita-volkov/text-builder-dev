@@ -1,11 +1,11 @@
 module Main where
 
-import Criterion.Main
 import Data.Function
 import Data.Text (Text)
 import qualified Data.Text.Encoding as D
 import qualified Data.Text.Lazy as C
 import qualified Data.Text.Lazy.Builder as B
+import Test.Tasty.Bench
 import qualified TextBuilderDev as A
 import Prelude
 

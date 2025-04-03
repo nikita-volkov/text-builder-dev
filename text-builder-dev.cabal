@@ -119,6 +119,6 @@ benchmark bench
   main-is: Main.hs
   build-depends:
     base >=4.11 && <5,
-    criterion >=1.5.6.1 && <2,
+    tasty-bench ^>=0.4.1,
     text >=2.1.2 && <3,
     text-builder-dev,
