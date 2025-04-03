@@ -119,7 +119,9 @@ benchmark bench
     -O2
     -threaded
     -with-rtsopts=-N
-    -funbox-strict-fields
+    -with-rtsopts=-A32m
+    -with-rtsopts=-T
+    -fproc-alignment=64
 
   main-is: Main.hs
   build-depends:
