@@ -349,6 +349,7 @@ instance LawfulConversions.Is TextEncoding.StrictBuilder TextBuilder
 -- * Accessors
 
 -- | Get the amount of characters.
+{-# DEPRECATED length "Introduces performance overhead" #-}
 {-# INLINE length #-}
 length :: TextBuilder -> Int
 length (TextBuilder _ x) = x
