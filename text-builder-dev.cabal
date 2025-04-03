@@ -71,7 +71,11 @@ library
   hs-source-dirs: library
   exposed-modules: TextBuilderDev
   other-modules:
-    TextBuilderDev.Allocator
+    TextBuilderDev.Base
+    TextBuilderDev.Extras
+    TextBuilderDev.IsomorphicToTextBuilder
+    TextBuilderDev.IsomorphismClass
+    TextBuilderDev.LawfulConversions
     TextBuilderDev.Prelude
     TextBuilderDev.Unicode
     TextBuilderDev.Utf16View

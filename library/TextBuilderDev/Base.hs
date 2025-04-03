@@ -1,17 +1,16 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
-module TextBuilderDev.Allocator
+module TextBuilderDev.Base
   ( -- * Execution
-    allocate,
-    toSizeBound,
+    toText,
+    toMaxSize,
+    null,
 
     -- * Definition
-    Allocator,
-    force,
+    TextBuilder,
     text,
     asciiByteString,
-    char,
     unicodeCodePoint,
     utf8CodeUnits1,
     utf8CodeUnits2,
@@ -31,42 +30,48 @@ import qualified Data.Text.IO as Text
 import qualified Data.Text.Internal as TextInternal
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
-import TextBuilderDev.Prelude
+import TextBuilderDev.Prelude hiding (null)
 import qualified TextBuilderDev.Utf16View as Utf16View
 import qualified TextBuilderDev.Utf8View as Utf8View
 
--- | Execute a builder producing a strict text.
-allocate :: Allocator -> Text
-allocate (Allocator sizeBound write) =
+-- | Execute the builder producing a strict text.
+toText :: TextBuilder -> Text
+toText (TextBuilder maxSize write) =
   runST $ do
-    array <- TextArray.new sizeBound
+    array <- TextArray.new maxSize
     offsetAfter <- write array 0
     frozenArray <- TextArray.unsafeFreeze array
     return $ TextInternal.text frozenArray 0 offsetAfter
 
-toSizeBound :: Allocator -> Int
-toSizeBound (Allocator sizeBound _) = sizeBound
+-- | Estimate the maximum amount of bytes that the produced text can take.
+toMaxSize :: TextBuilder -> Int
+toMaxSize (TextBuilder maxSize _) = maxSize
+
+-- | Check whether the builder is empty.
+{-# INLINE null #-}
+null :: TextBuilder -> Bool
+null = (== 0) . toMaxSize
 
 -- |
 -- Specification of how to efficiently construct strict 'Text'.
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
-data Allocator
-  = Allocator
+data TextBuilder
+  = TextBuilder
       {-# UNPACK #-} !Int
       !(forall s. TextArray.MArray s -> Int -> ST s Int)
 
-instance Semigroup Allocator where
+instance Semigroup TextBuilder where
   {-# INLINE (<>) #-}
-  (<>) (Allocator estimatedArraySizeL writeL) (Allocator estimatedArraySizeR writeR) =
-    Allocator
+  (<>) (TextBuilder estimatedArraySizeL writeL) (TextBuilder estimatedArraySizeR writeR) =
+    TextBuilder
       (estimatedArraySizeL + estimatedArraySizeR)
       ( \array offset -> do
           offsetAfter1 <- writeL array offset
           writeR array offsetAfter1
       )
-  stimes n (Allocator sizeBound write) =
-    Allocator
-      (sizeBound * fromIntegral n)
+  stimes n (TextBuilder maxSize write) =
+    TextBuilder
+      (maxSize * fromIntegral n)
       ( \array ->
           let go n offset =
                 if n > 0
@@ -77,42 +82,32 @@ instance Semigroup Allocator where
            in go n
       )
 
-instance Monoid Allocator where
+instance Monoid TextBuilder where
   {-# INLINE mempty #-}
-  mempty = Allocator 0 (const return)
+  mempty = TextBuilder 0 (const return)
   {-# INLINE mconcat #-}
   mconcat list =
-    Allocator
-      (foldl' (\acc (Allocator sizeBound _) -> acc + sizeBound) 0 list)
+    TextBuilder
+      (foldl' (\acc (TextBuilder maxSize _) -> acc + maxSize) 0 list)
       ( \array ->
           let go [] offset = return offset
-              go (Allocator _ write : xs) offset = do
+              go (TextBuilder _ write : xs) offset = do
                 offsetAfter <- write array offset
                 go xs offsetAfter
            in go list
       )
 
--- |
--- Run the builder and pack the produced text into a new builder.
---
--- Useful to have around builders that you reuse,
--- because a forced builder is much faster,
--- since it's virtually a single call @memcopy@.
-{-# INLINE force #-}
-force :: Allocator -> Allocator
-force = text . allocate
-
 -- | Strict text.
 {-# INLINEABLE text #-}
-text :: Text -> Allocator
+text :: Text -> TextBuilder
 #if MIN_VERSION_text(2,0,0)
 text (TextInternal.Text array offset length) =
-  Allocator length \builderArray builderOffset -> do
+  TextBuilder length \builderArray builderOffset -> do
     TextArray.copyI length builderArray builderOffset array offset
     return $ builderOffset + length
 #else
 text (TextInternal.Text array offset length) =
-  Allocator length \builderArray builderOffset -> do
+  TextBuilder length \builderArray builderOffset -> do
     let builderOffsetAfter = builderOffset + length
     TextArray.copyI builderArray builderOffset array offset builderOffsetAfter
     return builderOffsetAfter
@@ -123,9 +118,9 @@ text (TextInternal.Text array offset length) =
 -- It's your responsibility to ensure that the bytes are in proper range,
 -- otherwise the produced text will be broken.
 {-# INLINEABLE asciiByteString #-}
-asciiByteString :: ByteString -> Allocator
+asciiByteString :: ByteString -> TextBuilder
 asciiByteString byteString =
-  Allocator
+  TextBuilder
     (ByteString.length byteString)
     ( \array ->
         let step byte next index = do
@@ -134,14 +129,9 @@ asciiByteString byteString =
          in ByteString.foldr step return byteString
     )
 
--- | Unicode character.
-{-# INLINE char #-}
-char :: Char -> Allocator
-char = unicodeCodePoint . ord
-
 -- | Unicode code point.
 {-# INLINE unicodeCodePoint #-}
-unicodeCodePoint :: Int -> Allocator
+unicodeCodePoint :: Int -> TextBuilder
 #if MIN_VERSION_text(2,0,0)
 unicodeCodePoint x =
   Utf8View.unicodeCodePoint x utf8CodeUnits1 utf8CodeUnits2 utf8CodeUnits3 utf8CodeUnits4
@@ -151,11 +141,11 @@ unicodeCodePoint x =
 #endif
 
 -- | Single code-unit UTF-8 character.
-utf8CodeUnits1 :: Word8 -> Allocator
+utf8CodeUnits1 :: Word8 -> TextBuilder
 #if MIN_VERSION_text(2,0,0)
 {-# INLINEABLE utf8CodeUnits1 #-}
 utf8CodeUnits1 unit1 =
-  Allocator 1 \array offset ->
+  TextBuilder 1 \array offset ->
     TextArray.unsafeWrite array offset unit1
       $> succ offset
 #else
@@ -165,11 +155,11 @@ utf8CodeUnits1 unit1 =
 #endif
 
 -- | Double code-unit UTF-8 character.
-utf8CodeUnits2 :: Word8 -> Word8 -> Allocator
+utf8CodeUnits2 :: Word8 -> Word8 -> TextBuilder
 #if MIN_VERSION_text(2,0,0)
 {-# INLINEABLE utf8CodeUnits2 #-}
 utf8CodeUnits2 unit1 unit2 =
-  Allocator 2 \array offset -> do
+  TextBuilder 2 \array offset -> do
     TextArray.unsafeWrite array offset unit1
     TextArray.unsafeWrite array (offset + 1) unit2
     return $ offset + 2
@@ -180,11 +170,11 @@ utf8CodeUnits2 unit1 unit2 =
 #endif
 
 -- | Triple code-unit UTF-8 character.
-utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Allocator
+utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> TextBuilder
 #if MIN_VERSION_text(2,0,0)
 {-# INLINEABLE utf8CodeUnits3 #-}
 utf8CodeUnits3 unit1 unit2 unit3 =
-  Allocator 3 \array offset -> do
+  TextBuilder 3 \array offset -> do
     TextArray.unsafeWrite array offset unit1
     TextArray.unsafeWrite array (offset + 1) unit2
     TextArray.unsafeWrite array (offset + 2) unit3
@@ -196,11 +186,11 @@ utf8CodeUnits3 unit1 unit2 unit3 =
 #endif
 
 -- | UTF-8 character out of 4 code units.
-utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Allocator
+utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> TextBuilder
 #if MIN_VERSION_text(2,0,0)
 {-# INLINEABLE utf8CodeUnits4 #-}
 utf8CodeUnits4 unit1 unit2 unit3 unit4 =
-  Allocator 4 \array offset -> do
+  TextBuilder 4 \array offset -> do
     TextArray.unsafeWrite array offset unit1
     TextArray.unsafeWrite array (offset + 1) unit2
     TextArray.unsafeWrite array (offset + 2) unit3
@@ -213,20 +203,20 @@ utf8CodeUnits4 unit1 unit2 unit3 unit4 =
 #endif
 
 -- | Single code-unit UTF-16 character.
-utf16CodeUnits1 :: Word16 -> Allocator
+utf16CodeUnits1 :: Word16 -> TextBuilder
 #if MIN_VERSION_text(2,0,0)
 {-# INLINE utf16CodeUnits1 #-}
 utf16CodeUnits1 = unicodeCodePoint . fromIntegral
 #else
 {-# INLINEABLE utf16CodeUnits1 #-}
 utf16CodeUnits1 unit =
-  Allocator 1 \array offset ->
+  TextBuilder 1 \array offset ->
     TextArray.unsafeWrite array offset unit
       $> succ offset
 #endif
 
 -- | Double code-unit UTF-16 character.
-utf16CodeUnits2 :: Word16 -> Word16 -> Allocator
+utf16CodeUnits2 :: Word16 -> Word16 -> TextBuilder
 #if MIN_VERSION_text(2,0,0)
 {-# INLINE utf16CodeUnits2 #-}
 utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
@@ -235,17 +225,17 @@ utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
 #else
 {-# INLINEABLE utf16CodeUnits2 #-}
 utf16CodeUnits2 unit1 unit2 =
-  Allocator 2 \array offset -> do
+  TextBuilder 2 \array offset -> do
     TextArray.unsafeWrite array offset unit1
     TextArray.unsafeWrite array (succ offset) unit2
     return $ offset + 2
 #endif
 
 -- | A less general but faster alternative to 'unsignedBinary'.
-finiteBitsUnsignedBinary :: (FiniteBits a) => a -> Allocator
+finiteBitsUnsignedBinary :: (FiniteBits a) => a -> TextBuilder
 finiteBitsUnsignedBinary val =
   let size = max 1 (finiteBitSize val - countLeadingZeros val)
-   in Allocator size \array arrayStartIndex ->
+   in TextBuilder size \array arrayStartIndex ->
         let go val arrayIndex =
               if arrayIndex >= arrayStartIndex
                 then do
@@ -260,9 +250,9 @@ finiteBitsUnsignedBinary val =
 -- | Fixed-length decimal.
 -- Padded with zeros or trimmed depending on whether it's shorter or longer
 -- than specified.
-fixedUnsignedDecimal :: (Integral a) => Int -> a -> Allocator
+fixedUnsignedDecimal :: (Integral a) => Int -> a -> TextBuilder
 fixedUnsignedDecimal size val =
-  Allocator size $ \array startOffset ->
+  TextBuilder size $ \array startOffset ->
     let offsetAfter = startOffset + size
         writeValue val offset =
           if offset >= startOffset
