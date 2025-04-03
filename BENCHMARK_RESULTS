@@ -1,0 +1,136 @@
+All
+  Left-biased mappend
+    100B
+      TextBuilderDev.TextBuilder:           OK
+        185  ns ±  14 ns, 928 B  allocated,   0 B  copied, 6.0 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        210  ns ±  15 ns, 1.2 KB allocated,   0 B  copied, 6.0 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        508  ns ±  38 ns, 2.6 KB allocated,   1 B  copied, 6.0 MB peak memory
+      Data.Text.Text:                       OK
+        213  ns ±  13 ns, 1.5 KB allocated,   0 B  copied, 6.0 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        407  ns ±  28 ns, 4.2 KB allocated,   1 B  copied, 6.0 MB peak memory
+    1kB
+      TextBuilderDev.TextBuilder:           OK
+        1.51 μs ± 110 ns, 8.3 KB allocated,   6 B  copied, 6.0 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        1.84 μs ± 166 ns,  12 KB allocated,  12 B  copied, 6.0 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        4.72 μs ± 328 ns,  24 KB allocated,  29 B  copied, 6.0 MB peak memory
+      Data.Text.Text:                       OK
+        3.84 μs ± 301 ns, 104 KB allocated,  66 B  copied, 6.0 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        24.2 μs ± 2.2 μs, 358 KB allocated, 455 B  copied, 6.0 MB peak memory
+    10kB
+      TextBuilderDev.TextBuilder:           OK
+        15.5 μs ± 1.2 μs,  82 KB allocated, 181 B  copied, 8.0 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        18.3 μs ± 1.5 μs, 121 KB allocated, 433 B  copied, 8.0 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        48.3 μs ± 3.5 μs, 242 KB allocated, 1.7 KB copied, 8.0 MB peak memory
+      Data.Text.Text:                       OK
+        305  μs ±  26 μs, 9.6 MB allocated, 2.9 KB copied,  11 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        2.59 ms ± 130 μs,  34 MB allocated, 240 KB copied,  11 MB peak memory
+    100kB
+      TextBuilderDev.TextBuilder:           OK
+        202  μs ±  13 μs, 1.0 MB allocated,  15 KB copied,  11 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        196  μs ±  14 μs, 1.2 MB allocated,  39 KB copied,  12 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        538  μs ±  36 μs, 2.4 MB allocated, 172 KB copied,  12 MB peak memory
+      Data.Text.Text:                       OK
+        26.8 ms ± 1.7 ms, 954 MB allocated, 292 KB copied,  17 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        615  ms ±  33 ms, 4.7 GB allocated, 136 MB copied,  17 MB peak memory
+  Right-biased mappend
+    100B
+      TextBuilderDev.TextBuilder:           OK
+        186  ns ±  16 ns, 928 B  allocated,   0 B  copied,  17 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        227  ns ±  15 ns, 1.2 KB allocated,   0 B  copied,  17 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        492  ns ±  29 ns, 2.5 KB allocated,   1 B  copied,  17 MB peak memory
+      Data.Text.Text:                       OK
+        211  ns ±  15 ns, 1.5 KB allocated,   0 B  copied,  17 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        277  ns ±  26 ns, 1.8 KB allocated,   0 B  copied,  17 MB peak memory
+    1kB
+      TextBuilderDev.TextBuilder:           OK
+        1.57 μs ±  62 ns, 8.3 KB allocated,   6 B  copied,  17 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        1.97 μs ± 135 ns,  12 KB allocated,  13 B  copied,  17 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        4.57 μs ± 415 ns,  24 KB allocated,  31 B  copied,  17 MB peak memory
+      Data.Text.Text:                       OK
+        3.71 μs ± 328 ns, 104 KB allocated,  62 B  copied,  17 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        2.22 μs ± 205 ns,  17 KB allocated,  25 B  copied,  17 MB peak memory
+    10kB
+      TextBuilderDev.TextBuilder:           OK
+        15.4 μs ± 1.1 μs,  82 KB allocated, 204 B  copied,  17 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        31.3 μs ± 2.3 μs, 185 KB allocated, 588 B  copied,  17 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        49.0 μs ± 4.0 μs, 242 KB allocated, 2.0 KB copied,  17 MB peak memory
+      Data.Text.Text:                       OK
+        375  μs ±  34 μs, 9.6 MB allocated, 2.6 KB copied,  17 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        24.1 μs ± 1.9 μs, 168 KB allocated, 1.9 KB copied,  17 MB peak memory
+    100kB
+      TextBuilderDev.TextBuilder:           OK
+        161  μs ±  16 μs, 820 KB allocated,  18 KB copied,  17 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        355  μs ±  34 μs, 1.8 MB allocated,  50 KB copied,  17 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        553  μs ±  42 μs, 2.4 MB allocated, 189 KB copied,  17 MB peak memory
+      Data.Text.Text:                       OK
+        29.0 ms ± 2.2 ms, 954 MB allocated, 250 KB copied,  23 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        309  μs ±  28 μs, 1.6 MB allocated, 182 KB copied,  23 MB peak memory
+  mconcat
+    100B
+      TextBuilderDev.TextBuilder:           OK
+        123  ns ± 7.5 ns, 464 B  allocated,   0 B  copied,  23 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        163  ns ±  16 ns, 1.0 KB allocated,   0 B  copied,  23 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        312  ns ±  28 ns, 2.1 KB allocated,   0 B  copied,  23 MB peak memory
+      Data.Text.Text:                       OK
+        107  ns ± 7.9 ns, 248 B  allocated,   0 B  copied,  23 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        200  ns ± 6.8 ns, 1.6 KB allocated,   0 B  copied,  23 MB peak memory
+    1kB
+      TextBuilderDev.TextBuilder:           OK
+        1.21 μs ±  64 ns, 3.6 KB allocated,   0 B  copied,  23 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        1.70 μs ± 156 ns, 9.8 KB allocated,  10 B  copied,  23 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        3.05 μs ± 262 ns,  20 KB allocated,  15 B  copied,  23 MB peak memory
+      Data.Text.Text:                       OK
+        1.04 μs ±  62 ns, 2.0 KB allocated,   0 B  copied,  23 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        1.77 μs ± 132 ns,  16 KB allocated,  19 B  copied,  23 MB peak memory
+    10kB
+      TextBuilderDev.TextBuilder:           OK
+        12.2 μs ± 1.2 μs,  35 KB allocated,   4 B  copied,  23 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        29.4 μs ± 1.8 μs, 162 KB allocated, 559 B  copied,  23 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        35.1 μs ± 1.7 μs, 202 KB allocated, 787 B  copied,  23 MB peak memory
+      Data.Text.Text:                       OK
+        10.3 μs ± 837 ns,  20 KB allocated,   4 B  copied,  23 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        21.6 μs ± 1.1 μs, 160 KB allocated, 1.3 KB copied,  23 MB peak memory
+    100kB
+      TextBuilderDev.TextBuilder:           OK
+        179  μs ±  16 μs, 352 KB allocated,  47 B  copied,  27 MB peak memory
+      Data.Text.Encoding.StrictTextBuilder: OK
+        449  μs ±  31 μs, 1.8 MB allocated,  78 KB copied,  27 MB peak memory
+      Data.Text.Lazy.Builder.Builder:       OK
+        358  μs ±  14 μs, 2.0 MB allocated,  81 KB copied,  27 MB peak memory
+      Data.Text.Text:                       OK
+        103  μs ± 7.3 μs, 195 KB allocated,  43 B  copied,  29 MB peak memory
+      Data.Text.Lazy.Text:                  OK
+        230  μs ±  16 μs, 1.6 MB allocated,  96 KB copied,  29 MB peak memory
