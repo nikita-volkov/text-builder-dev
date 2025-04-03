@@ -579,7 +579,7 @@ finiteBitsUnsignedBinary a =
   TextBuilder allocator size
   where
     allocator = Allocator.finiteBitsUnsignedBinary a
-    size = Allocator.sizeBound allocator
+    size = Allocator.toSizeBound allocator
 
 -- | Unsigned binary number.
 {-# INLINE unsignedPaddedBinary #-}

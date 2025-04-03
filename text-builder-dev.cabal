@@ -71,7 +71,6 @@ library
   exposed-modules: TextBuilderDev
   other-modules:
     TextBuilderDev.Allocator
-    TextBuilderDev.Allocator.ArrayWriter
     TextBuilderDev.Prelude
     TextBuilderDev.Unicode
     TextBuilderDev.Utf16View

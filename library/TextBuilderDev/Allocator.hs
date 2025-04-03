@@ -4,7 +4,7 @@
 module TextBuilderDev.Allocator
   ( -- * Execution
     allocate,
-    sizeBound,
+    toSizeBound,
 
     -- * Definition
     Allocator,
@@ -31,46 +31,55 @@ import qualified Data.Text.IO as Text
 import qualified Data.Text.Internal as TextInternal
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
-import qualified TextBuilderDev.Allocator.ArrayWriter as ArrayWriter
 import TextBuilderDev.Prelude
 import qualified TextBuilderDev.Utf16View as Utf16View
 import qualified TextBuilderDev.Utf8View as Utf8View
 
 -- | Execute a builder producing a strict text.
 allocate :: Allocator -> Text
-allocate (Allocator (ArrayWriter.ArrayWriter write) sizeBound) =
+allocate (Allocator sizeBound write) =
   runST $ do
     array <- TextArray.new sizeBound
     offsetAfter <- write array 0
     frozenArray <- TextArray.unsafeFreeze array
     return $ TextInternal.text frozenArray 0 offsetAfter
 
-sizeBound :: Allocator -> Int
-sizeBound (Allocator _ sizeBound) = sizeBound
+toSizeBound :: Allocator -> Int
+toSizeBound (Allocator sizeBound _) = sizeBound
 
 -- |
 -- Specification of how to efficiently construct strict 'Text'.
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
 data Allocator
   = Allocator
-      !ArrayWriter.ArrayWriter
       {-# UNPACK #-} !Int
+      !(forall s. TextArray.MArray s -> Int -> ST s Int)
 
 instance Semigroup Allocator where
   {-# INLINE (<>) #-}
-  (<>) (Allocator writer1 estimatedArraySize1) (Allocator writer2 estimatedArraySize2) =
-    Allocator writer estimatedArraySize
-    where
-      writer = writer1 <> writer2
-      estimatedArraySize = estimatedArraySize1 + estimatedArraySize2
-  stimes n (Allocator writer sizeBound) =
+  (<>) (Allocator estimatedArraySizeL writeL) (Allocator estimatedArraySizeR writeR) =
     Allocator
-      (stimes n writer)
+      (estimatedArraySizeL + estimatedArraySizeR)
+      ( \array offset -> do
+          offsetAfter1 <- writeL array offset
+          writeR array offsetAfter1
+      )
+  stimes n (Allocator sizeBound write) =
+    Allocator
       (sizeBound * fromIntegral n)
+      ( \array ->
+          let go n offset =
+                if n > 0
+                  then do
+                    offset <- write array offset
+                    go (pred n) offset
+                  else return offset
+           in go n
+      )
 
 instance Monoid Allocator where
   {-# INLINE mempty #-}
-  mempty = Allocator mempty 0
+  mempty = Allocator 0 (const return)
 
 -- |
 -- Run the builder and pack the produced text into a new builder.
@@ -82,31 +91,20 @@ instance Monoid Allocator where
 force :: Allocator -> Allocator
 force = text . allocate
 
-{-# INLINE sizedWriter #-}
-sizedWriter :: Int -> (forall s. TextArray.MArray s -> Int -> ST s Int) -> Allocator
-sizedWriter size write =
-  Allocator (ArrayWriter.ArrayWriter write) size
-
 -- | Strict text.
 {-# INLINEABLE text #-}
 text :: Text -> Allocator
 #if MIN_VERSION_text(2,0,0)
 text (TextInternal.Text array offset length) =
-  Allocator writer length
-  where
-    writer =
-      ArrayWriter.ArrayWriter $ \builderArray builderOffset -> do
-        TextArray.copyI length builderArray builderOffset array offset
-        return $ builderOffset + length
+  Allocator length \builderArray builderOffset -> do
+    TextArray.copyI length builderArray builderOffset array offset
+    return $ builderOffset + length
 #else
 text (TextInternal.Text array offset length) =
-  Allocator writer length
-  where
-    writer =
-      ArrayWriter.ArrayWriter $ \builderArray builderOffset -> do
-        let builderOffsetAfter = builderOffset + length
-        TextArray.copyI builderArray builderOffset array offset builderOffsetAfter
-        return builderOffsetAfter
+  Allocator length \builderArray builderOffset -> do
+    let builderOffsetAfter = builderOffset + length
+    TextArray.copyI builderArray builderOffset array offset builderOffsetAfter
+    return builderOffsetAfter
 #endif
 
 -- | ASCII byte string.
@@ -116,15 +114,14 @@ text (TextInternal.Text array offset length) =
 {-# INLINEABLE asciiByteString #-}
 asciiByteString :: ByteString -> Allocator
 asciiByteString byteString =
-  Allocator action length
-  where
-    length = ByteString.length byteString
-    action =
-      ArrayWriter.ArrayWriter $ \array ->
+  Allocator
+    (ByteString.length byteString)
+    ( \array ->
         let step byte next index = do
               TextArray.unsafeWrite array index (fromIntegral byte)
               next (succ index)
          in ByteString.foldr step return byteString
+    )
 
 -- | Unicode character.
 {-# INLINE char #-}
@@ -146,11 +143,10 @@ unicodeCodePoint x =
 utf8CodeUnits1 :: Word8 -> Allocator
 #if MIN_VERSION_text(2,0,0)
 {-# INLINEABLE utf8CodeUnits1 #-}
-utf8CodeUnits1 unit1 = Allocator writer 1 
-  where
-    writer = ArrayWriter.ArrayWriter $ \array offset ->
-      TextArray.unsafeWrite array offset unit1
-        $> succ offset
+utf8CodeUnits1 unit1 =
+  Allocator 1 \array offset ->
+    TextArray.unsafeWrite array offset unit1
+      $> succ offset
 #else
 {-# INLINE utf8CodeUnits1 #-}
 utf8CodeUnits1 unit1 =
@@ -161,12 +157,11 @@ utf8CodeUnits1 unit1 =
 utf8CodeUnits2 :: Word8 -> Word8 -> Allocator
 #if MIN_VERSION_text(2,0,0)
 {-# INLINEABLE utf8CodeUnits2 #-}
-utf8CodeUnits2 unit1 unit2 = Allocator writer 2 
-  where
-    writer = ArrayWriter.ArrayWriter $ \array offset -> do
-      TextArray.unsafeWrite array offset unit1
-      TextArray.unsafeWrite array (offset + 1) unit2
-      return $ offset + 2
+utf8CodeUnits2 unit1 unit2 =
+  Allocator 2 \array offset -> do
+    TextArray.unsafeWrite array offset unit1
+    TextArray.unsafeWrite array (offset + 1) unit2
+    return $ offset + 2
 #else
 {-# INLINE utf8CodeUnits2 #-}
 utf8CodeUnits2 unit1 unit2 =
@@ -177,13 +172,12 @@ utf8CodeUnits2 unit1 unit2 =
 utf8CodeUnits3 :: Word8 -> Word8 -> Word8 -> Allocator
 #if MIN_VERSION_text(2,0,0)
 {-# INLINEABLE utf8CodeUnits3 #-}
-utf8CodeUnits3 unit1 unit2 unit3 = Allocator writer 3 
-  where
-    writer = ArrayWriter.ArrayWriter $ \array offset -> do
-      TextArray.unsafeWrite array offset unit1
-      TextArray.unsafeWrite array (offset + 1) unit2
-      TextArray.unsafeWrite array (offset + 2) unit3
-      return $ offset + 3
+utf8CodeUnits3 unit1 unit2 unit3 =
+  Allocator 3 \array offset -> do
+    TextArray.unsafeWrite array offset unit1
+    TextArray.unsafeWrite array (offset + 1) unit2
+    TextArray.unsafeWrite array (offset + 2) unit3
+    return $ offset + 3
 #else
 {-# INLINE utf8CodeUnits3 #-}
 utf8CodeUnits3 unit1 unit2 unit3 =
@@ -194,14 +188,13 @@ utf8CodeUnits3 unit1 unit2 unit3 =
 utf8CodeUnits4 :: Word8 -> Word8 -> Word8 -> Word8 -> Allocator
 #if MIN_VERSION_text(2,0,0)
 {-# INLINEABLE utf8CodeUnits4 #-}
-utf8CodeUnits4 unit1 unit2 unit3 unit4 = Allocator writer 4 
-  where
-    writer = ArrayWriter.ArrayWriter $ \array offset -> do
-      TextArray.unsafeWrite array offset unit1
-      TextArray.unsafeWrite array (offset + 1) unit2
-      TextArray.unsafeWrite array (offset + 2) unit3
-      TextArray.unsafeWrite array (offset + 3) unit4
-      return $ offset + 4
+utf8CodeUnits4 unit1 unit2 unit3 unit4 =
+  Allocator 4 \array offset -> do
+    TextArray.unsafeWrite array offset unit1
+    TextArray.unsafeWrite array (offset + 1) unit2
+    TextArray.unsafeWrite array (offset + 2) unit3
+    TextArray.unsafeWrite array (offset + 3) unit4
+    return $ offset + 4
 #else
 {-# INLINE utf8CodeUnits4 #-}
 utf8CodeUnits4 unit1 unit2 unit3 unit4 =
@@ -216,12 +209,9 @@ utf16CodeUnits1 = unicodeCodePoint . fromIntegral
 #else
 {-# INLINEABLE utf16CodeUnits1 #-}
 utf16CodeUnits1 unit =
-  Allocator writer 1
-  where
-    writer =
-      ArrayWriter.ArrayWriter $ \array offset ->
-        TextArray.unsafeWrite array offset unit
-          $> succ offset
+  Allocator 1 \array offset ->
+    TextArray.unsafeWrite array offset unit
+      $> succ offset
 #endif
 
 -- | Double code-unit UTF-16 character.
@@ -234,22 +224,17 @@ utf16CodeUnits2 unit1 unit2 = unicodeCodePoint cp
 #else
 {-# INLINEABLE utf16CodeUnits2 #-}
 utf16CodeUnits2 unit1 unit2 =
-  Allocator writer 2
-  where
-    writer =
-      ArrayWriter.ArrayWriter $ \array offset -> do
-        TextArray.unsafeWrite array offset unit1
-        TextArray.unsafeWrite array (succ offset) unit2
-        return $ offset + 2
+  Allocator 2 \array offset -> do
+    TextArray.unsafeWrite array offset unit1
+    TextArray.unsafeWrite array (succ offset) unit2
+    return $ offset + 2
 #endif
 
 -- | A less general but faster alternative to 'unsignedBinary'.
 finiteBitsUnsignedBinary :: (FiniteBits a) => a -> Allocator
 finiteBitsUnsignedBinary val =
-  Allocator writer size
-  where
-    writer =
-      ArrayWriter.ArrayWriter $ \array arrayStartIndex ->
+  let size = max 1 (finiteBitSize val - countLeadingZeros val)
+   in Allocator size \array arrayStartIndex ->
         let go val arrayIndex =
               if arrayIndex >= arrayStartIndex
                 then do
@@ -260,15 +245,13 @@ finiteBitsUnsignedBinary val =
             indexAfter =
               arrayStartIndex + size
          in go val (pred indexAfter)
-    size =
-      max 1 (finiteBitSize val - countLeadingZeros val)
 
 -- | Fixed-length decimal.
 -- Padded with zeros or trimmed depending on whether it's shorter or longer
 -- than specified.
 fixedUnsignedDecimal :: (Integral a) => Int -> a -> Allocator
 fixedUnsignedDecimal size val =
-  sizedWriter size $ \array startOffset ->
+  Allocator size $ \array startOffset ->
     let offsetAfter = startOffset + size
         writeValue val offset =
           if offset >= startOffset
