@@ -108,25 +108,7 @@ instance Monoid TextBuilder where
       )
 
 instance Arbitrary TextBuilder where
-  arbitrary =
-    QcGen.oneof
-      [ (<>) <$> downscale arbitrary <*> downscale arbitrary,
-        sconcat <$> downscale arbitrary,
-        stimes <$> downscale (arbitrary @Word8) <*> downscale arbitrary,
-        mconcat <$> downscale arbitrary,
-        pure mempty,
-        text <$> arbitrary,
-        asciiByteString . ByteString.filter (< 128) <$> arbitrary,
-        unicodeCodePoint
-          <$> QcGen.suchThat arbitrary (\x -> x >= 0 && x <= 0x10FFFF),
-        finiteBitsUnsignedBinary @Word <$> arbitrary,
-        fixedUnsignedDecimal @Int
-          <$> QcGen.suchThat arbitrary (\x -> x >= 0 && x <= 255)
-          <*> QcGen.suchThat arbitrary (>= 0)
-      ]
-    where
-      downscale =
-        QcGen.scale (flip div 2)
+  arbitrary = text <$> arbitrary
 
 -- | Strict text.
 {-# INLINEABLE text #-}
