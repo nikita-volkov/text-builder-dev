@@ -52,7 +52,6 @@ import Data.Unique as Exports
 import Data.Version as Exports
 import Data.Word as Exports
 import Debug.Trace as Exports
-import DeferredFolds.Unfoldr as Exports (Unfoldr (..))
 import Foreign.ForeignPtr as Exports
 import Foreign.ForeignPtr.Unsafe as Exports
 import Foreign.Ptr as Exports

@@ -6,7 +6,6 @@ import qualified Data.List.Split as Split
 import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import qualified Data.Text.Lazy as TextLazy
-import qualified DeferredFolds.Unfoldr as Unfoldr
 import TextBuilderDev.Base
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
@@ -95,8 +94,7 @@ decimal = signed unsignedDecimal
 -- "0"
 {-# INLINEABLE unsignedDecimal #-}
 unsignedDecimal :: (Integral a) => a -> TextBuilder
-unsignedDecimal =
-  foldMap decimalDigit . Unfoldr.decimalDigits
+unsignedDecimal = string . ($ "") . showInt
 
 -- | Decimal representation of an integral value with thousands separated by the specified character.
 --
@@ -204,14 +202,13 @@ dataSizeInBytesInDecimal = signed \a ->
 -- | Unsigned binary number.
 {-# INLINE unsignedBinary #-}
 unsignedBinary :: (Integral a) => a -> TextBuilder
-unsignedBinary =
-  foldMap decimalDigit . Unfoldr.binaryDigits
+unsignedBinary = string . ($ "") . showBin
 
 -- | Unsigned binary number padded to the maximum amount of bits supported by the type.
 {-# INLINE unsignedPaddedBinary #-}
 unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilder
 unsignedPaddedBinary a =
-  padFromLeft (finiteBitSize a) '0' $ foldMap decimalDigit $ Unfoldr.binaryDigits a
+  padFromLeft (finiteBitSize a) '0' $ unsignedBinary a
 
 -- | Hexadecimal representation of an integral value.
 {-# INLINE hexadecimal #-}
@@ -221,8 +218,7 @@ hexadecimal = signed unsignedHexadecimal
 -- | Unsigned hexadecimal representation of an integral value.
 {-# INLINE unsignedHexadecimal #-}
 unsignedHexadecimal :: (Integral a) => a -> TextBuilder
-unsignedHexadecimal =
-  foldMap hexadecimalDigit . Unfoldr.hexadecimalDigits
+unsignedHexadecimal = string . ($ "") . showHex
 
 -- | Decimal digit.
 {-# INLINE decimalDigit #-}

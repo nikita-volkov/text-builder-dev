@@ -85,7 +85,6 @@ library
     QuickCheck >=2.14 && <3,
     base >=4.11 && <5,
     bytestring >=0.10 && <0.13,
-    deferred-folds >=0.9.10.1 && <0.10,
     isomorphism-class >=0.3 && <0.4,
     lawful-conversions >=0.1.4 && <0.2,
     quickcheck-instances >=0.3.28 && <0.4,
