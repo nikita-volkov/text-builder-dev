@@ -20,7 +20,7 @@ import qualified Data.Text.Encoding as TextEncoding
 -- Unlike conversion classes from other libs this class is lawful.
 -- The law is:
 --
--- @'fromTextBuilder' . 'toTextBuilder' = 'id'@
+-- @'toTextBuilder' . 'fromTextBuilder' = 'id'@
 --
 -- This class does not provide implicit rendering,
 -- such as from integer to its decimal representation.
