@@ -383,13 +383,16 @@ intervalInSeconds interval = flip evalState (round interval :: Int) $ do
   hours <- state (swap . flip divMod 24)
   days <- get
   return
-    $ padFromLeft 2 '0' (decimal days)
-    <> ":"
-    <> padFromLeft 2 '0' (decimal hours)
-    <> ":"
-    <> padFromLeft 2 '0' (decimal minutes)
-    <> ":"
-    <> padFromLeft 2 '0' (decimal seconds)
+    ( mconcat
+        [ padFromLeft 2 '0' (decimal days),
+          ":",
+          padFromLeft 2 '0' (decimal hours),
+          ":",
+          padFromLeft 2 '0' (decimal minutes),
+          ":",
+          padFromLeft 2 '0' (decimal seconds)
+        ]
+    )
 
 -- | DiffTime in a compact decimal format based on 'picosecondsCompact'.
 diffTimeCompact :: DiffTime -> TextBuilder
