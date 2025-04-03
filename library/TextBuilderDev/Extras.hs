@@ -10,6 +10,13 @@ import qualified DeferredFolds.Unfoldr as Unfoldr
 import TextBuilderDev.Base
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
+-- * Destructors
+
+-- | Convert builder to string.
+{-# INLINE toString #-}
+toString :: TextBuilder -> String
+toString = Text.unpack . toText
+
 -- ** Output IO
 
 -- | Put builder, to stdout.

@@ -2,6 +2,7 @@ module TextBuilderDev
   ( TextBuilder,
 
     -- * Accessors
+    toString,
     toText,
     null,
 
