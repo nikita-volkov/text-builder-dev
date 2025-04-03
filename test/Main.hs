@@ -5,14 +5,12 @@ import qualified Data.Char as Char
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
-import qualified LawfulConversions
 import Numeric.Compat
 import Test.QuickCheck.Classes
 import Test.QuickCheck.Instances ()
 import Test.Tasty
 import Test.Tasty.HUnit
 import Test.Tasty.QuickCheck hiding ((.&.))
-import TextBuilderDev (TextBuilder)
 import qualified TextBuilderDev as B
 import qualified TextBuilderDev.TastyExtras as Extras
 import Prelude hiding (choose, showBin)
@@ -195,13 +193,7 @@ main =
         testLaws $ showLaws (Proxy @B.TextBuilder),
         testLaws $ eqLaws (Proxy @B.TextBuilder),
         testLaws $ semigroupLaws (Proxy @B.TextBuilder),
-        testLaws $ monoidLaws (Proxy @B.TextBuilder),
-        testGroup "LawfulConversions integration"
-          $ [ testProperties "Is Text" $ LawfulConversions.isProperties @Text @TextBuilder Proxy Proxy,
-              testProperties "Is Lazy Text" $ LawfulConversions.isProperties @TextLazy.Text @TextBuilder Proxy Proxy,
-              testProperties "Is Lazy Text Builder" $ LawfulConversions.isProperties @TextLazyBuilder.Builder @TextBuilder Proxy Proxy,
-              testProperties "IsMany String" $ LawfulConversions.isManyProperties @String @TextBuilder Proxy Proxy
-            ]
+        testLaws $ monoidLaws (Proxy @B.TextBuilder)
       ]
   where
     bigTest = 10000

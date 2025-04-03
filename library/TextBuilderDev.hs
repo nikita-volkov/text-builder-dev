@@ -82,5 +82,3 @@ where
 import TextBuilderDev.Base
 import TextBuilderDev.Extras
 import TextBuilderDev.IsomorphicTo
-import TextBuilderDev.IsomorphismClass ()
-import TextBuilderDev.LawfulConversions ()
