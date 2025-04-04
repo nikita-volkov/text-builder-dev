@@ -1,27 +1,7 @@
 {-# LANGUAGE CPP #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
-module TextBuilderDev.Base
-  ( -- * Execution
-    toText,
-    toMaxSize,
-    null,
-
-    -- * Definition
-    TextBuilder,
-    text,
-    asciiByteString,
-    unicodeCodePoint,
-    utf8CodeUnits1,
-    utf8CodeUnits2,
-    utf8CodeUnits3,
-    utf8CodeUnits4,
-    utf16CodeUnits1,
-    utf16CodeUnits2,
-    finiteBitsUnsignedBinary,
-    fixedUnsignedDecimal,
-  )
-where
+module TextBuilderDev.Base where
 
 import qualified Data.ByteString as ByteString
 import qualified Data.Text as Text
@@ -35,31 +15,15 @@ import qualified TextBuilderDev.Base.Utf16View as Utf16View
 import qualified TextBuilderDev.Base.Utf8View as Utf8View
 import TextBuilderDev.Prelude hiding (null)
 
--- | Execute the builder producing a strict text.
-toText :: TextBuilder -> Text
-toText (TextBuilder maxSize write) =
-  runST $ do
-    array <- TextArray.new maxSize
-    offsetAfter <- write array 0
-    frozenArray <- TextArray.unsafeFreeze array
-    return $ TextInternal.text frozenArray 0 offsetAfter
-
--- | Estimate the maximum amount of bytes that the produced text can take.
-toMaxSize :: TextBuilder -> Int
-toMaxSize (TextBuilder maxSize _) = maxSize
-
--- | Check whether the builder is empty.
-{-# INLINE null #-}
-null :: TextBuilder -> Bool
-null = (== 0) . toMaxSize
-
 -- |
 -- Specification of how to efficiently construct strict 'Text'.
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
 data TextBuilder
   = TextBuilder
-      !Int
-      !(forall s. TextArray.MArray s -> Int -> ST s Int)
+      -- | Estimated maximum size of the produced text.
+      Int
+      -- | Function that populates a preallocated byte array of the estimated maximum size specified above provided an offset into it and producing the offset after.
+      (forall s. TextArray.MArray s -> Int -> ST s Int)
 
 instance IsString TextBuilder where
   fromString = text . fromString
@@ -109,6 +73,28 @@ instance Monoid TextBuilder where
 
 instance Arbitrary TextBuilder where
   arbitrary = text <$> arbitrary
+
+-- * Destructors
+
+-- | Execute the builder producing a strict text.
+toText :: TextBuilder -> Text
+toText (TextBuilder maxSize write) =
+  runST $ do
+    array <- TextArray.new maxSize
+    offsetAfter <- write array 0
+    frozenArray <- TextArray.unsafeFreeze array
+    return $ TextInternal.text frozenArray 0 offsetAfter
+
+-- | Estimate the maximum amount of bytes that the produced text can take.
+toMaxSize :: TextBuilder -> Int
+toMaxSize (TextBuilder maxSize _) = maxSize
+
+-- | Check whether the builder is empty.
+{-# INLINE null #-}
+null :: TextBuilder -> Bool
+null = (== 0) . toMaxSize
+
+-- * Constructors
 
 -- | Strict text.
 {-# INLINEABLE text #-}

@@ -58,6 +58,7 @@ common base
     RecordWildCards
     ScopedTypeVariables
     StandaloneDeriving
+    StrictData
     TemplateHaskell
     TupleSections
     TypeApplications
