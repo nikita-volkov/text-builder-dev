@@ -16,12 +16,12 @@ instance Arbitrary TextLazyBuilder.Builder where
 
 -- * --
 
-isomorphicToLaws ::
+isTextBuilderLaws ::
   (B.IsTextBuilder a, Eq a, Show a, Arbitrary a) =>
   String ->
   Proxy a ->
   TestTree
-isomorphicToLaws subject proxy =
+isTextBuilderLaws subject proxy =
   testGroup subject
     $ [ testProperty "to . from == id" $ \a ->
           (B.to . B.from) a === asProxyTypeOf a proxy,

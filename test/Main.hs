@@ -186,9 +186,9 @@ main =
                   ]
             ],
         testGroup "IsTextBuilder instances"
-          $ [ Extras.isomorphicToLaws "Text" $ Proxy @Text,
-              Extras.isomorphicToLaws "Lazy Text" $ Proxy @TextLazy.Text,
-              Extras.isomorphicToLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder
+          $ [ Extras.isTextBuilderLaws "Text" $ Proxy @Text,
+              Extras.isTextBuilderLaws "Lazy Text" $ Proxy @TextLazy.Text,
+              Extras.isTextBuilderLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder
             ],
         testLaws $ showLaws (Proxy @B.TextBuilder),
         testLaws $ eqLaws (Proxy @B.TextBuilder),
