@@ -1,9 +1,7 @@
 module TextBuilderDev.Domains.Digits where
 
-import qualified Data.List as List
 import qualified Data.Text.Array as TextArray
 import TextBuilderDev.Base
-import qualified TextBuilderDev.Domains.Digits.List as Digits.List
 import TextBuilderDev.Prelude
 
 -- | Decimal digit.
@@ -64,22 +62,27 @@ hexadecimal = signed unsignedHexadecimal
 -- | Render a number in the given radix.
 {-# INLINE digitsByRadix #-}
 digitsByRadix :: (Integral a) => a -> (a -> a) -> a -> TextBuilder
-digitsByRadix radix digitCodepoint x =
-  TextBuilder size action
+digitsByRadix radix digitCodepoint =
+  go 0 []
   where
-    size = List.length digits
+    go !offset !digits x = case divMod x radix of
+      (next, digit) ->
+        if next <= 0
+          then finish (succ offset) (digit : digits)
+          else go (succ offset) (digit : digits) next
 
-    digits = Digits.List.digits radix x
-
-    action :: TextArray.MArray s -> Int -> ST s Int
-    action array =
-      go digits
+    finish size digits =
+      TextBuilder size action
       where
-        go digits offset = case digits of
-          [] -> return offset
-          (digit : digits) -> do
-            TextArray.unsafeWrite array offset (fromIntegral (digitCodepoint digit))
-            go digits (succ offset)
+        action :: TextArray.MArray s -> Int -> ST s Int
+        action array =
+          go digits
+          where
+            go digits offset = case digits of
+              [] -> return offset
+              (digit : digits) -> do
+                TextArray.unsafeWrite array offset (fromIntegral (digitCodepoint digit))
+                go digits (succ offset)
 
 -- | Unsigned binary representation of a non-negative integral value.
 --
