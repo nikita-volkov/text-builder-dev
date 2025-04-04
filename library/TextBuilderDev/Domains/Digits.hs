@@ -62,6 +62,7 @@ hexadecimal = signed unsignedHexadecimal
 -- * Unsigned Numbers
 
 -- | Render a number in the given radix.
+{-# INLINE digitsByRadix #-}
 digitsByRadix :: (Integral a) => a -> (a -> a) -> a -> TextBuilder
 digitsByRadix radix digitCodepoint x =
   TextBuilder size action
