@@ -1,6 +1,7 @@
 module Main where
 
 import Data.Function
+import qualified Data.Text.Builder.Linear
 import qualified Data.Text.Encoding as D
 import qualified Data.Text.Lazy as C
 import qualified Data.Text.Lazy.Builder as B
@@ -58,6 +59,12 @@ main =
                   ( whnf
                       (C.toStrict . concat)
                       (fmap C.fromStrict texts)
+                  ),
+                bench
+                  "Data.Text.Builder.Linear"
+                  ( whnf
+                      (Data.Text.Builder.Linear.runBuilder . concat)
+                      (fmap Data.Text.Builder.Linear.fromText texts)
                   )
               ]
 

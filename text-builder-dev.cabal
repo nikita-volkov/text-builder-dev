@@ -133,3 +133,4 @@ benchmark bench
     tasty-bench ^>=0.4.1,
     text >=2.1.2 && <3,
     text-builder-dev,
+    text-builder-linear ^>=0.1.3,
