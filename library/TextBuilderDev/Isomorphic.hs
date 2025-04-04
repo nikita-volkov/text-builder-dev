@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 
-module TextBuilderDev.IsomorphicTo where
+module TextBuilderDev.Isomorphic where
 
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
@@ -37,38 +37,38 @@ import qualified Data.Text.Encoding as TextEncoding
 -- since there can be infinite amount of flavours of
 -- conversions. They are context-dependent and as such
 -- should be defined as part of the domain.
-class IsomorphicTo a where
+class Isomorphic a where
   -- | Project the type into "TextBuilder".
   from :: a -> TextBuilder
 
   -- | Embed "TextBuilder" into the type.
   to :: TextBuilder -> a
 
-instance IsomorphicTo TextBuilder where
+instance Isomorphic TextBuilder where
   from = id
   to = id
 
-instance IsomorphicTo Text where
+instance Isomorphic Text where
   from = text
   to = toText
 
-instance IsomorphicTo TextLazy.Text where
+instance Isomorphic TextLazy.Text where
   from = lazyText
   to = TextLazy.fromStrict . toText
 
-instance IsomorphicTo TextLazyBuilder.Builder where
+instance Isomorphic TextLazyBuilder.Builder where
   from = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
   to = TextLazyBuilder.fromText . toText
 
 #if MIN_VERSION_text(2,1,2)
 
-instance IsomorphicTo TextEncoding.StrictTextBuilder where
+instance Isomorphic TextEncoding.StrictTextBuilder where
   from = from . TextEncoding.strictBuilderToText
   to = TextEncoding.textToStrictBuilder . to
 
 #elif MIN_VERSION_text(2,0,2)
 
-instance IsomorphicTo TextEncoding.StrictBuilder where
+instance Isomorphic TextEncoding.StrictBuilder where
   from = from . TextEncoding.strictBuilderToText
   to = TextEncoding.textToStrictBuilder . to
 

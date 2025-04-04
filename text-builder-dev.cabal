@@ -76,7 +76,7 @@ library
     TextBuilderDev.Base.Utf16View.Unicode
     TextBuilderDev.Base.Utf8View
     TextBuilderDev.Extras
-    TextBuilderDev.IsomorphicTo
+    TextBuilderDev.Isomorphic
     TextBuilderDev.Prelude
 
   build-depends:

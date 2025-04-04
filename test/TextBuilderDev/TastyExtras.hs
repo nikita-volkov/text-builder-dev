@@ -17,7 +17,7 @@ instance Arbitrary TextLazyBuilder.Builder where
 -- * --
 
 isomorphicToLaws ::
-  (B.IsomorphicTo a, Eq a, Show a, Arbitrary a) =>
+  (B.Isomorphic a, Eq a, Show a, Arbitrary a) =>
   String ->
   Proxy a ->
   TestTree

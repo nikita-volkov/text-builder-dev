@@ -185,7 +185,7 @@ main =
                             === B.toText (B.utcTimeInIso8601 roundedToSecondsTime)
                   ]
             ],
-        testGroup "IsomorphicTo instances"
+        testGroup "Isomorphic instances"
           $ [ Extras.isomorphicToLaws "Text" $ Proxy @Text,
               Extras.isomorphicToLaws "Lazy Text" $ Proxy @TextLazy.Text,
               Extras.isomorphicToLaws "Lazy Text Builder" $ Proxy @TextLazyBuilder.Builder

@@ -200,9 +200,15 @@ dataSizeInBytesInDecimal = signed \a ->
             else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
 
 -- | Unsigned binary number.
+-- 
+-- >>> unsignedBinary 1
+-- "1"
+--
+-- >>> unsignedBinary 2
+-- "10"
 {-# INLINE unsignedBinary #-}
 unsignedBinary :: (Integral a) => a -> TextBuilder
-unsignedBinary = string . ($ "") . showBin
+unsignedBinary = string . ($ "") . showIntAtBase 2 intToDigit
 
 -- | Unsigned binary number padded to the maximum amount of bits supported by the type.
 {-# INLINE unsignedPaddedBinary #-}
