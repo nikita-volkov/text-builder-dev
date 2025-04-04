@@ -51,5 +51,5 @@ instance IsTextBuilder TextLazy.Text where
   to = TextLazy.fromStrict . toText
 
 instance IsTextBuilder TextLazyBuilder.Builder where
-  from = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
+  from = lazyText . TextLazyBuilder.toLazyText
   to = TextLazyBuilder.fromText . toText
