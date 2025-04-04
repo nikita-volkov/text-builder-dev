@@ -7,6 +7,7 @@ import qualified Data.Text.Lazy as TextLazy
 import TextBuilderDev.Base
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Padding
+import TextBuilderDev.Domains.Unicode
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
 -- * Destructors

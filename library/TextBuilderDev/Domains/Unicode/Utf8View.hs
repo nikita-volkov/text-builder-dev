@@ -1,4 +1,4 @@
-module TextBuilderDev.Base.Utf8View where
+module TextBuilderDev.Domains.Unicode.Utf8View where
 
 import TextBuilderDev.Prelude
 

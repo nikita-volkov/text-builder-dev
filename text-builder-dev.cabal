@@ -73,15 +73,16 @@ library
   exposed-modules: TextBuilderDev
   other-modules:
     TextBuilderDev.Base
-    TextBuilderDev.Base.Utf16View
-    TextBuilderDev.Base.Utf16View.Unicode
-    TextBuilderDev.Base.Utf8View
     TextBuilderDev.Domains.Digits
     TextBuilderDev.Domains.Other
     TextBuilderDev.Domains.Padding
     TextBuilderDev.Domains.StrictBuilder
     TextBuilderDev.Domains.StrictTextBuilder
     TextBuilderDev.Domains.Time
+    TextBuilderDev.Domains.Unicode
+    TextBuilderDev.Domains.Unicode.Utf16View
+    TextBuilderDev.Domains.Unicode.Utf16View.Unicode
+    TextBuilderDev.Domains.Unicode.Utf8View
     TextBuilderDev.IsTextBuilder
     TextBuilderDev.Prelude
 

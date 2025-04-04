@@ -2,6 +2,7 @@ module TextBuilderDev.Domains.Digits where
 
 import qualified Data.Text.Array as TextArray
 import TextBuilderDev.Base
+import TextBuilderDev.Domains.Unicode
 import TextBuilderDev.Prelude
 
 -- | Decimal digit.

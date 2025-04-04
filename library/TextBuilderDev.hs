@@ -84,4 +84,5 @@ import TextBuilderDev.Domains.Padding
 import TextBuilderDev.Domains.StrictBuilder ()
 import TextBuilderDev.Domains.StrictTextBuilder ()
 import TextBuilderDev.Domains.Time
+import TextBuilderDev.Domains.Unicode
 import TextBuilderDev.IsTextBuilder

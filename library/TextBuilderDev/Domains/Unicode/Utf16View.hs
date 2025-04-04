@@ -1,6 +1,6 @@
-module TextBuilderDev.Base.Utf16View where
+module TextBuilderDev.Domains.Unicode.Utf16View where
 
-import qualified TextBuilderDev.Base.Utf16View.Unicode as Unicode
+import qualified TextBuilderDev.Domains.Unicode.Utf16View.Unicode as Unicode
 import TextBuilderDev.Prelude
 
 -- |
