@@ -87,7 +87,7 @@ library
     bytestring >=0.10 && <0.13,
     quickcheck-instances >=0.3.28 && <0.4,
     split >=0.2.3.4 && <0.3,
-    text >=1.0 && <3,
+    text >=1.2 && <3,
     time >=1.12 && <2,
     transformers >=0.5 && <0.7,
 
@@ -96,16 +96,22 @@ test-suite test
   type: exitcode-stdio-1.0
   hs-source-dirs: test
   main-is: Main.hs
-  other-modules: TextBuilderDev.TastyExtras
+  other-modules:
+    Main.StrictTextBuilder
+    Main.TastyExtras
+
   build-depends:
+    base >=4.11 && <5,
     base-compat >=0.13,
+    bytestring >=0.10 && <0.13,
     quickcheck-classes >=0.6.5 && <0.7,
     quickcheck-instances >=0.3.28 && <0.4,
-    rerebase <2,
     tasty >=1.2.3 && <2,
     tasty-hunit >=0.10.0.2 && <0.11,
     tasty-quickcheck >=0.10.1 && <0.12,
+    text >=1.2 && <3,
     text-builder-dev,
+    time >=1.12 && <2,
 
 benchmark bench
   import: base
