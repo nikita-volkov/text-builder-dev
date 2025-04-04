@@ -1,16 +1,10 @@
-{-# LANGUAGE CPP #-}
-
 module TextBuilderDev.IsTextBuilder where
 
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import TextBuilderDev.Base
 import TextBuilderDev.Extras
-import TextBuilderDev.Prelude hiding (intercalate, length, null)
-
-#if MIN_VERSION_text(2,0,2)
-import qualified Data.Text.Encoding as TextEncoding
-#endif
+import TextBuilderDev.Prelude
 
 -- |
 -- Evidence that there exists an unambiguous way to convert
@@ -59,17 +53,3 @@ instance IsTextBuilder TextLazy.Text where
 instance IsTextBuilder TextLazyBuilder.Builder where
   from = text . TextLazy.toStrict . TextLazyBuilder.toLazyText
   to = TextLazyBuilder.fromText . toText
-
-#if MIN_VERSION_text(2,1,2)
-
-instance IsTextBuilder TextEncoding.StrictTextBuilder where
-  from = from . TextEncoding.strictBuilderToText
-  to = TextEncoding.textToStrictBuilder . to
-
-#elif MIN_VERSION_text(2,0,2)
-
-instance IsTextBuilder TextEncoding.StrictBuilder where
-  from = from . TextEncoding.strictBuilderToText
-  to = TextEncoding.textToStrictBuilder . to
-
-#endif

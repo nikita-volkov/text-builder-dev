@@ -85,5 +85,7 @@ where
 
 import TextBuilderDev.Base
 import TextBuilderDev.Domains.Digits
+import TextBuilderDev.Domains.StrictBuilder ()
+import TextBuilderDev.Domains.StrictTextBuilder ()
 import TextBuilderDev.Extras
 import TextBuilderDev.IsTextBuilder
