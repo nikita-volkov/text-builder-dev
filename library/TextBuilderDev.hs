@@ -20,6 +20,9 @@ module TextBuilderDev
     lazyText,
     string,
     asciiByteString,
+
+    -- ** Data
+    bits,
     hexData,
 
     -- ** Character
@@ -43,8 +46,10 @@ module TextBuilderDev
     -- *** Binary
     binary,
     unsignedBinary,
-    unsignedPaddedBinary,
-    bits,
+
+    -- *** Octal
+    octal,
+    unsignedOctal,
 
     -- *** Decimal
     decimal,
@@ -53,10 +58,6 @@ module TextBuilderDev
     thousandSeparatedDecimal,
     thousandSeparatedUnsignedDecimal,
     dataSizeInBytesInDecimal,
-
-    -- *** Octal
-    octal,
-    unsignedOctal,
 
     -- *** Hexadecimal
     hexadecimal,
@@ -79,6 +80,7 @@ module TextBuilderDev
 where
 
 import TextBuilderDev.Base
+import TextBuilderDev.Domains.Data
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Other
 import TextBuilderDev.Domains.Padding

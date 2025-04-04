@@ -1,12 +1,9 @@
 module TextBuilderDev.Domains.Other where
 
-import qualified Data.ByteString as ByteString
-import qualified Data.List.Split as Split
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as TextLazy
 import TextBuilderDev.Base
 import TextBuilderDev.Domains.Digits
-import TextBuilderDev.Domains.Padding
 import TextBuilderDev.Domains.Unicode
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
@@ -144,12 +141,6 @@ dataSizeInBytesInDecimal = signed \a ->
             then thousandSeparatedDecimal separatorChar byExtraTen
             else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
 
--- | Unsigned binary number padded to the maximum amount of bits supported by the type.
-{-# INLINE unsignedPaddedBinary #-}
-unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilder
-unsignedPaddedBinary a =
-  padFromLeft (finiteBitSize a) '0' $ unsignedBinary a
-
 -- | Intercalate builders.
 {-# INLINE intercalate #-}
 intercalate :: (Foldable f) => TextBuilder -> f TextBuilder -> TextBuilder
@@ -217,19 +208,3 @@ doublePercent ::
   Double ->
   TextBuilder
 doublePercent decimalPlaces x = fixedDouble decimalPlaces (x * 100) <> "%"
-
--- | Hexadecimal readable representation of binary data.
---
--- >>> hexData "Hello"
--- "4865 6c6c 6f"
-{-# INLINE hexData #-}
-hexData :: ByteString -> TextBuilder
-hexData =
-  intercalate " "
-    . fmap mconcat
-    . Split.chunksOf 2
-    . fmap byte
-    . ByteString.unpack
-  where
-    byte =
-      padFromLeft 2 '0' . unsignedHexadecimal

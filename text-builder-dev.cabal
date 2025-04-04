@@ -73,6 +73,7 @@ library
   exposed-modules: TextBuilderDev
   other-modules:
     TextBuilderDev.Base
+    TextBuilderDev.Domains.Data
     TextBuilderDev.Domains.Digits
     TextBuilderDev.Domains.Other
     TextBuilderDev.Domains.Padding
