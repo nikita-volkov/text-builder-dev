@@ -17,10 +17,13 @@ import TextBuilderDev.Prelude hiding (null)
 
 -- |
 -- Specification of how to efficiently construct strict 'Text'.
+--
+-- For this task it is much more efficient than @Data.Text.Lazy.Builder.'Data.Text.Lazy.Builder.Builder'@ and even the recently introduced @Data.Text.Encoding.'Data.Text.Encoding.StrictTextBuilder'@.
+--
 -- Provides instances of 'Semigroup' and 'Monoid', which have complexity of /O(1)/.
 data TextBuilder
   = TextBuilder
-      -- | Estimated maximum size of the produced text.
+      -- | Estimated maximum size of the byte array to allocate.
       Int
       -- | Function that populates a preallocated byte array of the estimated maximum size specified above provided an offset into it and producing the offset after.
       (forall s. TextArray.MArray s -> Int -> ST s Int)

@@ -22,7 +22,7 @@ toString = Text.unpack . toText
 --
 -- Useful to have around builders that you reuse,
 -- because a forced builder is much faster,
--- since it's virtually a single call @memcopy@.
+-- since it's virtually a single call to @memcopy@.
 {-# INLINE force #-}
 force :: TextBuilder -> TextBuilder
 force = text . toText
