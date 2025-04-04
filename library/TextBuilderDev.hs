@@ -55,6 +55,10 @@ module TextBuilderDev
     unsignedPaddedBinary,
     finiteBitsUnsignedBinary,
 
+    -- *** Octal
+    octal,
+    unsignedOctal,
+
     -- *** Hexadecimal
     hexadecimal,
     unsignedHexadecimal,
@@ -80,5 +84,6 @@ module TextBuilderDev
 where
 
 import TextBuilderDev.Base
+import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Extras
 import TextBuilderDev.IsTextBuilder

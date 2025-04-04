@@ -41,12 +41,23 @@ signed onUnsigned i =
 -- "0"
 {-# INLINEABLE decimal #-}
 decimal :: (Integral a) => a -> TextBuilder
-decimal = signed decimalDigits
+decimal = signed unsignedDecimal
+
+-- | Signed octal representation of an integral value.
+--
+-- >>> octal 123456
+-- "361100"
+--
+-- >>> octal (-123456)
+-- "-361100"
+{-# INLINE octal #-}
+octal :: (Integral a) => a -> TextBuilder
+octal = signed unsignedOctal
 
 -- | Hexadecimal representation of an integral value.
 {-# INLINE hexadecimal #-}
 hexadecimal :: (Integral a) => a -> TextBuilder
-hexadecimal = signed hexadecimalDigits
+hexadecimal = signed unsignedHexadecimal
 
 -- * Unsigned Numbers
 
@@ -73,20 +84,20 @@ digitsByRadix radix digitCodepoint x =
 --
 -- __Warning:__ It is your responsibility to ensure that the value is non-negative.
 --
--- >>> binaryDigits 0
+-- >>> unsignedBinary 0
 -- "0"
 --
--- >>> binaryDigits 1
+-- >>> unsignedBinary 1
 -- "1"
 --
--- >>> binaryDigits 2
+-- >>> unsignedBinary 2
 -- "10"
 --
--- >>> binaryDigits 3
+-- >>> unsignedBinary 3
 -- "11"
-{-# INLINE binaryDigits #-}
-binaryDigits :: (Integral a) => a -> TextBuilder
-binaryDigits =
+{-# INLINE unsignedBinary #-}
+unsignedBinary :: (Integral a) => a -> TextBuilder
+unsignedBinary =
   digitsByRadix 2 (+ 48)
 
 -- | Unsigned octal representation of a non-negative integral value.
@@ -94,43 +105,43 @@ binaryDigits =
 -- __Warning:__ It is your responsibility to ensure that the value is non-negative.
 --
 --
--- >>> octalDigits 7
+-- >>> unsignedOctal 7
 -- "7"
 --
--- >>> octalDigits 9
+-- >>> unsignedOctal 9
 -- "11"
 --
--- >>> octalDigits 16
+-- >>> unsignedOctal 16
 -- "20"
-{-# INLINE octalDigits #-}
-octalDigits :: (Integral a) => a -> TextBuilder
-octalDigits =
+{-# INLINE unsignedOctal #-}
+unsignedOctal :: (Integral a) => a -> TextBuilder
+unsignedOctal =
   digitsByRadix 8 (+ 48)
 
 -- | Unsigned decimal representation of a non-negative integral value.
 --
 -- __Warning:__ It is your responsibility to ensure that the value is non-negative.
 --
--- >>> decimalDigits 123456
+-- >>> unsignedDecimal 123456
 -- "123456"
 --
--- >>> decimalDigits 0
+-- >>> unsignedDecimal 0
 -- "0"
-{-# INLINE decimalDigits #-}
-decimalDigits :: (Integral a) => a -> TextBuilder
-decimalDigits =
+{-# INLINE unsignedDecimal #-}
+unsignedDecimal :: (Integral a) => a -> TextBuilder
+unsignedDecimal =
   digitsByRadix 10 (+ 48)
 
 -- | Unsigned hexadecimal representation of a non-negative integral value.
 --
 -- __Warning:__ It is your responsibility to ensure that the value is non-negative.
 --
--- >>> hexadecimalDigits 123456
+-- >>> unsignedHexadecimal 123456
 -- "1e240"
 --
--- >>> hexadecimalDigits 0
+-- >>> unsignedHexadecimal 0
 -- "0"
-{-# INLINE hexadecimalDigits #-}
-hexadecimalDigits :: (Integral a) => a -> TextBuilder
-hexadecimalDigits =
+{-# INLINE unsignedHexadecimal #-}
+unsignedHexadecimal :: (Integral a) => a -> TextBuilder
+unsignedHexadecimal =
   digitsByRadix 16 (\digit -> if digit <= 9 then digit + 48 else digit + 87)

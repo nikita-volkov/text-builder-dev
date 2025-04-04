@@ -7,6 +7,7 @@ import qualified Data.Text as Text
 import qualified Data.Text.IO as Text
 import qualified Data.Text.Lazy as TextLazy
 import TextBuilderDev.Base
+import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
 -- * Destructors
@@ -62,39 +63,6 @@ lazyText =
 string :: String -> TextBuilder
 string =
   foldMap char
-
-signed :: (Ord a, Num a) => (a -> TextBuilder) -> a -> TextBuilder
-signed onUnsigned i =
-  if i >= 0
-    then onUnsigned i
-    else unicodeCodePoint 45 <> onUnsigned (negate i)
-
--- | Decimal representation of an integral value.
---
--- >>> decimal 123456
--- "123456"
---
--- >>> decimal (-123456)
--- "-123456"
---
--- >>> decimal 0
--- "0"
-{-# INLINEABLE decimal #-}
-decimal :: (Integral a) => a -> TextBuilder
-decimal = signed unsignedDecimal
-
--- | Decimal representation of an unsigned integral value.
---
--- __Warning:__ It is your responsibility to ensure that the value is non-negative.
---
--- >>> unsignedDecimal 123456
--- "123456"
---
--- >>> unsignedDecimal 0
--- "0"
-{-# INLINEABLE unsignedDecimal #-}
-unsignedDecimal :: (Integral a) => a -> TextBuilder
-unsignedDecimal = string . ($ "") . showInt
 
 -- | Decimal representation of an integral value with thousands separated by the specified character.
 --
@@ -199,46 +167,11 @@ dataSizeInBytesInDecimal = signed \a ->
             then thousandSeparatedDecimal separatorChar byExtraTen
             else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
 
--- | Unsigned binary number.
---
--- >>> unsignedBinary 1
--- "1"
---
--- >>> unsignedBinary 2
--- "10"
-{-# INLINE unsignedBinary #-}
-unsignedBinary :: (Integral a) => a -> TextBuilder
-unsignedBinary = string . ($ "") . showIntAtBase 2 intToDigit
-
 -- | Unsigned binary number padded to the maximum amount of bits supported by the type.
 {-# INLINE unsignedPaddedBinary #-}
 unsignedPaddedBinary :: (Integral a, FiniteBits a) => a -> TextBuilder
 unsignedPaddedBinary a =
   padFromLeft (finiteBitSize a) '0' $ unsignedBinary a
-
--- | Hexadecimal representation of an integral value.
-{-# INLINE hexadecimal #-}
-hexadecimal :: (Integral a) => a -> TextBuilder
-hexadecimal = signed unsignedHexadecimal
-
--- | Unsigned hexadecimal representation of an integral value.
-{-# INLINE unsignedHexadecimal #-}
-unsignedHexadecimal :: (Integral a) => a -> TextBuilder
-unsignedHexadecimal = string . ($ "") . showHex
-
--- | Decimal digit.
-{-# INLINE decimalDigit #-}
-decimalDigit :: (Integral a) => a -> TextBuilder
-decimalDigit (fromIntegral -> n) =
-  unicodeCodePoint (n + 48)
-
--- | Hexadecimal digit.
-{-# INLINE hexadecimalDigit #-}
-hexadecimalDigit :: (Integral a) => a -> TextBuilder
-hexadecimalDigit (fromIntegral -> n) =
-  if n <= 9
-    then unicodeCodePoint (n + 48)
-    else unicodeCodePoint (n + 87)
 
 -- | Intercalate builders.
 {-# INLINE intercalate #-}

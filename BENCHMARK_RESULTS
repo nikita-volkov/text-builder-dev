@@ -137,6 +137,6 @@ All
           273  μs ±  21 μs, 1.6 MB allocated,  97 KB copied,  35 MB peak memory
   Features
     decimal:                                  OK
-      374  ns ±  34 ns, 2.2 KB allocated,   0 B  copied,  35 MB peak memory
+      200  ns ±  13 ns, 1.3 KB allocated,   0 B  copied, 6.0 MB peak memory
     hexadecimal:                              OK
-      283  ns ±  26 ns, 1.9 KB allocated,   0 B  copied,  35 MB peak memory
+      165  ns ±  14 ns, 1.1 KB allocated,   0 B  copied, 6.0 MB peak memory
