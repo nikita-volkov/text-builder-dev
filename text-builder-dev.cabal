@@ -77,9 +77,9 @@ library
     TextBuilderDev.Base.Utf16View.Unicode
     TextBuilderDev.Base.Utf8View
     TextBuilderDev.Domains.Digits
+    TextBuilderDev.Domains.Other
     TextBuilderDev.Domains.StrictBuilder
     TextBuilderDev.Domains.StrictTextBuilder
-    TextBuilderDev.Extras
     TextBuilderDev.IsTextBuilder
     TextBuilderDev.Prelude
 

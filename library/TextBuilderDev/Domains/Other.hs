@@ -1,5 +1,4 @@
--- | Higher-level definitions not dealing with the structure of builder.
-module TextBuilderDev.Extras where
+module TextBuilderDev.Domains.Other where
 
 import qualified Data.ByteString as ByteString
 import qualified Data.List.Split as Split

@@ -3,7 +3,7 @@ module TextBuilderDev.IsTextBuilder where
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import TextBuilderDev.Base
-import TextBuilderDev.Extras
+import TextBuilderDev.Domains.Other
 import TextBuilderDev.Prelude
 
 -- |
