@@ -11,7 +11,8 @@ import Prelude
 main :: IO ()
 main =
   defaultMain
-    [ bgroup "Text concatenation" textConcatenation
+    [ bgroup "Competition" textConcatenation,
+      bgroup "Features" features
     ]
   where
     textConcatenation =
@@ -59,3 +60,8 @@ main =
                       (fmap C.fromStrict texts)
                   )
               ]
+
+    features =
+      [ bench "decimal" $ whnf (A.toText . A.decimal) (123456 :: Int),
+        bench "hexadecimal" $ whnf (A.toText . A.hexadecimal) (123456 :: Int)
+      ]
