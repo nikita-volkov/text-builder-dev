@@ -200,7 +200,7 @@ dataSizeInBytesInDecimal = signed \a ->
             else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
 
 -- | Unsigned binary number.
--- 
+--
 -- >>> unsignedBinary 1
 -- "1"
 --
@@ -422,13 +422,29 @@ picosecondsCompact x =
         divided = div x factor
 
 -- | Double with a fixed number of decimal places.
+--
+-- >>> fixedDouble 4 0.123456
+-- "0.1235"
+--
+-- >>> fixedDouble 2 2.1
+-- "2.10"
+--
+-- >>> fixedDouble (-2) 2.1
+-- "2"
+--
+-- >>> fixedDouble 2 (-2.1)
+-- "-2.10"
+--
+-- >>> fixedDouble 2 0
+-- "0.00"
 {-# INLINE fixedDouble #-}
 fixedDouble ::
   -- | Amount of decimals after point.
   Int ->
   Double ->
   TextBuilder
-fixedDouble decimalPlaces = fromString . printf ("%." ++ show decimalPlaces ++ "f")
+fixedDouble (max 0 -> decimalPlaces) =
+  fromString . printf ("%." ++ show decimalPlaces ++ "f")
 
 -- | Double multiplied by 100 with a fixed number of decimal places applied and followed by a percent-sign.
 --

@@ -75,10 +75,10 @@ module TextBuilderDev
     picosecondsCompact,
 
     -- * Classes
-    Isomorphic (..),
+    IsTextBuilder (..),
   )
 where
 
 import TextBuilderDev.Base
 import TextBuilderDev.Extras
-import TextBuilderDev.Isomorphic
+import TextBuilderDev.IsTextBuilder
