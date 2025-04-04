@@ -6,12 +6,6 @@ module TextBuilderDev
     toString,
     null,
 
-    -- ** Output IO
-    putToStdOut,
-    putToStdErr,
-    putLnToStdOut,
-    putLnToStdErr,
-
     -- * Constructors
 
     -- ** Builder manipulators

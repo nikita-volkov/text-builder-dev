@@ -3,7 +3,6 @@ module TextBuilderDev.Domains.Other where
 import qualified Data.ByteString as ByteString
 import qualified Data.List.Split as Split
 import qualified Data.Text as Text
-import qualified Data.Text.IO as Text
 import qualified Data.Text.Lazy as TextLazy
 import TextBuilderDev.Base
 import TextBuilderDev.Domains.Digits
@@ -15,24 +14,6 @@ import TextBuilderDev.Prelude hiding (intercalate, length, null)
 {-# INLINE toString #-}
 toString :: TextBuilder -> String
 toString = Text.unpack . toText
-
--- ** Output IO
-
--- | Put builder, to stdout.
-putToStdOut :: TextBuilder -> IO ()
-putToStdOut = Text.hPutStr stdout . toText
-
--- | Put builder, to stderr.
-putToStdErr :: TextBuilder -> IO ()
-putToStdErr = Text.hPutStr stderr . toText
-
--- | Put builder, followed by a line, to stdout.
-putLnToStdOut :: TextBuilder -> IO ()
-putLnToStdOut = Text.hPutStrLn stdout . toText
-
--- | Put builder, followed by a line, to stderr.
-putLnToStdErr :: TextBuilder -> IO ()
-putLnToStdErr = Text.hPutStrLn stderr . toText
 
 -- * Constructors
 
