@@ -25,7 +25,7 @@ hexData =
     byte =
       padFromLeft 2 '0' . unsignedHexadecimal
 
--- | Bits of a datum with a finite size.
+-- | Bits of a statically sized value.
 -- If it's an integer, the sign is reflected in the bits.
 --
 -- >>> bits @Int 0
@@ -46,6 +46,34 @@ bits val =
                 then do
                   TextArray.unsafeWrite array arrayIndex
                     $ if testBit val 0 then 49 else 48
+                  go (unsafeShiftR val 1) (pred arrayIndex)
+                else return indexAfter
+            indexAfter =
+              arrayStartIndex + size
+         in go val (pred indexAfter)
+
+-- | Bits of a statically sized value padded from the left according to the size.
+-- If it's an integer, the sign is reflected in the bits.
+--
+-- >>> paddedBits @Int8 0
+-- "00000000"
+--
+-- >>> paddedBits @Int8 4
+-- "00000100"
+--
+-- >>> paddedBits @Int16 4
+-- "0000000000000100"
+--
+-- >>> paddedBits @Int16 (-4)
+-- "1111111111111100"
+paddedBits :: (FiniteBits a) => a -> TextBuilder
+paddedBits val =
+  let size = finiteBitSize val
+   in TextBuilder size \array arrayStartIndex ->
+        let go val arrayIndex =
+              if arrayIndex >= arrayStartIndex
+                then do
+                  TextArray.unsafeWrite array arrayIndex $ if testBit val 0 then 49 else 48
                   go (unsafeShiftR val 1) (pred arrayIndex)
                 else return indexAfter
             indexAfter =

@@ -23,6 +23,7 @@ module TextBuilderDev
 
     -- ** Data
     bits,
+    paddedBits,
     hexData,
 
     -- ** Character
