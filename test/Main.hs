@@ -172,10 +172,10 @@ tests =
               fromString (showBin x "")
                 === B.toText (B.unsignedBinary x)
           ],
-        testGroup "finiteBitsUnsignedBinary" $
+        testGroup "bits" $
           [ testProperty "Produces the same output as showBin" $ \(x :: Word) ->
               fromString (showBin x "")
-                === B.toText (B.finiteBitsUnsignedBinary x)
+                === B.toText (B.bits x)
           ],
         testGroup "fixedUnsignedDecimal" $
           [ testProperty "Same as printf" $ \(size :: Word8, val :: Natural) ->

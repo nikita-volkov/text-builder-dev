@@ -28,6 +28,27 @@ signed onUnsigned i =
     then onUnsigned i
     else unicodeCodePoint 45 <> onUnsigned (negate i)
 
+-- | Signed binary representation of an integral value.
+--
+-- >>> binary 4
+-- "100"
+-- >>> binary (-4)
+-- "-100"
+{-# INLINEABLE binary #-}
+binary :: (Integral a) => a -> TextBuilder
+binary = signed unsignedBinary
+
+-- | Signed octal representation of an integral value.
+--
+-- >>> octal 123456
+-- "361100"
+--
+-- >>> octal (-123456)
+-- "-361100"
+{-# INLINE octal #-}
+octal :: (Integral a) => a -> TextBuilder
+octal = signed unsignedOctal
+
 -- | Signed decimal representation of an integral value.
 --
 -- >>> decimal 123456
@@ -42,18 +63,13 @@ signed onUnsigned i =
 decimal :: (Integral a) => a -> TextBuilder
 decimal = signed unsignedDecimal
 
--- | Signed octal representation of an integral value.
---
--- >>> octal 123456
--- "361100"
---
--- >>> octal (-123456)
--- "-361100"
-{-# INLINE octal #-}
-octal :: (Integral a) => a -> TextBuilder
-octal = signed unsignedOctal
-
 -- | Hexadecimal representation of an integral value.
+--
+-- >>> hexadecimal 123456
+-- "1e240"
+--
+-- >>> hexadecimal (-123456)
+-- "-1e240"
 {-# INLINE hexadecimal #-}
 hexadecimal :: (Integral a) => a -> TextBuilder
 hexadecimal = signed unsignedHexadecimal
@@ -150,3 +166,68 @@ unsignedDecimal =
 unsignedHexadecimal :: (Integral a) => a -> TextBuilder
 unsignedHexadecimal =
   digitsByRadix 16 (\digit -> if digit <= 9 then digit + 48 else digit + 87)
+
+-- * Other
+
+-- | A less general but faster alternative to 'unsignedBinary'.
+--
+-- >>> bits @Int 0
+-- "0"
+--
+-- >>> bits @Int 4
+-- "100"
+--
+-- >>> bits @Int8 (-4)
+-- "11111100"
+{-# INLINE bits #-}
+bits :: (FiniteBits a) => a -> TextBuilder
+bits val =
+  let size = max 1 (finiteBitSize val - countLeadingZeros val)
+   in TextBuilder size \array arrayStartIndex ->
+        let go val arrayIndex =
+              if arrayIndex >= arrayStartIndex
+                then do
+                  TextArray.unsafeWrite array arrayIndex
+                    $ if testBit val 0 then 49 else 48
+                  go (unsafeShiftR val 1) (pred arrayIndex)
+                else return indexAfter
+            indexAfter =
+              arrayStartIndex + size
+         in go val (pred indexAfter)
+
+-- | Fixed-length decimal.
+-- Padded with zeros or trimmed depending on whether it's shorter or longer
+-- than specified.
+--
+-- __Warning:__ It is your responsibility to ensure that the size is positive and in a reasonable range,
+-- and that the value is positive, otherwise the produced text will be broken.
+--
+-- >>> fixedUnsignedDecimal 5 123
+-- "00123"
+--
+-- >>> fixedUnsignedDecimal 5 123456
+-- "23456"
+--
+-- >>> fixedUnsignedDecimal 0 123
+-- ""
+fixedUnsignedDecimal :: (Integral a) => Int -> a -> TextBuilder
+fixedUnsignedDecimal size val =
+  TextBuilder size $ \array startOffset ->
+    let offsetAfter = startOffset + size
+        writeValue val offset =
+          if offset >= startOffset
+            then
+              if val /= 0
+                then case divMod val 10 of
+                  (val, digit) -> do
+                    TextArray.unsafeWrite array offset $ 48 + fromIntegral digit
+                    writeValue val (pred offset)
+                else writePadding offset
+            else return offsetAfter
+        writePadding offset =
+          if offset >= startOffset
+            then do
+              TextArray.unsafeWrite array offset 48
+              writePadding (pred offset)
+            else return offsetAfter
+     in writeValue val (pred offsetAfter)

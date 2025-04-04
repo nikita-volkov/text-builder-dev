@@ -164,3 +164,7 @@ All
       48.4 ns ± 3.7 ns, 560 B  allocated,   0 B  copied,  36 MB peak memory
     hexadecimal:                              OK
       44.9 ns ± 3.5 ns, 480 B  allocated,   0 B  copied,  36 MB peak memory
+    binary:                                   OK
+      123  ns ± 7.2 ns, 1.4 KB allocated,   0 B  copied, 6.0 MB peak memory
+    bits:                                     OK
+      246  ns ±  13 ns, 968 B  allocated,   0 B  copied, 6.0 MB peak memory

@@ -34,7 +34,17 @@ module TextBuilderDev
     utf8CodeUnits3,
     utf8CodeUnits4,
 
+    -- ** Digits
+    decimalDigit,
+    hexadecimalDigit,
+
     -- ** Integers
+
+    -- *** Binary
+    binary,
+    unsignedBinary,
+    unsignedPaddedBinary,
+    bits,
 
     -- *** Decimal
     decimal,
@@ -44,11 +54,6 @@ module TextBuilderDev
     thousandSeparatedUnsignedDecimal,
     dataSizeInBytesInDecimal,
 
-    -- *** Binary
-    unsignedBinary,
-    unsignedPaddedBinary,
-    finiteBitsUnsignedBinary,
-
     -- *** Octal
     octal,
     unsignedOctal,
@@ -56,10 +61,6 @@ module TextBuilderDev
     -- *** Hexadecimal
     hexadecimal,
     unsignedHexadecimal,
-
-    -- ** Digits
-    decimalDigit,
-    hexadecimalDigit,
 
     -- ** Real
     fixedDouble,
