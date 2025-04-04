@@ -1,4 +1,1 @@
 packages: .
-allow-newer:
-  , foldl:text
-  , foldl:bytestring
