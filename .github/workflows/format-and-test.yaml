@@ -18,4 +18,5 @@ jobs:
     uses: nikita-volkov/check-haskell-fast.github-actions-workflow/.github/workflows/check-haskell-fast.yaml@v1
     secrets: inherit
     with:
-      minimal-ghc: 8.8.1
+      minimal-ghc: "8.8.1"
+      skip-doctest-on-minimal-ghc: true
