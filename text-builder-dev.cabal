@@ -78,8 +78,10 @@ library
     TextBuilderDev.Base.Utf8View
     TextBuilderDev.Domains.Digits
     TextBuilderDev.Domains.Other
+    TextBuilderDev.Domains.Padding
     TextBuilderDev.Domains.StrictBuilder
     TextBuilderDev.Domains.StrictTextBuilder
+    TextBuilderDev.Domains.Time
     TextBuilderDev.IsTextBuilder
     TextBuilderDev.Prelude
 

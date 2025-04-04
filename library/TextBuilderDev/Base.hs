@@ -115,6 +115,11 @@ text (TextInternal.Text array offset length) =
     return builderOffsetAfter
 #endif
 
+-- | Unicode character.
+{-# INLINE char #-}
+char :: Char -> TextBuilder
+char = unicodeCodePoint . ord
+
 -- | ASCII byte string.
 --
 -- It's your responsibility to ensure that the bytes are in proper range,

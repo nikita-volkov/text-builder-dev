@@ -80,6 +80,8 @@ where
 import TextBuilderDev.Base
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Other
+import TextBuilderDev.Domains.Padding
 import TextBuilderDev.Domains.StrictBuilder ()
 import TextBuilderDev.Domains.StrictTextBuilder ()
+import TextBuilderDev.Domains.Time
 import TextBuilderDev.IsTextBuilder
