@@ -23,11 +23,11 @@ data TextBuilder
       --
       -- __Warning:__ Keep in mind that the array is operating on 'Word8' values starting from @text-2.0@, but prior to it it operates on 'Word16'. This is due to the \"text\" library switching from UTF-16 to UTF-8 after version 2. To deal with this you have the following options:
       --
-      -- 1. Use the CPP @#if MIN_VERSION_text(2,0,0)@ instruction to conditionally compile your code for different versions of the library.
+      -- 1. Restrict the version of the \"text\" library in your package to @>=2@.
       --
       -- 2. Use helpers provided by this library, such as 'unsafeSeptets' and 'unsafeReverseSeptets', which abstract over the differences in the underlying representation.
       --
-      -- 3. Restrict the version of the \"text\" library in your package to @>=2@.
+      -- 3. Use CPP to conditionally compile your code for different versions of \"text\".
       (forall s. TextArray.MArray s -> Int -> ST s Int)
 
 instance IsString TextBuilder where
