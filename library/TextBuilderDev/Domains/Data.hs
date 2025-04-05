@@ -3,6 +3,7 @@ module TextBuilderDev.Domains.Data where
 import qualified Data.ByteString as ByteString
 import qualified Data.List.Split as Split
 import qualified Data.Text.Array as TextArray
+import qualified GHC.List
 import TextBuilderDev.Core
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Other
@@ -98,15 +99,18 @@ paddedBits val =
 {-# INLINE paddedBits2 #-}
 paddedBits2 :: (FiniteBits a) => a -> TextBuilder
 paddedBits2 val =
-  unsafeSeptets size (buildList (pred size))
+  unsafeSeptets size list
   where
     size = finiteBitSize val
-    buildList index =
-      if index >= 0
-        then
-          let codepoint = if testBit val index then 49 else 48
-           in codepoint : buildList (pred index)
-        else []
+    list =
+      GHC.List.build \cons nil ->
+        let go index =
+              if index >= 0
+                then
+                  let codepoint = if testBit val index then 49 else 48
+                   in cons codepoint (go (pred index))
+                else nil
+         in go (pred size)
 
 -- | Bits of a statically sized value padded from the left according to the size.
 -- If it's an integer, the sign is reflected in the bits.
@@ -125,12 +129,15 @@ paddedBits2 val =
 {-# INLINE paddedBits3 #-}
 paddedBits3 :: (FiniteBits a) => a -> TextBuilder
 paddedBits3 val =
-  unsafeReverseSeptets size (buildList 0)
+  unsafeReverseSeptets size list
   where
     size = finiteBitSize val
-    buildList index =
-      if index < size
-        then
-          let codepoint = if testBit val index then 49 else 48
-           in codepoint : buildList (succ index)
-        else []
+    list =
+      GHC.List.build \cons nil ->
+        let go index =
+              if index < size
+                then
+                  let codepoint = if testBit val index then 49 else 48
+                   in cons codepoint (go (succ index))
+                else nil
+         in go 0
