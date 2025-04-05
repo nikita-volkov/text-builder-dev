@@ -14,26 +14,38 @@ jobs:
     uses: nikita-volkov/haskell-hackage-lib-github-actions-workflows/.github/workflows/format.yaml@v3
     secrets: inherit
 
-  test-1:
-    uses: nikita-volkov/check-haskell-fast.github-actions-workflow/.github/workflows/check-haskell-fast.yaml@v1
+  build-ghc-8-8:
+    uses: nikita-volkov/check-haskell-fast.github-actions-workflow/.github/workflows/main.yaml@v2
     secrets: inherit
     with:
-      minimal-ghc: "8.8.1"
-      skip-doctest-on-minimal-ghc: true
-      cabal-configure-extra-args: --constraint="text==1.2.5.0"
-
-  test-2:
-    uses: nikita-volkov/check-haskell-fast.github-actions-workflow/.github/workflows/check-haskell-fast.yaml@v1
+      ghc: "8.8.1"
+      skip-doctest: true
+      skip-benchmarks: true
+      skip-cabal-check: true
+      skip-haddock: true
+  
+  build-ghc-9-4-and-text-1-2:
+    uses: nikita-volkov/check-haskell-fast.github-actions-workflow/.github/workflows/main.yaml@v2
     secrets: inherit
     with:
-      minimal-ghc: "8.8.1"
-      skip-doctest-on-minimal-ghc: true
-      cabal-configure-extra-args: --constraint="text==2.0.2"
-
-  test-3:
-    uses: nikita-volkov/check-haskell-fast.github-actions-workflow/.github/workflows/check-haskell-fast.yaml@v1
+      ghc: "9.4"
+      cabal-configure-extra-args: >
+        --constraint="text==1.2.5.0"
+      skip-benchmarks: true
+      skip-cabal-check: true
+      skip-haddock: true
+  
+  build-ghc-9-4-and-text-2-0-2:
+    uses: nikita-volkov/check-haskell-fast.github-actions-workflow/.github/workflows/main.yaml@v2
     secrets: inherit
     with:
-      minimal-ghc: "8.8.1"
-      skip-doctest-on-minimal-ghc: true
-      cabal-configure-extra-args: --constraint="text>=2.1.2"
+      ghc: "9.4"
+      cabal-configure-extra-args: >
+        --constraint="text==2.0.2"
+      skip-benchmarks: true
+      skip-cabal-check: true
+      skip-haddock: true
+  
+  build-latest:
+    uses: nikita-volkov/check-haskell-fast.github-actions-workflow/.github/workflows/main.yaml@v2
+    secrets: inherit
