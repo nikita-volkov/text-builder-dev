@@ -69,8 +69,9 @@ main =
               ]
 
     features =
-      [ bench "decimal" $ whnf (A.toText . A.decimal) (123456 :: Int),
-        bench "hexadecimal" $ whnf (A.toText . A.hexadecimal) (123456 :: Int),
+      [ bench "bits" $ whnf (A.toText . A.bits) (123456 :: Int),
+        bench "paddedBits" $ whnf (A.toText . A.paddedBits) (123456 :: Int),
         bench "binary" $ whnf (A.toText . A.binary) (123456 :: Int),
-        bench "bits" $ whnf (A.toText . A.bits) (123456 :: Int)
+        bench "decimal" $ whnf (A.toText . A.decimal) (123456 :: Int),
+        bench "hexadecimal" $ whnf (A.toText . A.hexadecimal) (123456 :: Int)
       ]
