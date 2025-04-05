@@ -161,18 +161,21 @@ unsafeSeptets ::
   --
   -- __Warning:__ It is your responsibility to ensure that the bytes are smaller than 128.
   -- Otherwise the produced text will have a broken encoding.
+  --
+  -- To ensure of optimization kicking in it is advised to construct the list using 'GHC.List.build'.
   [Word8] ->
   TextBuilder
 unsafeSeptets maxSize bytes =
   TextBuilder
     maxSize
     ( \array ->
-        let go = \case
-              [] -> return
-              byte : rest -> \offset -> do
-                TextArray.unsafeWrite array offset byte
-                go rest (succ offset)
-         in go bytes
+        foldr
+          ( \byte next offset -> do
+              TextArray.unsafeWrite array offset byte
+              next (succ offset)
+          )
+          return
+          bytes
     )
 
 -- | Same as 'unsafeSeptets', but writes the bytes in reverse order and requires the size to be precise.
@@ -192,6 +195,8 @@ unsafeReverseSeptets ::
   --
   -- __Warning:__ It is your responsibility to ensure that the bytes are smaller than 128.
   -- Otherwise the produced text will have a broken encoding.
+  --
+  -- To ensure of optimization kicking in it is advised to construct the list using 'GHC.List.build'.
   [Word8] ->
   TextBuilder
 unsafeReverseSeptets preciseSize bytes =
@@ -199,10 +204,12 @@ unsafeReverseSeptets preciseSize bytes =
     preciseSize
     ( \array startOffset ->
         let endOffset = startOffset + preciseSize
-            go = \case
-              [] -> \_ -> return endOffset
-              byte : rest -> \offset -> do
-                TextArray.unsafeWrite array offset byte
-                go rest (pred offset)
-         in go bytes (pred endOffset)
+         in foldr
+              ( \byte next offset -> do
+                  TextArray.unsafeWrite array offset byte
+                  next (pred offset)
+              )
+              (\_ -> return endOffset)
+              bytes
+              (pred endOffset)
     )
