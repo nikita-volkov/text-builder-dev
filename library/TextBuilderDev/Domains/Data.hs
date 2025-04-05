@@ -80,3 +80,57 @@ paddedBits val =
             indexAfter =
               arrayStartIndex + size
          in go val (pred indexAfter)
+
+-- | Bits of a statically sized value padded from the left according to the size.
+-- If it's an integer, the sign is reflected in the bits.
+--
+-- >>> paddedBits2 @Int8 0
+-- "00000000"
+--
+-- >>> paddedBits2 @Int8 4
+-- "00000100"
+--
+-- >>> paddedBits2 @Int16 4
+-- "0000000000000100"
+--
+-- >>> paddedBits2 @Int16 (-4)
+-- "1111111111111100"
+{-# INLINE paddedBits2 #-}
+paddedBits2 :: (FiniteBits a) => a -> TextBuilder
+paddedBits2 val =
+  unsafeSeptets size (buildList (pred size))
+  where
+    size = finiteBitSize val
+    buildList index =
+      if index >= 0
+        then
+          let codepoint = if testBit val index then 49 else 48
+           in codepoint : buildList (pred index)
+        else []
+
+-- | Bits of a statically sized value padded from the left according to the size.
+-- If it's an integer, the sign is reflected in the bits.
+--
+-- >>> paddedBits3 @Int8 0
+-- "00000000"
+--
+-- >>> paddedBits3 @Int8 4
+-- "00000100"
+--
+-- >>> paddedBits3 @Int16 4
+-- "0000000000000100"
+--
+-- >>> paddedBits3 @Int16 (-4)
+-- "1111111111111100"
+{-# INLINE paddedBits3 #-}
+paddedBits3 :: (FiniteBits a) => a -> TextBuilder
+paddedBits3 val =
+  unsafeReverseSeptets size (buildList 0)
+  where
+    size = finiteBitSize val
+    buildList index =
+      if index < size
+        then
+          let codepoint = if testBit val index then 49 else 48
+           in codepoint : buildList (succ index)
+        else []
