@@ -28,8 +28,6 @@ module TextBuilderDev
     -- ** Data
     bits,
     paddedBits,
-    paddedBits2,
-    paddedBits3,
     hexData,
 
     -- ** Character

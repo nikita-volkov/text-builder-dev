@@ -12,8 +12,7 @@ import Prelude
 main :: IO ()
 main =
   defaultMain
-    [ bgroup "Experiments" experiments,
-      bgroup "Competition" textConcatenation,
+    [ bgroup "Competition" textConcatenation,
       bgroup "Features" features
     ]
   where
@@ -75,10 +74,4 @@ main =
         bench "binary" $ whnf (A.toText . A.binary) (123456 :: Int),
         bench "decimal" $ whnf (A.toText . A.decimal) (123456 :: Int),
         bench "hexadecimal" $ whnf (A.toText . A.hexadecimal) (123456 :: Int)
-      ]
-
-    experiments =
-      [ bench "paddedBits" $ whnf (A.toText . A.paddedBits) (123456 :: Int),
-        bench "paddedBits2" $ whnf (A.toText . A.paddedBits2) (123456 :: Int),
-        bench "paddedBits3" $ whnf (A.toText . A.paddedBits3) (123456 :: Int)
       ]
