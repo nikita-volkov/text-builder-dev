@@ -23,7 +23,7 @@ module TextBuilderDev
     text,
     lazyText,
     string,
-    asciiByteString,
+    unsafeUtf8ByteString,
 
     -- ** Data
     bits,

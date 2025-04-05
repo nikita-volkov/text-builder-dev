@@ -37,7 +37,7 @@ tests =
             return (ByteString.pack list)
        in forAll gen $ \chunks ->
             mconcat chunks
-              === Text.encodeUtf8 (B.toText (foldMap B.asciiByteString chunks)),
+              === Text.encodeUtf8 (B.toText (foldMap B.unsafeUtf8ByteString chunks)),
     testProperty "Intercalation has the same effect as in Text" $
       \separator texts ->
         Text.intercalate separator texts

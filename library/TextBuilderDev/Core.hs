@@ -7,6 +7,10 @@ import qualified Data.Text.Array as TextArray
 import qualified Data.Text.Internal as TextInternal
 import TextBuilderDev.Prelude hiding (null)
 
+#if !MIN_VERSION_text(2,0,0)
+import qualified Data.Text.Encoding as TextEncoding
+#endif
+
 -- |
 -- Specification of how to efficiently construct strict 'Text'.
 --
@@ -117,21 +121,34 @@ text (TextInternal.Text array offset length) =
     return builderOffsetAfter
 #endif
 
--- | ASCII byte string.
+-- | UTF-8 bytestring. You can use it for converting ASCII values as well.
 --
--- It's your responsibility to ensure that the bytes are in proper range,
--- otherwise the produced text will be broken.
-{-# INLINEABLE asciiByteString #-}
-asciiByteString :: ByteString -> TextBuilder
-asciiByteString byteString =
+-- __Warning:__ It's your responsibility to ensure that the bytestring is properly encoded.
+--
+-- >>> unsafeUtf8ByteString "abc"
+-- "abc"
+--
+-- >>> import Data.Text.Encoding (encodeUtf8)
+-- >>> unsafeUtf8ByteString (encodeUtf8 "фывапролдж") == "фывапролдж"
+-- True
+{-# INLINEABLE unsafeUtf8ByteString #-}
+unsafeUtf8ByteString :: ByteString -> TextBuilder
+#if MIN_VERSION_text(2,0,0)
+unsafeUtf8ByteString byteString =
   TextBuilder
     (ByteString.length byteString)
     ( \array ->
+        -- TODO: Optimize to use memcpy or something similar.
         let step byte next index = do
-              TextArray.unsafeWrite array index (fromIntegral byte)
+              TextArray.unsafeWrite array index byte
               next (succ index)
          in ByteString.foldr step return byteString
     )
+#else
+-- Using a quick and dirty solution here since the old stuff is becoming less important with time.
+unsafeUtf8ByteString =
+  text . TextEncoding.decodeUtf8
+#endif
 
 -- * Basic Unsafe Primitives
 
