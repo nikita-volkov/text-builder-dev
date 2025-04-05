@@ -184,6 +184,7 @@ unsignedHexadecimal =
 --
 -- >>> fixedUnsignedDecimal 0 123
 -- ""
+{-# INLINEABLE fixedUnsignedDecimal #-}
 fixedUnsignedDecimal :: (Integral a) => Int -> a -> TextBuilder
 fixedUnsignedDecimal size val =
   TextBuilder size $ \array startOffset ->
