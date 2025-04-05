@@ -72,7 +72,7 @@ library
   hs-source-dirs: library
   exposed-modules: TextBuilderDev
   other-modules:
-    TextBuilderDev.Base
+    TextBuilderDev.Core
     TextBuilderDev.Domains.Data
     TextBuilderDev.Domains.Digits
     TextBuilderDev.Domains.Other

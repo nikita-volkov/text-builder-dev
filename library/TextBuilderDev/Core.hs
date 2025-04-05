@@ -1,6 +1,6 @@
 {-# LANGUAGE CPP #-}
 
-module TextBuilderDev.Base where
+module TextBuilderDev.Core where
 
 import qualified Data.ByteString as ByteString
 import qualified Data.Text.Array as TextArray

@@ -80,7 +80,7 @@ module TextBuilderDev
   )
 where
 
-import TextBuilderDev.Base
+import TextBuilderDev.Core
 import TextBuilderDev.Domains.Data
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Other

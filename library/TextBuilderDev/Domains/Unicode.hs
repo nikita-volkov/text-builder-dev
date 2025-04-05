@@ -11,7 +11,7 @@ import qualified Data.Text.Internal as TextInternal
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
 import qualified Test.QuickCheck.Gen as QcGen
-import TextBuilderDev.Base
+import TextBuilderDev.Core
 import qualified TextBuilderDev.Domains.Unicode.Utf16View as Utf16View
 import qualified TextBuilderDev.Domains.Unicode.Utf8View as Utf8View
 import TextBuilderDev.Prelude

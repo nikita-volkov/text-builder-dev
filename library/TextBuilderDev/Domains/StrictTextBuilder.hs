@@ -6,7 +6,7 @@ module TextBuilderDev.Domains.StrictTextBuilder where
 #if MIN_VERSION_text(2,1,2)
 
 import Data.Text.Internal.StrictBuilder
-import qualified TextBuilderDev.Base as Base
+import qualified TextBuilderDev.Core as Base
 import TextBuilderDev.IsTextBuilder
 import TextBuilderDev.Prelude
 

@@ -2,7 +2,7 @@ module TextBuilderDev.Domains.Other where
 
 import qualified Data.Text as Text
 import qualified Data.Text.Lazy as TextLazy
-import TextBuilderDev.Base
+import TextBuilderDev.Core
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Unicode
 import TextBuilderDev.Prelude hiding (intercalate, length, null)

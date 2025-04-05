@@ -1,7 +1,7 @@
 module TextBuilderDev.Domains.Padding where
 
 import qualified Data.Text as Text
-import TextBuilderDev.Base
+import TextBuilderDev.Core
 import TextBuilderDev.Domains.Unicode
 import TextBuilderDev.Prelude
 

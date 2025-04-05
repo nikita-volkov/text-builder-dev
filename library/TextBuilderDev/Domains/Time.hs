@@ -1,6 +1,6 @@
 module TextBuilderDev.Domains.Time where
 
-import TextBuilderDev.Base
+import TextBuilderDev.Core
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Padding
 import TextBuilderDev.Prelude

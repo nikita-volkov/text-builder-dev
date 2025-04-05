@@ -7,7 +7,7 @@ module TextBuilderDev.Domains.StrictBuilder where
 #elif MIN_VERSION_text(2,0,2)
 
 import Data.Text.Internal.StrictBuilder
-import qualified TextBuilderDev.Base as Base
+import qualified TextBuilderDev.Core as Base
 import TextBuilderDev.IsTextBuilder
 import TextBuilderDev.Prelude
 
