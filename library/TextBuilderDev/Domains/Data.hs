@@ -66,6 +66,7 @@ bits val =
 --
 -- >>> paddedBits @Int16 (-4)
 -- "1111111111111100"
+{-# INLINE paddedBits #-}
 paddedBits :: (FiniteBits a) => a -> TextBuilder
 paddedBits val =
   let size = finiteBitSize val
