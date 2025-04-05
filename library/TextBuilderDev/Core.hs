@@ -18,6 +18,16 @@ data TextBuilder
       -- | Estimated maximum size of the byte array to allocate.
       Int
       -- | Function that populates a preallocated byte array of the estimated maximum size specified above provided an offset into it and producing the offset after.
+      --
+      -- __Warning:__ The function must not write outside of the allocated array or bad things will happen to the running app.
+      --
+      -- __Warning:__ Keep in mind that the array is operating on 'Word8' values starting from @text-2.0@, but prior to it it operates on 'Word16'. This is due to the \"text\" library switching from UTF-16 to UTF-8 after version 2. To deal with this you have the following options:
+      --
+      -- 1. Use the CPP @#if MIN_VERSION_text(2,0,0)@ instruction to conditionally compile your code for different versions of the library.
+      --
+      -- 2. Use helpers provided by this library, such as 'unsafeSeptets' and 'unsafeReverseSeptets', which abstract over the differences in the underlying representation.
+      --
+      -- 3. Restrict the version of the \"text\" library in your package to @>=2@.
       (forall s. TextArray.MArray s -> Int -> ST s Int)
 
 instance IsString TextBuilder where
@@ -121,4 +131,85 @@ asciiByteString byteString =
               TextArray.unsafeWrite array index (fromIntegral byte)
               next (succ index)
          in ByteString.foldr step return byteString
+    )
+
+-- * Basic Unsafe Primitives
+
+-- |
+-- Provides a unified way to deal with the byte array regardless of the version of the @text@ library.
+--
+-- Keep in mind that prior to @text-2.0@, the array was operating on 'Word16' values due to the library abstracting over @UTF-16@.
+-- Starting from @text-2.0@, the array operates on 'Word8' values and the library abstracts over @UTF-8@.
+--
+-- This function is useful for building ASCII values.
+--
+-- >>> unsafeSeptets 3 (fmap (+48) [1, 2, 3])
+-- "123"
+--
+-- >>> unsafeSeptets 4 (fmap (+48) [1, 2, 3])
+-- "123"
+{-# INLINE unsafeSeptets #-}
+unsafeSeptets ::
+  -- | Maximum size of the byte array to allocate.
+  --
+  -- Must be greater than or equal to the length of the list.
+  --
+  -- __Warning:__ If it is smaller, bad things will happen.
+  -- We'll be writing outside of the allocated array.
+  Int ->
+  -- | List of bytes to write.
+  --
+  -- __Warning:__ It is your responsibility to ensure that the bytes are smaller than 128.
+  -- Otherwise the produced text will have a broken encoding.
+  --
+  -- To ensure of optimization kicking in it is advised to construct the list using 'GHC.List.build'.
+  [Word8] ->
+  TextBuilder
+unsafeSeptets maxSize bytes =
+  TextBuilder
+    maxSize
+    ( \array ->
+        foldr
+          ( \byte next offset -> do
+              TextArray.unsafeWrite array offset byte
+              next (succ offset)
+          )
+          return
+          bytes
+    )
+
+-- | Same as 'unsafeSeptets', but writes the bytes in reverse order and requires the size to be precise.
+--
+-- >>> unsafeReverseSeptets 3 (fmap (+48) [1, 2, 3])
+-- "321"
+{-# INLINE unsafeReverseSeptets #-}
+unsafeReverseSeptets ::
+  -- | Precise amount of bytes in the list.
+  --
+  -- Needs to be precise, because writing happens in reverse order.
+  --
+  -- __Warning:__ If it is smaller, bad things will happen.
+  -- We'll be writing outside of the allocated array.
+  Int ->
+  -- | List of bytes to write in reverse order.
+  --
+  -- __Warning:__ It is your responsibility to ensure that the bytes are smaller than 128.
+  -- Otherwise the produced text will have a broken encoding.
+  --
+  -- To ensure of optimization kicking in it is advised to construct the list using 'GHC.List.build'.
+  [Word8] ->
+  TextBuilder
+unsafeReverseSeptets preciseSize bytes =
+  TextBuilder
+    preciseSize
+    ( \array startOffset ->
+        let endOffset = startOffset + preciseSize
+         in foldr
+              ( \byte next offset -> do
+                  TextArray.unsafeWrite array offset byte
+                  next (pred offset)
+              )
+              (\_ -> return endOffset)
+              bytes
+              (pred endOffset)
     )

@@ -8,6 +8,10 @@ module TextBuilderDev
 
     -- * Constructors
 
+    -- ** Primitives
+    unsafeSeptets,
+    unsafeReverseSeptets,
+
     -- ** Builder manipulators
     force,
     intercalate,
