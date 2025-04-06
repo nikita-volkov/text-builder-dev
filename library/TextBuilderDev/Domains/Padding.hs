@@ -1,8 +1,7 @@
 module TextBuilderDev.Domains.Padding where
 
 import qualified Data.Text as Text
-import TextBuilderDev.Core
-import TextBuilderDev.Domains.Unicode
+import TextBuilderCore
 import TextBuilderDev.Prelude
 
 -- | Pad a builder from the left side to the specified length with the specified character.

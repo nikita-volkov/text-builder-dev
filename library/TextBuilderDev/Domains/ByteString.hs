@@ -5,7 +5,7 @@ module TextBuilderDev.Domains.ByteString where
 import qualified Data.ByteString as ByteString
 import qualified Data.List.Split as Split
 import qualified Data.Text.Array as TextArray
-import TextBuilderDev.Core
+import TextBuilderCore
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Other
 import TextBuilderDev.Domains.Padding

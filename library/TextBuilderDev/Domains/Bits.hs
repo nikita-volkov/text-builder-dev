@@ -1,7 +1,7 @@
 module TextBuilderDev.Domains.Bits where
 
 import qualified Data.Text.Array as TextArray
-import TextBuilderDev.Core
+import TextBuilderCore
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
 -- | Bits of a statically sized value.

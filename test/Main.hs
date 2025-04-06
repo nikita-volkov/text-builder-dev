@@ -1,6 +1,5 @@
 module Main where
 
-import Data.Bits
 import qualified Data.ByteString as ByteString
 import qualified Data.Char as Char
 import Data.Proxy
@@ -65,11 +64,11 @@ tests =
          in mconcat trimmedTexts
               === B.toText (mconcat (map B.text trimmedTexts)),
     testProperty "TextBuilderDev.null is isomorphic to Text.null" $ \(text :: Text) ->
-      B.null (B.from text) === Text.null text,
-    testProperty "(TextBuilderDev.unicodeCodePoint <>) is isomorphic to Text.cons" $
+      B.isEmpty (B.from text) === Text.null text,
+    testProperty "(TextBuilderDev.unicodeCodepoint <>) is isomorphic to Text.cons" $
       withMaxSuccess bigTest $
         \(text :: Text) (c :: Char) ->
-          B.toText (B.unicodeCodePoint (Char.ord c) <> B.text text) === Text.cons c text,
+          B.toText (B.unicodeCodepoint (Char.ord c) <> B.text text) === Text.cons c text,
     testGroup "Time interval" $
       [ testCase "59s" $ assertEqual "" "00:00:00:59" $ B.toText $ B.intervalInSeconds @Double 59,
         testCase "minute" $ assertEqual "" "00:00:01:00" $ B.toText $ B.intervalInSeconds @Double 60,
@@ -78,53 +77,7 @@ tests =
         testCase "day" $ assertEqual "" "01:00:00:00" $ B.toText $ B.intervalInSeconds @Double 86400
       ],
     testGroup "By function name" $
-      [ testGroup "utf8CodeUnitsN" $
-          [ testProperty "Text.cons isomporphism" $
-              withMaxSuccess bigTest $
-                \(text :: Text) (c :: Char) ->
-                  let cp = Char.ord c
-                      cuBuilder
-                        | cp < 0x80 = B.utf8CodeUnits1 (cuAt 0)
-                        | cp < 0x800 = B.utf8CodeUnits2 (cuAt 0) (cuAt 1)
-                        | cp < 0x10000 = B.utf8CodeUnits3 (cuAt 0) (cuAt 1) (cuAt 2)
-                        | otherwise = B.utf8CodeUnits4 (cuAt 0) (cuAt 1) (cuAt 2) (cuAt 3)
-                        where
-                          -- Use Data.Text.Encoding for comparison
-                          codeUnits = Text.encodeUtf8 $ Text.singleton c
-                          cuAt = (codeUnits `ByteString.index`)
-                   in B.toText (cuBuilder <> B.text text) === Text.cons c text,
-            testProperty "Text.singleton isomorphism" $
-              withMaxSuccess bigTest $
-                \(c :: Char) ->
-                  let text = Text.singleton c
-                      codeUnits = Text.encodeUtf8 text
-                      cp = Char.ord c
-                      cuBuilder
-                        | cp < 0x80 = B.utf8CodeUnits1 (cuAt 0)
-                        | cp < 0x800 = B.utf8CodeUnits2 (cuAt 0) (cuAt 1)
-                        | cp < 0x10000 = B.utf8CodeUnits3 (cuAt 0) (cuAt 1) (cuAt 2)
-                        | otherwise = B.utf8CodeUnits4 (cuAt 0) (cuAt 1) (cuAt 2) (cuAt 3)
-                        where
-                          cuAt = ByteString.index codeUnits
-                   in B.toText cuBuilder === text
-          ],
-        testGroup "utf16CodeUnitsN" $
-          [ testProperty "is isomorphic to Text.cons" $
-              withMaxSuccess bigTest $
-                \(text :: Text) (c :: Char) ->
-                  let cp = Char.ord c
-                      cuBuilder
-                        | cp < 0x10000 = B.utf16CodeUnits1 (cuAt 0)
-                        | otherwise = B.utf16CodeUnits2 (cuAt 0) (cuAt 1)
-                        where
-                          -- Use Data.Text.Encoding for comparison
-                          codeUnits = Text.encodeUtf16LE $ Text.singleton c
-                          cuAt i =
-                            (fromIntegral $ codeUnits `ByteString.index` (2 * i))
-                              .|. ((fromIntegral $ codeUnits `ByteString.index` (2 * i + 1)) `shiftL` 8)
-                   in B.toText (cuBuilder <> B.text text) === Text.cons c text
-          ],
-        testCase "thousandSeparatedUnsignedDecimal" $ do
+      [ testCase "thousandSeparatedUnsignedDecimal" $ do
           assertEqual "" "0" (B.toText (B.thousandSeparatedUnsignedDecimal @Integer ',' 0))
           assertEqual "" "123" (B.toText (B.thousandSeparatedUnsignedDecimal @Integer ',' 123))
           assertEqual "" "1,234" (B.toText (B.thousandSeparatedUnsignedDecimal @Integer ',' 1234))

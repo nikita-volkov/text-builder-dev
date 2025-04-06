@@ -1,10 +1,10 @@
 module TextBuilderDev
-  ( TextBuilder (..),
+  ( TextBuilder,
 
     -- * Accessors
     toText,
     toString,
-    null,
+    isEmpty,
 
     -- * Constructors
 
@@ -28,13 +28,7 @@ module TextBuilderDev
     char,
 
     -- *** Low-level character
-    unicodeCodePoint,
-    utf16CodeUnits1,
-    utf16CodeUnits2,
-    utf8CodeUnits1,
-    utf8CodeUnits2,
-    utf8CodeUnits3,
-    utf8CodeUnits4,
+    unicodeCodepoint,
 
     -- ** ByteString
     hexByteString,
@@ -86,7 +80,7 @@ module TextBuilderDev
   )
 where
 
-import TextBuilderDev.Core
+import TextBuilderCore
 import TextBuilderDev.Domains.Bits
 import TextBuilderDev.Domains.ByteString
 import TextBuilderDev.Domains.Digits
@@ -95,5 +89,4 @@ import TextBuilderDev.Domains.Padding
 import TextBuilderDev.Domains.StrictBuilder ()
 import TextBuilderDev.Domains.StrictTextBuilder ()
 import TextBuilderDev.Domains.Time
-import TextBuilderDev.Domains.Unicode
 import TextBuilderDev.IsTextBuilder

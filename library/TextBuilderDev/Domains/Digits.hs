@@ -1,23 +1,22 @@
 module TextBuilderDev.Domains.Digits where
 
 import qualified Data.Text.Array as TextArray
-import TextBuilderDev.Core
-import TextBuilderDev.Domains.Unicode
+import TextBuilderCore
 import TextBuilderDev.Prelude
 
 -- | Decimal digit.
 {-# INLINE decimalDigit #-}
 decimalDigit :: (Integral a) => a -> TextBuilder
 decimalDigit (fromIntegral -> n) =
-  unicodeCodePoint (n + 48)
+  unicodeCodepoint (n + 48)
 
 -- | Hexadecimal digit.
 {-# INLINE hexadecimalDigit #-}
 hexadecimalDigit :: (Integral a) => a -> TextBuilder
 hexadecimalDigit (fromIntegral -> n) =
   if n <= 9
-    then unicodeCodePoint (n + 48)
-    else unicodeCodePoint (n + 87)
+    then unicodeCodepoint (n + 48)
+    else unicodeCodepoint (n + 87)
 
 -- * Signed Numbers
 
@@ -26,7 +25,7 @@ signed :: (Ord a, Num a) => (a -> TextBuilder) -> a -> TextBuilder
 signed onUnsigned i =
   if i >= 0
     then onUnsigned i
-    else unicodeCodePoint 45 <> onUnsigned (negate i)
+    else unicodeCodepoint 45 <> onUnsigned (negate i)
 
 -- | Signed binary representation of an integral value.
 --

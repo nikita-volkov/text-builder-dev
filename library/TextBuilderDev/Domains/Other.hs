@@ -1,10 +1,8 @@
 module TextBuilderDev.Domains.Other where
 
 import qualified Data.Text as Text
-import qualified Data.Text.Lazy as TextLazy
-import TextBuilderDev.Core
+import TextBuilderCore
 import TextBuilderDev.Domains.Digits
-import TextBuilderDev.Domains.Unicode
 import TextBuilderDev.Prelude hiding (intercalate, length, null)
 
 -- * Destructors
@@ -25,18 +23,6 @@ toString = Text.unpack . toText
 {-# INLINE force #-}
 force :: TextBuilder -> TextBuilder
 force = text . toText
-
--- | Lazy text.
-{-# INLINE lazyText #-}
-lazyText :: TextLazy.Text -> TextBuilder
-lazyText =
-  TextLazy.foldrChunks (mappend . text) mempty
-
--- | String.
-{-# INLINE string #-}
-string :: String -> TextBuilder
-string =
-  foldMap char
 
 -- | Decimal representation of an integral value with thousands separated by the specified character.
 --
