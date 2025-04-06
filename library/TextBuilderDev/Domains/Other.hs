@@ -139,15 +139,14 @@ approximateDataSize = signed \a ->
 -- ""
 {-# INLINE intercalate #-}
 intercalate :: (Foldable f) => TextBuilder -> f TextBuilder -> TextBuilder
-intercalate separator = extract . foldl' step init
-  where
-    init = Product2 False mempty
-    step (Product2 isNotFirst builder) element =
-      Product2 True
-        $ if isNotFirst
-          then builder <> separator <> element
-          else element
-    extract (Product2 _ builder) = builder
+intercalate separator elements =
+  foldr
+    ( \element next !prefix ->
+        prefix <> element <> next separator
+    )
+    (const mempty)
+    elements
+    mempty
 
 -- | Intercalate projecting values to builder.
 {-# INLINE intercalateMap #-}

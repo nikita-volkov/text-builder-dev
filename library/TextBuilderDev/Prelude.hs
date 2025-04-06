@@ -1,6 +1,5 @@
 module TextBuilderDev.Prelude
   ( module Exports,
-    Product2 (..),
   )
 where
 
@@ -77,5 +76,3 @@ import Text.Printf as Exports (hPrintf, printf)
 import Text.Read as Exports (Read (..), readEither, readMaybe)
 import Unsafe.Coerce as Exports
 import Prelude as Exports hiding (all, and, any, concat, concatMap, elem, foldl, foldl1, foldr, foldr1, id, mapM, mapM_, maximum, minimum, notElem, or, product, sequence, sequence_, sum, (.))
-
-data Product2 a b = Product2 !a !b
