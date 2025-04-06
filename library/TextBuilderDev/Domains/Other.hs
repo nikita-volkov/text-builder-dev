@@ -128,6 +128,15 @@ approximateDataSize = signed \a ->
             else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
 
 -- | Intercalate builders.
+--
+-- >>> intercalate ", " ["a", "b", "c"]
+-- "a, b, c"
+--
+-- >>> intercalate ", " ["a"]
+-- "a"
+--
+-- >>> intercalate ", " []
+-- ""
 {-# INLINE intercalate #-}
 intercalate :: (Foldable f) => TextBuilder -> f TextBuilder -> TextBuilder
 intercalate separator = extract . foldl' step init

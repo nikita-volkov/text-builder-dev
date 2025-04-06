@@ -1,6 +1,7 @@
 module Main where
 
 import Data.Function
+import qualified Data.Text as E
 import qualified Data.Text.Builder.Linear
 import qualified Data.Text.Encoding as D
 import qualified Data.Text.Lazy as C
@@ -12,11 +13,11 @@ import Prelude
 main :: IO ()
 main =
   defaultMain
-    [ bgroup "Competition" textConcatenation,
+    [ bgroup "Competition" competition,
       bgroup "Features" features
     ]
   where
-    textConcatenation =
+    competition =
       [ bgroup "Left-biased mappend" $ byConcat $ foldl' (<>) mempty,
         bgroup "Right-biased mappend" $ byConcat $ foldl' (flip (<>)) mempty,
         bgroup "mconcat" $ byConcat $ mconcat
@@ -69,7 +70,11 @@ main =
               ]
 
     features =
-      [ bench "finiteBits" $ whnf (A.toText . A.finiteBits) (123456 :: Int),
+      [ bgroup "intercalate" $
+          [ bench "TextBuilder" $ whnf (A.toText . A.intercalate "фывапролдж") ["a", "b", "c", "d", "e", "f"],
+            bench "Text" $ whnf (E.intercalate "фывапролдж") ["a", "b", "c", "d", "e", "f"]
+          ],
+        bench "finiteBits" $ whnf (A.toText . A.finiteBits) (123456 :: Int),
         bench "paddedFiniteBits" $ whnf (A.toText . A.paddedFiniteBits) (123456 :: Int),
         bench "binary" $ whnf (A.toText . A.binary) (123456 :: Int),
         bench "decimal" $ whnf (A.toText . A.decimal) (123456 :: Int),
