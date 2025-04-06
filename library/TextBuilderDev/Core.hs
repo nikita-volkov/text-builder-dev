@@ -15,6 +15,11 @@ import TextBuilderDev.Prelude hiding (null)
 data TextBuilder
   = TextBuilder
       -- | Estimated maximum size of the byte array to allocate.
+      -- 
+      -- If the builder is empty it must be 0.
+      -- Otherwise it must be greater than or equal to the amount of bytes to be written.
+      -- 
+      -- __Warning:__ Due to \"text\" switching from UTF-16 to UTF-8 since version 2, 'Word16' is used as the byte when \"text\" version is <2 and 'Word8' is used when it's >=2.
       Int
       -- | Function that populates a preallocated byte array of the estimated maximum size specified above provided an offset into it and producing the offset after.
       --
