@@ -60,7 +60,7 @@ module TextBuilderDev
     approximateDataSize,
 
     -- * Classes
-    IsTextBuilder (..),
+    Isomorphic (..),
   )
 where
 
@@ -73,4 +73,4 @@ import TextBuilderDev.Domains.Padding
 import TextBuilderDev.Domains.StrictBuilder ()
 import TextBuilderDev.Domains.StrictTextBuilder ()
 import TextBuilderDev.Domains.Time
-import TextBuilderDev.IsTextBuilder
+import TextBuilderDev.Isomorphic

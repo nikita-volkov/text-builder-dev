@@ -110,15 +110,15 @@ tests =
                     === B.toText (B.utcTimeIso8601Timestamp roundedToSecondsTime)
           ]
       ],
-    testGroup "IsTextBuilder instances" $
+    testGroup "Isomorphic instances" $
       [ testGroup "Text" $
-          [ isTextBuilder $ Proxy @Text
+          [ isomorphic $ Proxy @Text
           ],
         testGroup "Lazy Text" $
-          [ isTextBuilder $ Proxy @TextLazy.Text
+          [ isomorphic $ Proxy @TextLazy.Text
           ],
         testGroup "Lazy Text Builder" $
-          [ isTextBuilder $ Proxy @TextLazyBuilder.Builder
+          [ isomorphic $ Proxy @TextLazyBuilder.Builder
           ]
       ],
     testLaws $ showLaws (Proxy @B.TextBuilder),

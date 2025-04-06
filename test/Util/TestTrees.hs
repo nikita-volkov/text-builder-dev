@@ -82,13 +82,13 @@ customGenMonoid gen =
         pure (mconcat xs === foldr mappend mempty xs)
     ]
 
-isTextBuilder ::
+isomorphic ::
   forall a.
-  (IsTextBuilder a, Eq a, Show a, Arbitrary a) =>
+  (Isomorphic a, Eq a, Show a, Arbitrary a) =>
   Proxy a ->
   TestTree
-isTextBuilder proxy =
-  testGroup "IsTextBuilder" $
+isomorphic proxy =
+  testGroup "Isomorphic" $
     [ testProperty "to . from == id" $ \a ->
         (to . from) a === asProxyTypeOf a proxy,
       testProperty "from . to == id" $ \a ->

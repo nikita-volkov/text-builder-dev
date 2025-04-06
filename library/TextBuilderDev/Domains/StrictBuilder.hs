@@ -7,10 +7,10 @@ module TextBuilderDev.Domains.StrictBuilder where
 
 import Data.Text.Internal.StrictBuilder
 import qualified TextBuilderCore as Base
-import TextBuilderDev.IsTextBuilder
+import TextBuilderDev.Isomorphic
 import TextBuilderDev.Prelude
 
-instance IsTextBuilder StrictBuilder where
+instance Isomorphic StrictBuilder where
   {-# INLINE from #-}
   from (StrictBuilder size write) =
     Base.TextBuilder

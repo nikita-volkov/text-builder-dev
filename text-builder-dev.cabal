@@ -80,7 +80,7 @@ library
     TextBuilderDev.Domains.StrictBuilder
     TextBuilderDev.Domains.StrictTextBuilder
     TextBuilderDev.Domains.Time
-    TextBuilderDev.IsTextBuilder
+    TextBuilderDev.Isomorphic
     TextBuilderDev.Prelude
 
   build-depends:

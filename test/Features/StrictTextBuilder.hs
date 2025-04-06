@@ -17,7 +17,7 @@ import Prelude
 
 tests :: [TestTree]
 tests =
-  [ isTextBuilder $
+  [ isomorphic $
       Proxy @TextEncoding.StrictTextBuilder,
     testGroup "to" $
       [ mapsToMonoid (to @TextEncoding.StrictTextBuilder)

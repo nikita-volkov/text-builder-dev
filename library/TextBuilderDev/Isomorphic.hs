@@ -1,4 +1,4 @@
-module TextBuilderDev.IsTextBuilder where
+module TextBuilderDev.Isomorphic where
 
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
@@ -30,25 +30,25 @@ import TextBuilderDev.Prelude
 -- since there can be infinite amount of flavours of
 -- conversions. They are context-dependent and as such
 -- should be defined as part of the domain.
-class IsTextBuilder a where
+class Isomorphic a where
   -- | Project the type into "TextBuilder".
   from :: a -> TextBuilder
 
   -- | Embed "TextBuilder" into the type.
   to :: TextBuilder -> a
 
-instance IsTextBuilder TextBuilder where
+instance Isomorphic TextBuilder where
   from = id
   to = id
 
-instance IsTextBuilder Text where
+instance Isomorphic Text where
   from = text
   to = toText
 
-instance IsTextBuilder TextLazy.Text where
+instance Isomorphic TextLazy.Text where
   from = lazyText
   to = TextLazy.fromStrict . toText
 
-instance IsTextBuilder TextLazyBuilder.Builder where
+instance Isomorphic TextLazyBuilder.Builder where
   from = lazyText . TextLazyBuilder.toLazyText
   to = TextLazyBuilder.fromText . toText
