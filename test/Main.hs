@@ -1,7 +1,6 @@
 module Main where
 
 import qualified Data.ByteString as ByteString
-import qualified Data.Char as Char
 import Data.Proxy
 import Data.String
 import Data.Text (Text)
@@ -46,43 +45,8 @@ tests =
       \separator ints ->
         Text.intercalate separator (fmap (fromString . show @Int) ints)
           === B.toText (B.intercalateMap (B.text separator) B.decimal ints),
-    testProperty "Packing a list of chars is isomorphic to appending a list of builders" $
-      \chars ->
-        Text.pack chars
-          === B.toText (foldMap B.char chars),
-    testProperty "Concatting a list of texts is isomorphic to fold-mapping with builders" $
-      \texts ->
-        mconcat texts
-          === B.toText (foldMap B.text texts),
-    testProperty "Concatting a list of texts is isomorphic to concatting a list of builders" $
-      \texts ->
-        mconcat texts
-          === B.toText (mconcat (map B.text texts)),
-    testProperty "Concatting a list of trimmed texts is isomorphic to concatting a list of builders" $
-      \texts ->
-        let trimmedTexts = fmap (Text.drop 3) texts
-         in mconcat trimmedTexts
-              === B.toText (mconcat (map B.text trimmedTexts)),
-    testProperty "TextBuilderDev.null is isomorphic to Text.null" $ \(text :: Text) ->
-      B.isEmpty (B.from text) === Text.null text,
-    testProperty "(TextBuilderDev.unicodeCodepoint <>) is isomorphic to Text.cons" $
-      withMaxSuccess bigTest $
-        \(text :: Text) (c :: Char) ->
-          B.toText (B.unicodeCodepoint (Char.ord c) <> B.text text) === Text.cons c text,
-    testGroup "Time interval" $
-      [ testCase "59s" $ assertEqual "" "00:00:00:59" $ B.toText $ B.intervalInSeconds @Double 59,
-        testCase "minute" $ assertEqual "" "00:00:01:00" $ B.toText $ B.intervalInSeconds @Double 60,
-        testCase "90s" $ assertEqual "" "00:00:01:30" $ B.toText $ B.intervalInSeconds @Double 90,
-        testCase "hour" $ assertEqual "" "00:01:00:00" $ B.toText $ B.intervalInSeconds @Double 3600,
-        testCase "day" $ assertEqual "" "01:00:00:00" $ B.toText $ B.intervalInSeconds @Double 86400
-      ],
     testGroup "By function name" $
-      [ testCase "thousandSeparatedUnsignedDecimal" $ do
-          assertEqual "" "0" (B.toText (B.thousandSeparatedUnsignedDecimal @Integer ',' 0))
-          assertEqual "" "123" (B.toText (B.thousandSeparatedUnsignedDecimal @Integer ',' 123))
-          assertEqual "" "1,234" (B.toText (B.thousandSeparatedUnsignedDecimal @Integer ',' 1234))
-          assertEqual "" "1,234,567" (B.toText (B.thousandSeparatedUnsignedDecimal @Integer ',' 1234567)),
-        testCase "padFromLeft" $ do
+      [ testCase "padFromLeft" $ do
           assertEqual "" "00" (B.toText (B.padFromLeft 2 '0' ""))
           assertEqual "" "00" (B.toText (B.padFromLeft 2 '0' "0"))
           assertEqual "" "01" (B.toText (B.padFromLeft 2 '0' "1"))
@@ -106,14 +70,14 @@ tests =
             testCase "Negative" $
               assertEqual "" "-1f23" (B.toText (B.hexadecimal @Integer (-0x01f23)))
           ],
-        testCase "dataSizeInBytesInDecimal" $ do
-          assertEqual "" "999B" (B.toText (B.dataSizeInBytesInDecimal @Integer 999))
-          assertEqual "" "1kB" (B.toText (B.dataSizeInBytesInDecimal @Integer 1000))
-          assertEqual "" "1.1kB" (B.toText (B.dataSizeInBytesInDecimal @Integer 1100))
-          assertEqual "" "1.1MB" (B.toText (B.dataSizeInBytesInDecimal @Integer 1150000))
-          assertEqual "" "9.9MB" (B.toText (B.dataSizeInBytesInDecimal @Integer 9990000))
-          assertEqual "" "10MB" (B.toText (B.dataSizeInBytesInDecimal @Integer 10100000))
-          assertEqual "" "1,000YB" (B.toText (B.dataSizeInBytesInDecimal @Integer 1000000000000000000000000000)),
+        testCase "approximateDataSize" $ do
+          assertEqual "" "999B" (B.toText (B.approximateDataSize @Integer 999))
+          assertEqual "" "1kB" (B.toText (B.approximateDataSize @Integer 1000))
+          assertEqual "" "1.1kB" (B.toText (B.approximateDataSize @Integer 1100))
+          assertEqual "" "1.1MB" (B.toText (B.approximateDataSize @Integer 1150000))
+          assertEqual "" "9.9MB" (B.toText (B.approximateDataSize @Integer 9990000))
+          assertEqual "" "10MB" (B.toText (B.approximateDataSize @Integer 10100000))
+          assertEqual "" "1,000YB" (B.toText (B.approximateDataSize @Integer 1000000000000000000000000000)),
         testCase "fixedDouble" $ do
           assertEqual "" "0.0" (B.toText (B.fixedDouble 1 0.05))
           assertEqual "" "0.1" (B.toText (B.fixedDouble 1 0.06))
@@ -121,11 +85,6 @@ tests =
           assertEqual "" "0.9000" (B.toText (B.fixedDouble 4 0.9)),
         testCase "doublePercent" $ do
           assertEqual "" "90.4%" (B.toText (B.doublePercent 1 0.904)),
-        testGroup "unsignedBinary" $
-          [ testProperty "Produces the same output as showBin" $ \(x :: Natural) ->
-              fromString (showBin x "")
-                === B.toText (B.unsignedBinary x)
-          ],
         testGroup "finiteBits" $
           [ testProperty "Produces the same output as showBin" $ \(x :: Word) ->
               fromString (showBin x "")
@@ -143,12 +102,12 @@ tests =
                in fromString padded
                     === B.toText (B.fixedUnsignedDecimal (fromIntegral size) val)
           ],
-        testGroup "utcTimeInIso8601" $
+        testGroup "utcTimeIso8601Timestamp" $
           [ testProperty "Same as iso8601Show" $ \x ->
               let roundedToSecondsTime =
                     x {utctDayTime = (fromIntegral @Int . round . utctDayTime) x}
                in (fromString . flip mappend "Z" . take 19 . iso8601Show) roundedToSecondsTime
-                    === B.toText (B.utcTimeInIso8601 roundedToSecondsTime)
+                    === B.toText (B.utcTimeIso8601Timestamp roundedToSecondsTime)
           ]
       ],
     testGroup "IsTextBuilder instances" $
@@ -167,8 +126,6 @@ tests =
     testLaws $ semigroupLaws (Proxy @B.TextBuilder),
     testLaws $ monoidLaws (Proxy @B.TextBuilder)
   ]
-  where
-    bigTest = 10000
 
 testLaws :: Laws -> TestTree
 testLaws Laws {..} =

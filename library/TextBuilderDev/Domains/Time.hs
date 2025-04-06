@@ -7,10 +7,10 @@ import TextBuilderDev.Prelude
 
 -- | UTC time in ISO8601 format.
 --
--- >>> utcTimeInIso8601 (read "2021-11-24 12:11:02 UTC")
+-- >>> utcTimeIso8601Timestamp (read "2021-11-24 12:11:02 UTC")
 -- "2021-11-24T12:11:02Z"
-utcTimeInIso8601 :: UTCTime -> TextBuilder
-utcTimeInIso8601 UTCTime {..} =
+utcTimeIso8601Timestamp :: UTCTime -> TextBuilder
+utcTimeIso8601Timestamp UTCTime {..} =
   let (year, month, day) = toGregorian utctDay
       daySeconds = round utctDayTime
       (dayMinutes, second) = divMod daySeconds 60
@@ -57,15 +57,26 @@ utcTimestampInIso8601 y mo d h mi s =
 
 -- |
 -- Time interval in seconds.
+-- Directly applicable to 'DiffTime' and 'NominalDiffTime'.
 --
 -- The format is the following:
 --
 -- > DD:HH:MM:SS
 --
--- Directly applicable to 'DiffTime' and 'NominalDiffTime'.
-{-# INLINEABLE intervalInSeconds #-}
-intervalInSeconds :: (RealFrac seconds) => seconds -> TextBuilder
-intervalInSeconds interval = flip evalState (round interval :: Int) $ do
+-- >>> realFracDdHhMmSsInterval @Double 59
+-- "00:00:00:59"
+--
+-- >>> realFracDdHhMmSsInterval @Double 90
+-- "00:00:01:30"
+--
+-- >>> realFracDdHhMmSsInterval @Double 86401
+-- "01:00:00:01"
+--
+-- >>> realFracDdHhMmSsInterval @Double (356 * 86400)
+-- "356:00:00:00"
+{-# INLINEABLE realFracDdHhMmSsInterval #-}
+realFracDdHhMmSsInterval :: (RealFrac seconds) => seconds -> TextBuilder
+realFracDdHhMmSsInterval interval = flip evalState (round interval :: Int) $ do
   seconds <- state (swap . flip divMod 60)
   minutes <- state (swap . flip divMod 60)
   hours <- state (swap . flip divMod 24)
@@ -82,17 +93,17 @@ intervalInSeconds interval = flip evalState (round interval :: Int) $ do
         ]
     )
 
--- | DiffTime in a compact decimal format based on 'picosecondsCompact'.
-diffTimeCompact :: DiffTime -> TextBuilder
-diffTimeCompact = picosecondsCompact . diffTimeToPicoseconds
+-- | DiffTime in a compact decimal format based on 'picosecondsInterval'.
+diffTimeInterval :: DiffTime -> TextBuilder
+diffTimeInterval = picosecondsInterval . diffTimeToPicoseconds
 
 -- | Amount of picoseconds represented in a compact decimal format using suffixes.
 --
 -- E.g., the following is @1_230_000_000@ picoseconds or 1.23 milliseconds or 1230 microseconds:
 --
 -- > 1230us
-picosecondsCompact :: Integer -> TextBuilder
-picosecondsCompact x =
+picosecondsInterval :: Integer -> TextBuilder
+picosecondsInterval x =
   attemptOr 1_000_000_000_000 "s"
     $ attemptOr 1_000_000_000 "ms"
     $ attemptOr 1_000_000 "us"

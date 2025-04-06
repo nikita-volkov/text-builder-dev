@@ -8,11 +8,7 @@ module TextBuilderDev
 
     -- * Constructors
 
-    -- ** Primitives
-    unsafeSeptets,
-    unsafeReverseSeptets,
-
-    -- ** Builder manipulators
+    -- ** Transformations
     force,
     intercalate,
     intercalateMap,
@@ -23,18 +19,14 @@ module TextBuilderDev
     text,
     lazyText,
     string,
+    unsafeUtf8ByteString,
 
     -- ** Character
     char,
-
-    -- *** Low-level character
     unicodeCodepoint,
 
-    -- ** ByteString
+    -- ** Data
     hexByteString,
-    unsafeUtf8ByteString,
-
-    -- ** Bits
     finiteBits,
     paddedFiniteBits,
 
@@ -42,38 +34,30 @@ module TextBuilderDev
 
     -- *** Binary
     binary,
-    unsignedBinary,
 
     -- *** Octal
     octal,
-    unsignedOctal,
 
     -- *** Decimal
     decimal,
-    unsignedDecimal,
     fixedUnsignedDecimal,
     thousandSeparatedDecimal,
-    thousandSeparatedUnsignedDecimal,
-    dataSizeInBytesInDecimal,
 
     -- *** Hexadecimal
     hexadecimal,
-    unsignedHexadecimal,
 
     -- ** Real
     fixedDouble,
     doublePercent,
 
-    -- ** Digits
-    decimalDigit,
-    hexadecimalDigit,
-
     -- ** Time
-    utcTimeInIso8601,
-    utcTimestampInIso8601,
-    intervalInSeconds,
-    diffTimeCompact,
-    picosecondsCompact,
+    utcTimeIso8601Timestamp,
+    realFracDdHhMmSsInterval,
+    diffTimeInterval,
+    picosecondsInterval,
+
+    -- ** Other
+    approximateDataSize,
 
     -- * Classes
     IsTextBuilder (..),

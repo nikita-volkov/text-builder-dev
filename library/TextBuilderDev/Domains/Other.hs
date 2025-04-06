@@ -76,23 +76,23 @@ thousandSeparatedUnsignedDecimal separatorChar =
 
 -- | Data size in decimal notation over amount of bytes.
 --
--- >>> dataSizeInBytesInDecimal 999
+-- >>> approximateDataSize 999
 -- "999B"
 --
--- >>> dataSizeInBytesInDecimal 9999
+-- >>> approximateDataSize 9999
 -- "9.9kB"
 --
--- >>> dataSizeInBytesInDecimal (-9999)
+-- >>> approximateDataSize (-9999)
 -- "-9.9kB"
 --
--- >>> dataSizeInBytesInDecimal 1234567890
+-- >>> approximateDataSize 1234567890
 -- "1.2GB"
 --
--- >>> dataSizeInBytesInDecimal 10000000000000000000000000000000023
+-- >>> approximateDataSize 10000000000000000000000000000000023
 -- "10,000,000,000YB"
-{-# INLINEABLE dataSizeInBytesInDecimal #-}
-dataSizeInBytesInDecimal :: (Integral a) => a -> TextBuilder
-dataSizeInBytesInDecimal = signed \a ->
+{-# INLINEABLE approximateDataSize #-}
+approximateDataSize :: (Integral a) => a -> TextBuilder
+approximateDataSize = signed \a ->
   if a < 1000
     then unsignedDecimal a <> "B"
     else
