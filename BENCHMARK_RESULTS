@@ -161,15 +161,15 @@ All
           172  μs ±  12 μs, 952 KB allocated, 166 B  copied,  35 MB peak memory
   Features
     intercalate
-      TextBuilder:                            OK
-        418  ns ±  29 ns, 3.8 KB allocated,   1 B  copied,  35 MB peak memory
-      Text:                                   OK
-        142  ns ±  14 ns, 824 B  allocated,   0 B  copied,  35 MB peak memory
-    binary:                                   OK
-      72.8 ns ± 7.1 ns, 152 B  allocated,   0 B  copied,  35 MB peak memory
-    octal:                                    OK
-      25.1 ns ± 1.8 ns,  96 B  allocated,   0 B  copied,  35 MB peak memory
-    decimal:                                  OK
-      48.4 ns ± 3.4 ns, 560 B  allocated,   0 B  copied,  35 MB peak memory
-    hexadecimal:                              OK
-      22.5 ns ± 1.8 ns, 104 B  allocated,   0 B  copied,  35 MB peak memory
+      TextBuilder: OK
+        416  ns ±  38 ns, 3.8 KB allocated,   0 B  copied, 6.0 MB peak memory
+      Text:        OK
+        142  ns ±  11 ns, 824 B  allocated,   0 B  copied, 6.0 MB peak memory
+    binary:        OK
+      62.6 ns ± 5.0 ns, 152 B  allocated,   0 B  copied, 6.0 MB peak memory
+    octal:         OK
+      25.3 ns ± 1.6 ns,  96 B  allocated,   0 B  copied, 6.0 MB peak memory
+    decimal:       OK
+      48.3 ns ± 3.2 ns, 560 B  allocated,   0 B  copied, 6.0 MB peak memory
+    hexadecimal:   OK
+      20.7 ns ± 1.8 ns, 104 B  allocated,   0 B  copied, 6.0 MB peak memory

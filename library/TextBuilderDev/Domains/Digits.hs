@@ -24,11 +24,11 @@ hexadecimalDigit (fromIntegral -> n) =
 
 {-# INLINE customFixedNumeralSystem #-}
 customFixedNumeralSystem ::
-  (FiniteBits a) =>
+  (FiniteBits a, Integral a) =>
   -- | Number of bits per digit.
   Int ->
   -- | Projection to codepoint with handling of overflow.
-  (a -> Word8) ->
+  (a -> a) ->
   -- | Value.
   a ->
   TextBuilder
@@ -38,7 +38,7 @@ customFixedNumeralSystem bitsPerDigit digitCodepoint val =
         let go val arrayIndex =
               if arrayIndex >= arrayStartIndex
                 then do
-                  TextArray.unsafeWrite array arrayIndex (digitCodepoint val)
+                  TextArray.unsafeWrite array arrayIndex (fromIntegral (digitCodepoint val))
                   go (unsafeShiftR val bitsPerDigit) (pred arrayIndex)
                 else return indexAfter
             indexAfter =
@@ -101,7 +101,7 @@ prefixedBinary = mappend "0b" . binary
 -- "77777416700"
 {-# INLINE octal #-}
 octal :: (FiniteBits a, Integral a) => a -> TextBuilder
-octal = customFixedNumeralSystem 3 (Codepoints.octalDigit . fromIntegral)
+octal = customFixedNumeralSystem 3 (Codepoints.octalDigit)
 
 -- |
 -- Same as 'octal', but with the \"0o\" prefix.
@@ -136,7 +136,7 @@ prefixedOctal = mappend "0o" . octal
 -- "fffe1dc0"
 {-# INLINE hexadecimal #-}
 hexadecimal :: (FiniteBits a, Integral a) => a -> TextBuilder
-hexadecimal = customFixedNumeralSystem 4 (Codepoints.hexDigit . fromIntegral)
+hexadecimal = customFixedNumeralSystem 4 Codepoints.hexDigit
 
 -- |
 -- Same as 'hexadecimal', but with the \"0x\" prefix.

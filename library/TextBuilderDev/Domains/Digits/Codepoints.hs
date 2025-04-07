@@ -3,7 +3,7 @@ module TextBuilderDev.Domains.Digits.Codepoints where
 import TextBuilderDev.Prelude
 
 {-# INLINE octalDigit #-}
-octalDigit :: Word8 -> Word8
+octalDigit :: (Bits a, Num a) => a -> a
 octalDigit a = a .&. 7 + 48
 
 -- | Extract the first 4 bits and convert them to a Unicode codepoint of a hexadecimal digit.
@@ -22,7 +22,7 @@ octalDigit a = a .&. 7 + 48
 -- >>> chr (fromIntegral (hexDigit 16))
 -- '0'
 {-# INLINE hexDigit #-}
-hexDigit :: Word8 -> Word8
+hexDigit :: (Bits a, Num a, Ord a) => a -> a
 hexDigit a = case a .&. 15 of
   a ->
     if a < 10
