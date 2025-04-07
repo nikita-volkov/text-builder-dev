@@ -74,9 +74,8 @@ main =
           [ bench "TextBuilder" $ whnf (A.toText . A.intercalate "фывапролдж") ["a", "b", "c", "d", "e", "f"],
             bench "Text" $ whnf (E.intercalate "фывапролдж") ["a", "b", "c", "d", "e", "f"]
           ],
-        bench "finiteBits" $ whnf (A.toText . A.finiteBits) (123456 :: Int),
-        bench "paddedFiniteBits" $ whnf (A.toText . A.paddedFiniteBits) (123456 :: Int),
         bench "binary" $ whnf (A.toText . A.binary) (123456 :: Int),
+        bench "octal" $ whnf (A.toText . A.octal) (123456 :: Int),
         bench "decimal" $ whnf (A.toText . A.decimal) (123456 :: Int),
         bench "hexadecimal" $ whnf (A.toText . A.hexadecimal) (123456 :: Int)
       ]

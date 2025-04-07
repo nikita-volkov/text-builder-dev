@@ -2,6 +2,7 @@ module TextBuilderDev.Domains.Digits where
 
 import qualified Data.Text.Array as TextArray
 import TextBuilderCore
+import qualified TextBuilderDev.Domains.Digits.Codepoints as Codepoints
 import TextBuilderDev.Prelude
 
 -- | Decimal digit.
@@ -18,6 +19,131 @@ hexadecimalDigit (fromIntegral -> n) =
     then unicodeCodepoint (n + 48)
     else unicodeCodepoint (n + 87)
 
+{-# INLINE customFixedNumeralSystem #-}
+customFixedNumeralSystem ::
+  (FiniteBits a) =>
+  -- | Number of bits per digit.
+  Int ->
+  -- | Projection to codepoint with handling of overflow.
+  (a -> Word8) ->
+  -- | Value.
+  a ->
+  TextBuilder
+customFixedNumeralSystem bitsPerDigit digitCodepoint val =
+  let size = div (finiteBitSize val + bitsPerDigit - 1) bitsPerDigit
+   in TextBuilder size \array arrayStartIndex ->
+        let go val arrayIndex =
+              if arrayIndex >= arrayStartIndex
+                then do
+                  TextArray.unsafeWrite array arrayIndex (digitCodepoint val)
+                  go (unsafeShiftR val bitsPerDigit) (pred arrayIndex)
+                else return indexAfter
+            indexAfter =
+              arrayStartIndex + size
+         in go val (pred indexAfter)
+
+-- |
+-- [Two's complement](https://en.wikipedia.org/wiki/Two%27s_complement) binary representation of a value.
+--
+-- Bits of a statically sized value padded from the left according to the size.
+-- If it's a negatable integer, the sign is reflected in the bits.
+--
+-- >>> binary @Int8 0
+-- "00000000"
+--
+-- >>> binary @Int8 4
+-- "00000100"
+--
+-- >>> binary @Int8 (-1)
+-- "11111111"
+--
+-- >>> binary @Word8 255
+-- "11111111"
+--
+-- >>> binary @Int16 4
+-- "0000000000000100"
+--
+-- >>> binary @Int16 (-4)
+-- "1111111111111100"
+{-# INLINE binary #-}
+binary :: (FiniteBits a) => a -> TextBuilder
+binary val =
+  let size = finiteBitSize val
+   in TextBuilder size \array arrayStartIndex ->
+        let go val arrayIndex =
+              if arrayIndex >= arrayStartIndex
+                then do
+                  TextArray.unsafeWrite array arrayIndex if testBit val 0 then 49 else 48
+                  go (unsafeShiftR val 1) (pred arrayIndex)
+                else return indexAfter
+            indexAfter =
+              arrayStartIndex + size
+         in go val (pred indexAfter)
+
+-- |
+-- Same as 'binary', but with the \"0b\" prefix.
+--
+-- >>> prefixedBinary @Int8 0
+-- "0b00000000"
+{-# INLINE prefixedBinary #-}
+prefixedBinary :: (FiniteBits a) => a -> TextBuilder
+prefixedBinary = mappend "0b" . binary
+
+-- | Octal representation of an integer.
+--
+-- >>> octal @Int32 123456
+-- "00000361100"
+--
+-- >>> octal @Int32 (-123456)
+-- "77777416700"
+{-# INLINE octal #-}
+octal :: (FiniteBits a, Integral a) => a -> TextBuilder
+octal = customFixedNumeralSystem 3 (Codepoints.octalDigit . fromIntegral)
+
+-- |
+-- Same as 'octal', but with the \"0o\" prefix.
+--
+-- >>> prefixedOctal @Int8 0
+-- "0o000"
+{-# INLINE prefixedOctal #-}
+prefixedOctal :: (FiniteBits a, Integral a) => a -> TextBuilder
+prefixedOctal = mappend "0o" . octal
+
+-- | Integer in hexadecimal notation with a fixed number of digits determined by the size of the type.
+--
+-- >>> hexadecimal @Int8 0
+-- "00"
+--
+-- >>> hexadecimal @Int8 4
+-- "04"
+--
+-- >>> hexadecimal @Int8 (-128)
+-- "80"
+--
+-- >>> hexadecimal @Int8 (-1)
+-- "ff"
+--
+-- >>> hexadecimal @Word8 255
+-- "ff"
+--
+-- >>> hexadecimal @Int32 123456
+-- "0001e240"
+--
+-- >>> hexadecimal @Int32 (-123456)
+-- "fffe1dc0"
+{-# INLINE hexadecimal #-}
+hexadecimal :: (FiniteBits a, Integral a) => a -> TextBuilder
+hexadecimal = customFixedNumeralSystem 4 (Codepoints.hexDigit . fromIntegral)
+
+-- |
+-- Same as 'hexadecimal', but with the \"0x\" prefix.
+--
+-- >>> prefixedHexadecimal @Int8 0
+-- "0x00"
+{-# INLINE prefixedHexadecimal #-}
+prefixedHexadecimal :: (FiniteBits a, Integral a) => a -> TextBuilder
+prefixedHexadecimal = mappend "0x" . hexadecimal
+
 -- * Signed Numbers
 
 {-# INLINE signed #-}
@@ -27,28 +153,7 @@ signed onUnsigned i =
     then onUnsigned i
     else unicodeCodepoint 45 <> onUnsigned (negate i)
 
--- | Signed binary representation of an integral value.
---
--- >>> binary 4
--- "100"
--- >>> binary (-4)
--- "-100"
-{-# INLINEABLE binary #-}
-binary :: (Integral a) => a -> TextBuilder
-binary = signed unsignedBinary
-
--- | Signed octal representation of an integral value.
---
--- >>> octal 123456
--- "361100"
---
--- >>> octal (-123456)
--- "-361100"
-{-# INLINE octal #-}
-octal :: (Integral a) => a -> TextBuilder
-octal = signed unsignedOctal
-
--- | Signed decimal representation of an integral value.
+-- | Signed decimal representation of an integer.
 --
 -- >>> decimal 123456
 -- "123456"
@@ -61,17 +166,6 @@ octal = signed unsignedOctal
 {-# INLINEABLE decimal #-}
 decimal :: (Integral a) => a -> TextBuilder
 decimal = signed unsignedDecimal
-
--- | Hexadecimal representation of an integral value.
---
--- >>> hexadecimal 123456
--- "1e240"
---
--- >>> hexadecimal (-123456)
--- "-1e240"
-{-# INLINE hexadecimal #-}
-hexadecimal :: (Integral a) => a -> TextBuilder
-hexadecimal = signed unsignedHexadecimal
 
 -- * Unsigned Numbers
 
@@ -99,26 +193,6 @@ digitsByRadix radix digitCodepoint =
               (digit : digits) -> do
                 TextArray.unsafeWrite array offset (fromIntegral (digitCodepoint digit))
                 go digits (succ offset)
-
--- | Unsigned binary representation of a non-negative integral value.
---
--- __Warning:__ It is your responsibility to ensure that the value is non-negative.
---
--- >>> unsignedBinary 0
--- "0"
---
--- >>> unsignedBinary 1
--- "1"
---
--- >>> unsignedBinary 2
--- "10"
---
--- >>> unsignedBinary 3
--- "11"
-{-# INLINE unsignedBinary #-}
-unsignedBinary :: (Integral a) => a -> TextBuilder
-unsignedBinary =
-  digitsByRadix 2 (+ 48)
 
 -- | Unsigned octal representation of a non-negative integral value.
 --
@@ -175,17 +249,26 @@ unsignedHexadecimal =
 -- __Warning:__ It is your responsibility to ensure that the size is positive and in a reasonable range,
 -- and that the value is positive, otherwise the produced text will be broken.
 --
--- >>> fixedUnsignedDecimal 5 123
+-- >>> fixedDecimal 5 123
 -- "00123"
 --
--- >>> fixedUnsignedDecimal 5 123456
+-- >>> fixedDecimal 5 123456
 -- "23456"
 --
--- >>> fixedUnsignedDecimal 0 123
+-- >>> fixedDecimal 5 (-123456)
+-- "23456"
+--
+-- >>> fixedDecimal 7 (-123456)
+-- "0123456"
+--
+-- >>> fixedDecimal 0 123
 -- ""
-{-# INLINEABLE fixedUnsignedDecimal #-}
-fixedUnsignedDecimal :: (Integral a) => Int -> a -> TextBuilder
-fixedUnsignedDecimal size val =
+--
+-- >>> fixedDecimal (-2) 123
+-- ""
+{-# INLINEABLE fixedDecimal #-}
+fixedDecimal :: (Integral a) => Int -> a -> TextBuilder
+fixedDecimal (max 0 -> size) (abs -> val) =
   TextBuilder size $ \array startOffset ->
     let offsetAfter = startOffset + size
         writeValue val offset =

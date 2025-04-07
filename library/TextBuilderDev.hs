@@ -26,25 +26,26 @@ module TextBuilderDev
     unicodeCodepoint,
 
     -- ** Data
-    hexByteString,
-    finiteBits,
-    paddedFiniteBits,
+    byteStringHexEncoding,
 
     -- ** Integers
 
+    -- *** Decimal
+    decimal,
+    fixedDecimal,
+    thousandSeparatedDecimal,
+
     -- *** Binary
     binary,
+    prefixedBinary,
 
     -- *** Octal
     octal,
-
-    -- *** Decimal
-    decimal,
-    fixedUnsignedDecimal,
-    thousandSeparatedDecimal,
+    prefixedOctal,
 
     -- *** Hexadecimal
     hexadecimal,
+    prefixedHexadecimal,
 
     -- ** Real
     fixedDouble,
@@ -53,8 +54,8 @@ module TextBuilderDev
     -- ** Time
     utcTimeIso8601Timestamp,
     realFracDdHhMmSsInterval,
-    diffTimeInterval,
-    picosecondsInterval,
+    diffTimeSeconds,
+    picoseconds,
 
     -- ** Other
     approximateDataSize,
@@ -65,7 +66,6 @@ module TextBuilderDev
 where
 
 import TextBuilderCore
-import TextBuilderDev.Domains.Bits
 import TextBuilderDev.Domains.ByteString
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Other

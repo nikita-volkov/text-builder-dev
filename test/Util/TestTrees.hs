@@ -5,6 +5,7 @@ import Data.Monoid
 import Data.Proxy
 import Data.Semigroup
 import Test.QuickCheck
+import Test.QuickCheck.Classes
 import Test.QuickCheck.Instances ()
 import Test.Tasty
 import Test.Tasty.QuickCheck
@@ -97,3 +98,7 @@ isomorphic proxy =
         [ mapsToMonoid (from @a)
         ]
     ]
+
+followsLaws :: Laws -> TestTree
+followsLaws Laws {..} =
+  testProperties lawsTypeclass lawsProperties

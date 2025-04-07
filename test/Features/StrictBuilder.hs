@@ -20,7 +20,8 @@ tests =
   [ isomorphic $
       Proxy @TextEncoding.StrictBuilder,
     testGroup "to" $
-      [ mapsToMonoid (to @TextEncoding.StrictBuilder)
+      [ mapsToMonoid (to @TextEncoding.StrictBuilder),
+        mapsToMonoid (from @TextEncoding.StrictBuilder)
       ]
   ]
 

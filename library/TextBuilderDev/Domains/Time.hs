@@ -41,17 +41,17 @@ utcTimestampInIso8601 ::
   TextBuilder
 utcTimestampInIso8601 y mo d h mi s =
   mconcat
-    [ fixedUnsignedDecimal 4 y,
+    [ fixedDecimal 4 y,
       "-",
-      fixedUnsignedDecimal 2 mo,
+      fixedDecimal 2 mo,
       "-",
-      fixedUnsignedDecimal 2 d,
+      fixedDecimal 2 d,
       "T",
-      fixedUnsignedDecimal 2 h,
+      fixedDecimal 2 h,
       ":",
-      fixedUnsignedDecimal 2 mi,
+      fixedDecimal 2 mi,
       ":",
-      fixedUnsignedDecimal 2 s,
+      fixedDecimal 2 s,
       "Z"
     ]
 
@@ -93,17 +93,17 @@ realFracDdHhMmSsInterval interval = flip evalState (round interval :: Int) $ do
         ]
     )
 
--- | DiffTime in a compact decimal format based on 'picosecondsInterval'.
-diffTimeInterval :: DiffTime -> TextBuilder
-diffTimeInterval = picosecondsInterval . diffTimeToPicoseconds
+-- | DiffTime in a compact decimal format based on 'picoseconds'.
+diffTimeSeconds :: DiffTime -> TextBuilder
+diffTimeSeconds = picoseconds . diffTimeToPicoseconds
 
 -- | Amount of picoseconds represented in a compact decimal format using suffixes.
 --
 -- E.g., the following is @1_230_000_000@ picoseconds or 1.23 milliseconds or 1230 microseconds:
 --
 -- > 1230us
-picosecondsInterval :: Integer -> TextBuilder
-picosecondsInterval x =
+picoseconds :: Integer -> TextBuilder
+picoseconds x =
   attemptOr 1_000_000_000_000 "s"
     $ attemptOr 1_000_000_000 "ms"
     $ attemptOr 1_000_000 "us"

@@ -18,10 +18,10 @@ padFromLeft paddedLength paddingChar =
 
 -- | Pad a builder from the right side to the specified length with the specified character.
 --
--- >>> padFromRight 5 '0' "123"
--- "12300"
+-- >>> padFromRight 5 ' ' "123"
+-- "123  "
 --
--- >>> padFromRight 5 '0' "123456"
+-- >>> padFromRight 5 ' ' "123456"
 -- "123456"
 {-# INLINEABLE padFromRight #-}
 padFromRight :: Int -> Char -> TextBuilder -> TextBuilder
