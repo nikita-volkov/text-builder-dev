@@ -1,6 +1,7 @@
 module Features (tests) where
 
 import qualified Data.ByteString as ByteString
+import Data.Char (intToDigit)
 import Data.Int
 import Data.String
 import qualified Data.Text as Text
@@ -23,11 +24,6 @@ tests :: [TestTree]
 tests =
   [ testGroup "StrictBuilder" StrictBuilder.tests,
     testGroup "StrictTextBuilder" StrictTextBuilder.tests,
-    testGroup "binary" $
-      [ testGroup "Int" $
-          [ mapsToMonoid @Int binary
-          ]
-      ],
     testGroup "decimal" $
       [ testGroup "Int" $
           [ mapsToMonoid @Int decimal
@@ -64,19 +60,32 @@ tests =
           [ mapsToMonoid @Integer (thousandSeparatedDecimal ',')
           ]
       ],
+    testGroup "binary" $
+      [ testGroup "Int" $
+          [ mapsToMonoid @Int binary,
+            testProperty "Encodes the same as showIntAtBase" $ \(x :: Word32) ->
+              (padFromLeft 32 '0' . string . showIntAtBase 2 intToDigit x) "" === binary x
+          ]
+      ],
+    testGroup "octal" $
+      [ testGroup "Int" $
+          [ mapsToMonoid @Int octal,
+            testProperty "Encodes the same as showIntAtBase" $ \(x :: Word32) ->
+              (padFromLeft 11 '0' . string . showIntAtBase 8 intToDigit x) "" === octal x
+          ]
+      ],
     testGroup "hexadecimal" $
       [ testGroup "Int" $
           [ mapsToMonoid @Int hexadecimal,
-            testProperty "Encodes the same as showHex" $ \(x :: Int32) ->
-              x >= 0 ==>
-                (padFromLeft 8 '0' . string . showHex x) "" === hexadecimal x
+            testProperty "Encodes the same as showHex" $ \(x :: Word32) ->
+              (padFromLeft 8 '0' . string . showHex x) "" === hexadecimal x
           ]
       ],
-    testGroup "fixedDouble" $
-      [ mapsToMonoid (fixedDouble 3)
+    testGroup "doubleFixedPoint" $
+      [ mapsToMonoid (doubleFixedPoint 3)
       ],
-    testGroup "doublePercent" $
-      [ mapsToMonoid (doublePercent 3)
+    testGroup "doubleFixedPointPercent" $
+      [ mapsToMonoid (doubleFixedPointPercent 3)
       ],
     testGroup "utcTimeIso8601Timestamp" $
       [ mapsToMonoid utcTimeIso8601Timestamp,

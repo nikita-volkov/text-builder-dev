@@ -3,7 +3,7 @@ module TextBuilderDev.Domains.Other where
 import qualified Data.Text as Text
 import TextBuilderCore
 import TextBuilderDev.Domains.Digits
-import TextBuilderDev.Prelude hiding (intercalate, length, null)
+import TextBuilderDev.Prelude hiding (intercalate)
 
 -- * Destructors
 
@@ -13,16 +13,6 @@ toString :: TextBuilder -> String
 toString = Text.unpack . toText
 
 -- * Constructors
-
--- |
--- Run the builder and pack the produced text into a new builder.
---
--- Useful to have around builders that you reuse,
--- because a forced builder is much faster,
--- since it's virtually a single call to @memcopy@.
-{-# INLINE force #-}
-force :: TextBuilder -> TextBuilder
-force = text . toText
 
 -- | Decimal representation of an integral value with thousands separated by the specified character.
 --
@@ -34,23 +24,23 @@ force = text . toText
 {-# INLINEABLE thousandSeparatedDecimal #-}
 thousandSeparatedDecimal :: (Integral a) => Char -> a -> TextBuilder
 thousandSeparatedDecimal separatorChar =
-  signed (thousandSeparatedUnsignedDecimal separatorChar)
+  signed (unsignedThousandSeparatedDecimal separatorChar)
 
 -- | Decimal representation of an unsigned integral value with thousands separated by the specified character.
 --
 -- __Warning:__ It is your responsibility to ensure that the value is non-negative.
 --
--- >>> thousandSeparatedUnsignedDecimal ',' 1234567890
+-- >>> unsignedThousandSeparatedDecimal ',' 1234567890
 -- "1,234,567,890"
 --
--- >>> thousandSeparatedUnsignedDecimal ' ' 1234567890
+-- >>> unsignedThousandSeparatedDecimal ' ' 1234567890
 -- "1 234 567 890"
 --
--- >>> thousandSeparatedUnsignedDecimal ',' 0
+-- >>> unsignedThousandSeparatedDecimal ',' 0
 -- "0"
-{-# INLINEABLE thousandSeparatedUnsignedDecimal #-}
-thousandSeparatedUnsignedDecimal :: (Integral a) => Char -> a -> TextBuilder
-thousandSeparatedUnsignedDecimal separatorChar =
+{-# INLINEABLE unsignedThousandSeparatedDecimal #-}
+unsignedThousandSeparatedDecimal :: (Integral a) => Char -> a -> TextBuilder
+unsignedThousandSeparatedDecimal separatorChar =
   processRightmostDigit
   where
     processRightmostDigit value =
@@ -127,78 +117,45 @@ approximateDataSize = signed \a ->
             then thousandSeparatedDecimal separatorChar byExtraTen
             else thousandSeparatedDecimal separatorChar byExtraTen <> "." <> decimalDigit remainder
 
--- | Intercalate builders.
---
--- >>> intercalate ", " ["a", "b", "c"]
--- "a, b, c"
---
--- >>> intercalate ", " ["a"]
--- "a"
---
--- >>> intercalate ", " []
--- ""
-{-# INLINE intercalate #-}
-intercalate :: (Foldable f) => TextBuilder -> f TextBuilder -> TextBuilder
-intercalate separator elements =
-  foldr
-    ( \element next !prefix ->
-        prefix <> element <> next separator
-    )
-    (const mempty)
-    elements
-    mempty
-
--- | Intercalate projecting values to builder.
-{-# INLINE intercalateMap #-}
-intercalateMap :: (Foldable f) => TextBuilder -> (a -> TextBuilder) -> f a -> TextBuilder
-intercalateMap separator mapper = extract . foldl' step init
-  where
-    init = Nothing
-    step acc element =
-      Just $ case acc of
-        Nothing -> mapper element
-        Just acc -> acc <> separator <> mapper element
-    extract = fromMaybe mempty
-
 -- | Double with a fixed number of decimal places.
 --
--- >>> fixedDouble 4 0.123456
+-- >>> doubleFixedPoint 4 0.123456
 -- "0.1235"
 --
--- >>> fixedDouble 2 2.1
+-- >>> doubleFixedPoint 2 2.1
 -- "2.10"
 --
--- >>> fixedDouble (-2) 2.1
+-- >>> doubleFixedPoint (-2) 2.1
 -- "2"
 --
--- >>> fixedDouble 2 (-2.1)
+-- >>> doubleFixedPoint 2 (-2.1)
 -- "-2.10"
 --
--- >>> fixedDouble 2 0
+-- >>> doubleFixedPoint 2 0
 -- "0.00"
-{-# INLINE fixedDouble #-}
-fixedDouble ::
+{-# INLINE doubleFixedPoint #-}
+doubleFixedPoint ::
   -- | Amount of decimals after point.
   Int ->
   Double ->
   TextBuilder
-fixedDouble (max 0 -> decimalPlaces) =
+doubleFixedPoint (max 0 -> decimalPlaces) =
   fromString . printf ("%." ++ show decimalPlaces ++ "f")
 
 -- | Double multiplied by 100 with a fixed number of decimal places applied and followed by a percent-sign.
 --
--- >>> doublePercent 3 0.123456
+-- >>> doubleFixedPointPercent 3 0.123456
 -- "12.346%"
 --
--- >>> doublePercent 0 2
+-- >>> doubleFixedPointPercent 0 2
 -- "200%"
 --
--- >>> doublePercent 0 (-2)
+-- >>> doubleFixedPointPercent 0 (-2)
 -- "-200%"
-{-# INLINE doublePercent #-}
-doublePercent ::
+{-# INLINE doubleFixedPointPercent #-}
+doubleFixedPointPercent ::
   -- | Amount of decimals after point.
   Int ->
   Double ->
   TextBuilder
-doublePercent decimalPlaces x = fixedDouble decimalPlaces (x * 100) <> "%"
+doubleFixedPointPercent decimalPlaces x = doubleFixedPoint decimalPlaces (x * 100) <> "%"

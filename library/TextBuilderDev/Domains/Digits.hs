@@ -1,9 +1,12 @@
 module TextBuilderDev.Domains.Digits where
 
+import qualified Data.ByteString as ByteString
+import qualified Data.List.Split as Split
 import qualified Data.Text.Array as TextArray
 import TextBuilderCore
+import TextBuilderDev.Domains.Combinators
 import qualified TextBuilderDev.Domains.Digits.Codepoints as Codepoints
-import TextBuilderDev.Prelude
+import TextBuilderDev.Prelude hiding (intercalate)
 
 -- | Decimal digit.
 {-# INLINE decimalDigit #-}
@@ -242,12 +245,9 @@ unsignedHexadecimal =
 
 -- * Other
 
--- | Fixed-length decimal.
+-- | Fixed-length decimal without sign.
 -- Padded with zeros or trimmed depending on whether it's shorter or longer
 -- than specified.
---
--- __Warning:__ It is your responsibility to ensure that the size is positive and in a reasonable range,
--- and that the value is positive, otherwise the produced text will be broken.
 --
 -- >>> fixedDecimal 5 123
 -- "00123"
@@ -288,3 +288,16 @@ fixedDecimal (max 0 -> size) (abs -> val) =
               writePadding (pred offset)
             else return offsetAfter
      in writeValue val (pred offsetAfter)
+
+-- | Hexadecimal readable representation of binary data.
+--
+-- >>> byteStringHexEncoding "Hello"
+-- "4865 6c6c 6f"
+{-# INLINE byteStringHexEncoding #-}
+byteStringHexEncoding :: ByteString -> TextBuilder
+byteStringHexEncoding =
+  intercalate " "
+    . fmap mconcat
+    . Split.chunksOf 2
+    . fmap hexadecimal
+    . ByteString.unpack

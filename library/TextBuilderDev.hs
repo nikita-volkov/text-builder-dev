@@ -48,8 +48,8 @@ module TextBuilderDev
     prefixedHexadecimal,
 
     -- ** Real
-    fixedDouble,
-    doublePercent,
+    doubleFixedPoint,
+    doubleFixedPointPercent,
 
     -- ** Time
     utcTimeIso8601Timestamp,
@@ -67,6 +67,7 @@ where
 
 import TextBuilderCore
 import TextBuilderDev.Domains.ByteString
+import TextBuilderDev.Domains.Combinators
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Other
 import TextBuilderDev.Domains.Padding

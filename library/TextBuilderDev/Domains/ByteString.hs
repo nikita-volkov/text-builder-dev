@@ -3,29 +3,13 @@
 module TextBuilderDev.Domains.ByteString where
 
 import qualified Data.ByteString as ByteString
-import qualified Data.List.Split as Split
 import qualified Data.Text.Array as TextArray
 import TextBuilderCore
-import TextBuilderDev.Domains.Digits
-import TextBuilderDev.Domains.Other
-import TextBuilderDev.Prelude hiding (intercalate, length, null)
+import TextBuilderDev.Prelude
 
 #if !MIN_VERSION_text(2,0,0)
 import qualified Data.Text.Encoding as TextEncoding
 #endif
-
--- | Hexadecimal readable representation of binary data.
---
--- >>> byteStringHexEncoding "Hello"
--- "4865 6c6c 6f"
-{-# INLINE byteStringHexEncoding #-}
-byteStringHexEncoding :: ByteString -> TextBuilder
-byteStringHexEncoding =
-  intercalate " "
-    . fmap mconcat
-    . Split.chunksOf 2
-    . fmap hexadecimal
-    . ByteString.unpack
 
 -- | UTF-8 bytestring. You can use it for converting ASCII values as well.
 --

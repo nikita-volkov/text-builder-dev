@@ -73,6 +73,7 @@ library
   exposed-modules: TextBuilderDev
   other-modules:
     TextBuilderDev.Domains.ByteString
+    TextBuilderDev.Domains.Combinators
     TextBuilderDev.Domains.Digits
     TextBuilderDev.Domains.Digits.Codepoints
     TextBuilderDev.Domains.Other

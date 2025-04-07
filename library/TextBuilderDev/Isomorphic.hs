@@ -24,12 +24,6 @@ import TextBuilderDev.Prelude
 -- In the integer case there is no way to read it
 -- from a textual form without a possibility of failing
 -- (e.g., when the input string cannot be parsed as an integer).
---
--- If you're looking for such conversion classes,
--- this library is not a place for them,
--- since there can be infinite amount of flavours of
--- conversions. They are context-dependent and as such
--- should be defined as part of the domain.
 class Isomorphic a where
   -- | Project the type into "TextBuilder".
   from :: a -> TextBuilder
