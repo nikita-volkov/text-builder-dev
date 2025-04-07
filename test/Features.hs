@@ -104,7 +104,7 @@ tests =
           ]
       ],
     testGroup "unsafeUtf8ByteString" $
-      [ mapsToMonoid unsafeUtf8ByteString,
+      [ mapsToMonoid (unsafeUtf8ByteString . Text.encodeUtf8),
         testProperty "Works on ASCII" $
           let gen = listOf do
                 list <- listOf (choose (0, 127))
