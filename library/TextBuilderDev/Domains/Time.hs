@@ -1,7 +1,6 @@
 module TextBuilderDev.Domains.Time where
 
-import TextBuilderCore
-import TextBuilderDev.Domains.Digits
+import TextBuilder
 import TextBuilderDev.Domains.Padding
 import TextBuilderDev.Prelude
 
@@ -41,17 +40,17 @@ utcTimestampInIso8601 ::
   TextBuilder
 utcTimestampInIso8601 y mo d h mi s =
   mconcat
-    [ fixedDecimal 4 y,
+    [ fixedLengthDecimal 4 y,
       "-",
-      fixedDecimal 2 mo,
+      fixedLengthDecimal 2 mo,
       "-",
-      fixedDecimal 2 d,
+      fixedLengthDecimal 2 d,
       "T",
-      fixedDecimal 2 h,
+      fixedLengthDecimal 2 h,
       ":",
-      fixedDecimal 2 mi,
+      fixedLengthDecimal 2 mi,
       ":",
-      fixedDecimal 2 s,
+      fixedLengthDecimal 2 s,
       "Z"
     ]
 

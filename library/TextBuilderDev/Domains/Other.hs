@@ -1,68 +1,8 @@
 module TextBuilderDev.Domains.Other where
 
-import qualified Data.Text as Text
-import TextBuilderCore
+import TextBuilder
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Prelude hiding (intercalate)
-
--- * Destructors
-
--- | Convert builder to string.
-{-# INLINE toString #-}
-toString :: TextBuilder -> String
-toString = Text.unpack . toText
-
--- * Constructors
-
--- | Decimal representation of an integral value with thousands separated by the specified character.
---
--- >>> thousandSeparatedDecimal ',' 1234567890
--- "1,234,567,890"
---
--- >>> thousandSeparatedDecimal ',' (-1234567890)
--- "-1,234,567,890"
-{-# INLINEABLE thousandSeparatedDecimal #-}
-thousandSeparatedDecimal :: (Integral a) => Char -> a -> TextBuilder
-thousandSeparatedDecimal separatorChar =
-  signed (unsignedThousandSeparatedDecimal separatorChar)
-
--- | Decimal representation of an unsigned integral value with thousands separated by the specified character.
---
--- __Warning:__ It is your responsibility to ensure that the value is non-negative.
---
--- >>> unsignedThousandSeparatedDecimal ',' 1234567890
--- "1,234,567,890"
---
--- >>> unsignedThousandSeparatedDecimal ' ' 1234567890
--- "1 234 567 890"
---
--- >>> unsignedThousandSeparatedDecimal ',' 0
--- "0"
-{-# INLINEABLE unsignedThousandSeparatedDecimal #-}
-unsignedThousandSeparatedDecimal :: (Integral a) => Char -> a -> TextBuilder
-unsignedThousandSeparatedDecimal separatorChar =
-  processRightmostDigit
-  where
-    processRightmostDigit value =
-      case divMod value 10 of
-        (value, digit) ->
-          processAnotherDigit [decimalDigit digit] (1 :: Int) value
-    processAnotherDigit builders index value =
-      if value == 0
-        then mconcat builders
-        else case divMod value 10 of
-          (value, digit) ->
-            if mod index 3 == 0
-              then
-                processAnotherDigit
-                  (decimalDigit digit : char separatorChar : builders)
-                  (succ index)
-                  value
-              else
-                processAnotherDigit
-                  (decimalDigit digit : builders)
-                  (succ index)
-                  value
 
 -- | Data size in decimal notation over amount of bytes.
 --
@@ -84,7 +24,7 @@ unsignedThousandSeparatedDecimal separatorChar =
 approximateDataSize :: (Integral a) => a -> TextBuilder
 approximateDataSize = signed \a ->
   if a < 1000
-    then unsignedDecimal a <> "B"
+    then decimal a <> "B"
     else
       if a < 1000000
         then dividedDecimal 100 a <> "kB"

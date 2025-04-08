@@ -32,7 +32,7 @@ module TextBuilderDev
 
     -- *** Decimal
     decimal,
-    fixedDecimal,
+    fixedLengthDecimal,
     thousandSeparatedDecimal,
 
     -- *** Binary
@@ -65,9 +65,7 @@ module TextBuilderDev
   )
 where
 
-import TextBuilderCore
-import TextBuilderDev.Domains.ByteString
-import TextBuilderDev.Domains.Combinators
+import TextBuilder
 import TextBuilderDev.Domains.Digits
 import TextBuilderDev.Domains.Other
 import TextBuilderDev.Domains.Padding
