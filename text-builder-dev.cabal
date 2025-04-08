@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name: text-builder-dev
-version: 0.3.10
+version: 0.4
 category: Text, Builders
 synopsis: Edge of developments for "text-builder"
 description:
@@ -8,6 +8,7 @@ description:
   All experimentation and feature development happens here.
   The API can change drastically.
   For a more stable API use "text-builder".
+
   The packages are compatible, because they both operate on the type defined in "[text-builder-core](https://hackage.haskell.org/package/text-builder-core)".
 
 homepage: https://github.com/nikita-volkov/text-builder-dev
@@ -72,10 +73,7 @@ library
   hs-source-dirs: library
   exposed-modules: TextBuilderDev
   other-modules:
-    TextBuilderDev.Domains.ByteString
-    TextBuilderDev.Domains.Combinators
     TextBuilderDev.Domains.Digits
-    TextBuilderDev.Domains.Digits.Codepoints
     TextBuilderDev.Domains.Other
     TextBuilderDev.Domains.Padding
     TextBuilderDev.Domains.StrictBuilder
@@ -89,7 +87,8 @@ library
     bytestring >=0.10 && <0.13,
     split >=0.2.3.4 && <0.3,
     text >=1.2 && <3,
-    text-builder-core ^>=0.1.1,
+    text-builder ^>=1,
+    text-builder-core ^>=0.1.1.1,
     time >=1.12 && <2,
     transformers >=0.5 && <0.7,
 
@@ -108,7 +107,6 @@ test-suite test
   build-depends:
     QuickCheck >=2.14 && <3,
     base >=4.11 && <5,
-    bytestring >=0.10 && <0.13,
     quickcheck-classes >=0.6.5 && <0.7,
     quickcheck-instances >=0.3.32 && <0.4,
     tasty >=1.5.3 && <2,
@@ -116,23 +114,3 @@ test-suite test
     text >=1.2 && <3,
     text-builder-dev,
     time >=1.12 && <2,
-
-benchmark bench
-  import: base
-  type: exitcode-stdio-1.0
-  hs-source-dirs: bench
-  ghc-options:
-    -O2
-    -threaded
-    -with-rtsopts=-N
-    -with-rtsopts=-A32m
-    -with-rtsopts=-T
-    -fproc-alignment=64
-
-  main-is: Main.hs
-  build-depends:
-    base >=4.11 && <5,
-    tasty-bench ^>=0.4.1,
-    text >=2.1.2 && <3,
-    text-builder-dev,
-    text-builder-linear ^>=0.1.3,

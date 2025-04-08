@@ -2,7 +2,7 @@ module TextBuilderDev.Isomorphic where
 
 import qualified Data.Text.Lazy as TextLazy
 import qualified Data.Text.Lazy.Builder as TextLazyBuilder
-import TextBuilderCore
+import TextBuilder
 import TextBuilderDev.Prelude
 
 -- |
