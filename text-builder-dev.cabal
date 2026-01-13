@@ -1,6 +1,6 @@
 cabal-version: 3.0
 name: text-builder-dev
-version: 0.4
+version: 0.4.0.1
 category: Text, Builders
 synopsis: Edge of developments for "text-builder"
 description:
@@ -108,7 +108,7 @@ test-suite test
     QuickCheck >=2.14 && <3,
     base >=4.11 && <5,
     quickcheck-classes >=0.6.5 && <0.7,
-    quickcheck-instances >=0.3.32 && <0.4,
+    quickcheck-instances >=0.3.32 && <0.5,
     tasty >=1.5.3 && <2,
     tasty-quickcheck >=0.11.1 && <0.12,
     text >=1.2 && <3,
